@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "start:dev": "nest start --watch",
-    "build": "nest build",
+    "start": "node dist/apps/api/src/main.js",
+    "build": "nest build && node -e \"const fs=require('fs');const path=require('path');const src=path.join('dist','apps','api','src','main.js');const dest=path.join('dist','main.js');if(fs.existsSync(src)) fs.copyFileSync(src,dest);\"",
     "test": "jest",
     "lint": "eslint .",
     "prisma:generate": "prisma generate",
