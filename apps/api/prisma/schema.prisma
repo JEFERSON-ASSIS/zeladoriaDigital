@@ -1,0 +1,229 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  PREFEITURA
+  SECRETARIA
+  TRIAGEM
+  EQUIPE_CAMPO
+  CIDADAO
+}
+
+enum OccurrenceStatus {
+  ABERTO
+  EM_ANALISE
+  ENCAMINHADO
+  EM_EXECUCAO
+  CONCLUIDO
+  CANCELADO
+}
+
+enum PriorityLevel {
+  BAIXA
+  MEDIA
+  ALTA
+  URGENTE
+}
+
+model Municipality {
+  id          String       @id @default(cuid())
+  name        String
+  code        String?      @unique
+  users       User[]
+  citizens    Citizen[]
+  departments Department[]
+  neighborhoods Neighborhood[]
+  occurrences Occurrence[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model User {
+  id             String   @id @default(cuid())
+  name           String
+  email          String   @unique
+  password       String
+  role           UserRole
+  municipalityId String?
+  municipality   Municipality? @relation(fields: [municipalityId], references: [id])
+  departmentId   String?
+  department     Department? @relation(fields: [departmentId], references: [id])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  auditLogs      AuditLog[]
+  notifications  Notification[]
+  changedMovements OccurrenceMovement[] @relation("ChangedBy")
+}
+
+model Citizen {
+  id             String   @id @default(cuid())
+  name           String
+  email          String?  @unique
+  password       String?
+  phone          String?
+  cpf            String?  @unique
+  municipalityId String?
+  municipality   Municipality? @relation(fields: [municipalityId], references: [id])
+  occurrences    Occurrence[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Department {
+  id             String   @id @default(cuid())
+  name           String
+  municipalityId String?
+  municipality   Municipality? @relation(fields: [municipalityId], references: [id])
+  occurrences    Occurrence[] @relation("SuggestedDepartment")
+  serviceOrders  ServiceOrder[]
+  users          User[]
+  fieldTeams     FieldTeam[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Neighborhood {
+  id             String   @id @default(cuid())
+  name           String
+  municipalityId String?
+  municipality   Municipality? @relation(fields: [municipalityId], references: [id])
+  occurrences    Occurrence[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  occurrences Occurrence[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Occurrence {
+  id                    String            @id @default(cuid())
+  protocol              String            @unique
+  title                 String?
+  description           String
+  address               String
+  latitude              Float?
+  longitude             Float?
+  status                OccurrenceStatus  @default(ABERTO)
+  priority              PriorityLevel     @default(MEDIA)
+  priorityScore         Int               @default(0)
+  duplicateGroupId      String?
+  aiSummary             String?
+  citizenId             String?
+  citizen               Citizen?          @relation(fields: [citizenId], references: [id])
+  municipalityId        String?
+  municipality          Municipality?     @relation(fields: [municipalityId], references: [id])
+  categoryId            String?
+  category              Category?         @relation(fields: [categoryId], references: [id])
+  neighborhoodId        String?
+  neighborhood          Neighborhood?     @relation(fields: [neighborhoodId], references: [id])
+  suggestedDepartmentId String?
+  suggestedDepartment   Department?       @relation("SuggestedDepartment", fields: [suggestedDepartmentId], references: [id])
+  attachments           OccurrenceAttachment[]
+  movements             OccurrenceMovement[]
+  serviceOrders         ServiceOrder[]
+  ratings               Rating[]
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+}
+
+model OccurrenceAttachment {
+  id            String   @id @default(cuid())
+  occurrenceId  String
+  occurrence    Occurrence @relation(fields: [occurrenceId], references: [id])
+  fileUrl       String
+  fileType      String
+  createdAt     DateTime @default(now())
+}
+
+model OccurrenceMovement {
+  id           String   @id @default(cuid())
+  occurrenceId String
+  occurrence   Occurrence @relation(fields: [occurrenceId], references: [id])
+  fromStatus   OccurrenceStatus?
+  toStatus     OccurrenceStatus
+  note         String?
+  changedById  String?
+  changedBy    User?    @relation("ChangedBy", fields: [changedById], references: [id])
+  createdAt    DateTime @default(now())
+}
+
+model ServiceOrder {
+  id             String   @id @default(cuid())
+  occurrenceId   String   @unique
+  occurrence     Occurrence @relation(fields: [occurrenceId], references: [id])
+  departmentId   String?
+  department     Department? @relation(fields: [departmentId], references: [id])
+  fieldTeamId    String?
+  fieldTeam      FieldTeam? @relation(fields: [fieldTeamId], references: [id])
+  priority       PriorityLevel @default(MEDIA)
+  slaHours       Int?
+  plannedAt      DateTime?
+  startedAt      DateTime?
+  finishedAt     DateTime?
+  beforePhotoUrl String?
+  afterPhotoUrl  String?
+  teamNote       String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model FieldTeam {
+  id            String   @id @default(cuid())
+  name          String
+  departmentId  String?
+  department    Department? @relation(fields: [departmentId], references: [id])
+  serviceOrders ServiceOrder[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  subject    String
+  body       String
+  createdAt  DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  title     String
+  body      String
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String
+  entity    String
+  entityId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+}
+
+model Rating {
+  id           String   @id @default(cuid())
+  occurrenceId String
+  occurrence   Occurrence @relation(fields: [occurrenceId], references: [id])
+  citizenId    String?
+  score        Int
+  comment      String?
+  createdAt    DateTime @default(now())
+}
