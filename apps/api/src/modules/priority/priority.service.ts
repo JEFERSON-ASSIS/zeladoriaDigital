@@ -1,8 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { Category, Department, Occurrence, PriorityLevel } from '@prisma/client';
+import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
 export class PriorityService {
+  constructor(private readonly prisma: PrismaService) {}
+
   calculatePriority(input: { title?: string | null; description: string; category?: Pick<Category, 'name'> | null; address?: string | null; citizen?: { id: string } | null }) {
     const text = `${input.title ?? ''} ${input.description} ${input.category?.name ?? ''} ${input.address ?? ''}`.toLowerCase();
     let score = 0;
@@ -48,5 +51,18 @@ export class PriorityService {
     }, { total: 0 } as Record<string, number>);
 
     return `Total: ${counts.total ?? 0} | Abertas: ${counts.ABERTO ?? 0} | Urgentes: ${counts.URGENTE ?? 0} | Altas: ${counts.ALTA ?? 0}`;
+  }
+
+  async calculateAndPersist(occurrenceId: string, occurrence: Pick<Occurrence, 'address' | 'createdAt' | 'priority'>) {
+    const score = this.calculatePriority({
+      description: occurrence.address,
+      address: occurrence.address
+    }).score;
+    const classification = score > 100 ? 'CRITICA' : score >= 81 ? 'URGENTE' : score >= 61 ? 'ALTA' : score >= 31 ? 'MEDIA' : 'BAIXA';
+    return this.prisma.priorityCalculation.upsert({
+      where: { occurrenceId },
+      create: { occurrenceId, score, classification, detailsJson: { source: 'rules' } },
+      update: { score, classification, detailsJson: { source: 'rules' } }
+    });
   }
 }

@@ -32,6 +32,12 @@ enum PriorityLevel {
   URGENTE
 }
 
+enum AlertLevel {
+  INFO
+  WARNING
+  CRITICAL
+}
+
 model Municipality {
   id          String       @id @default(cuid())
   name        String
@@ -226,4 +232,63 @@ model Rating {
   score        Int
   comment      String?
   createdAt    DateTime @default(now())
+}
+
+model IndicatorCache {
+  id           String   @id @default(cuid())
+  indicatorType String
+  cacheKey     String   @unique
+  value        Json
+  periodStart  DateTime?
+  periodEnd    DateTime?
+  filtersJson  Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model PriorityCalculation {
+  id             String   @id @default(cuid())
+  occurrenceId   String   @unique
+  score          Int
+  classification String
+  detailsJson    Json
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model ManagerialAlert {
+  id             String   @id @default(cuid())
+  type           String
+  title          String
+  message        String
+  level          AlertLevel
+  departmentId   String?
+  neighborhoodId String?
+  occurrenceId   String?
+  read           Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model HeatmapCache {
+  id             String   @id @default(cuid())
+  bairro         String
+  categoriaId    String?
+  latitudeCentro Float?
+  longitudeCentro Float?
+  quantidade     Int      @default(0)
+  periodoInicio  DateTime?
+  periodoFim     DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model OccurrenceRating {
+  id           String   @id @default(cuid())
+  occurrenceId String   @unique
+  citizenId    String?
+  score        Int
+  comment      String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }

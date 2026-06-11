@@ -154,3 +154,106 @@ export async function updateOccurrenceStatus(id: string, status: string, accessT
 
   return response.json();
 }
+
+async function fetchAdmin<T>(path: string, accessToken?: string, init?: RequestInit) {
+  const response = await fetch(`${API_URL}${path}`, {
+    cache: 'no-store',
+    headers: {
+      ...authHeaders(accessToken),
+      ...(init?.headers ?? {})
+    },
+    ...init
+  });
+  return safeJson<T>(response);
+}
+
+function buildQueryString(filters: Record<string, unknown>) {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(filters)) {
+    if (value !== undefined && value !== null && value !== '') {
+      params.set(key, String(value));
+    }
+  }
+  const query = params.toString();
+  return query ? `?${query}` : '';
+}
+
+export function getStoredAccessToken() {
+  return typeof window === 'undefined' ? undefined : JSON.parse(window.localStorage.getItem('zeladoria.session') ?? 'null')?.accessToken;
+}
+
+export async function fetchExecutiveDashboard(filters: Record<string, unknown> = {}, accessToken?: string) {
+  return (await fetchAdmin<any>(`/admin/dashboard/executive${buildQueryString(filters)}`, accessToken)) ?? {};
+}
+
+export async function fetchStatusIndicators(filters: Record<string, unknown> = {}, accessToken?: string) {
+  return (await fetchAdmin<any[]>(`/admin/indicators/status${buildQueryString(filters)}`, accessToken)) ?? [];
+}
+
+export async function fetchDepartmentIndicators(filters: Record<string, unknown> = {}, accessToken?: string) {
+  return (await fetchAdmin<any[]>(`/admin/indicators/departments${buildQueryString(filters)}`, accessToken)) ?? [];
+}
+
+export async function fetchCategoryIndicators(filters: Record<string, unknown> = {}, accessToken?: string) {
+  return (await fetchAdmin<any[]>(`/admin/indicators/categories${buildQueryString(filters)}`, accessToken)) ?? [];
+}
+
+export async function fetchNeighborhoodIndicators(filters: Record<string, unknown> = {}, accessToken?: string) {
+  return (await fetchAdmin<any[]>(`/admin/indicators/neighborhoods${buildQueryString(filters)}`, accessToken)) ?? [];
+}
+
+export async function fetchRanking(filters: Record<string, unknown> = {}, accessToken?: string) {
+  return (await fetchAdmin<any[]>(`/admin/ranking${buildQueryString(filters)}`, accessToken)) ?? [];
+}
+
+export async function fetchAlerts(filters: Record<string, unknown> = {}, accessToken?: string) {
+  return (await fetchAdmin<any[]>(`/admin/alerts${buildQueryString(filters)}`, accessToken)) ?? [];
+}
+
+export async function fetchReportsSummary(filters: Record<string, unknown> = {}, accessToken?: string) {
+  return (await fetchAdmin<any>('/admin/reports/generate', accessToken, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(filters)
+  })) ?? {};
+}
+
+export async function fetchExecutiveSummary(filters: Record<string, unknown> = {}, accessToken?: string) {
+  return (await fetchAdmin<any>('/admin/ai/executive-summary', accessToken, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(filters)
+  })) ?? {};
+}
+
+export async function fetchPublicTransparency(filters: Record<string, unknown> = {}) {
+  return (await fetchAdmin<any>(`/transparency${buildQueryString(filters)}`)) ?? {};
+}
+
+export async function exportAdminGrid(
+  format: 'pdf' | 'csv' | 'xlsx',
+  filters: Record<string, unknown>,
+  accessToken?: string
+) {
+  const response = await fetch(`${API_URL}/admin/export`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...authHeaders(accessToken)
+    },
+    body: JSON.stringify({ format, filters })
+  });
+
+  if (!response.ok) {
+    throw new Error('Falha ao exportar grid');
+  }
+
+  const blob = await response.blob();
+  const disposition = response.headers.get('Content-Disposition') ?? '';
+  const filenameMatch = disposition.match(/filename="([^"]+)"/i);
+
+  return {
+    blob,
+    filename: filenameMatch?.[1] ?? `export.${format}`
+  };
+}

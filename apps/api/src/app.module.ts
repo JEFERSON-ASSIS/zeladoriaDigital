@@ -10,6 +10,12 @@ import { NeighborhoodsModule } from './modules/neighborhoods/neighborhoods.modul
 import { PrismaModule } from './prisma/prisma.module';
 import { WhatsAppModule } from './modules/whatsapp/whatsapp.module';
 import { PriorityModule } from './modules/priority/priority.module';
+import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { AiAssistantModule } from './modules/ai-assistant/ai-assistant.module';
+import { ReportsModule } from './modules/reports/reports.module';
+import { ExportModule } from './modules/export/export.module';
+import { JobsModule } from './modules/jobs/jobs.module';
+import { TransparencyModule } from './modules/transparency/transparency.module';
 
 @Module({
   imports: [
@@ -23,7 +29,13 @@ import { PriorityModule } from './modules/priority/priority.module';
     CategoriesModule,
     NeighborhoodsModule,
     WhatsAppModule,
-    PriorityModule
+    PriorityModule,
+    AnalyticsModule,
+    AiAssistantModule,
+    ReportsModule,
+    ExportModule,
+    JobsModule,
+    TransparencyModule
   ]
 })
 export class AppModule {}

@@ -1,4 +1,11 @@
 import { Module } from '@nestjs/common';
 import { PriorityService } from './priority.service';
-@Module({ providers: [PriorityService], exports: [PriorityService] })
+import { PrismaModule } from '../../prisma/prisma.module';
+import { PriorityEngineService } from './priority-engine.service';
+
+@Module({
+  imports: [PrismaModule],
+  providers: [PriorityService, PriorityEngineService],
+  exports: [PriorityService, PriorityEngineService]
+})
 export class PriorityModule {}

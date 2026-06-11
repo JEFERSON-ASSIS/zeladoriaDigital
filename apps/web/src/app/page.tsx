@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { clearSession, getNavigationForRole, getSession, type AuthSession } from '../lib/auth';
+import { clearSession, getNavigationForRole, getNavigationHref, getSession, type AuthSession } from '../lib/auth';
 import { fetchDashboardData } from '../lib/api';
 import { fetchCurrentUser } from '../lib/auth-api';
 
@@ -22,6 +22,7 @@ export default function HomePage() {
   useEffect(() => {
     const currentSession = getSession();
     if (!currentSession) {
+      setLoadingSession(false);
       router.replace('/login');
       return;
     }
@@ -85,6 +86,18 @@ export default function HomePage() {
     );
   }
 
+  if (!session) {
+    return (
+      <main className="login-shell">
+        <section className="login-card">
+          <p className="eyebrow">Sessão</p>
+          <h1>Acesso não autenticado</h1>
+          <p className="login-copy">Redirecionando para a página de login.</p>
+        </section>
+      </main>
+    );
+  }
+
   return (
     <main className="shell">
       <aside className="sidebar">
@@ -92,18 +105,14 @@ export default function HomePage() {
         <p className="sidebar-user">{session?.user.name ?? 'Carregando...'}</p>
         <nav>
           {visibleMenus.map((item) => (
-            <a
+            <button
               key={item}
-              href={
-                item === 'Ordens de serviço'
-                  ? '/ordens-servico'
-                  : item === 'Ocorrências'
-                    ? '/ocorrencias'
-                    : '#'
-              }
+              type="button"
+              className="menu-link"
+              onClick={() => router.push(getNavigationHref(item))}
             >
               {item}
-            </a>
+            </button>
           ))}
         </nav>
         <button className="ghost-button" onClick={logout} type="button">

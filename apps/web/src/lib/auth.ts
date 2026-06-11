@@ -55,6 +55,12 @@ export function getNavigationHref(label: string) {
       return '/ocorrencias';
     case 'Ordens de serviço':
       return '/ordens-servico';
+    case 'Mapa':
+      return '/admin/maps/executive';
+    case 'Relatórios':
+      return '/admin/reports';
+    case 'Usuários':
+      return '/admin/users';
     case 'Nova ocorrência':
       return '/nova-ocorrencia';
     case 'Minhas solicitações':
