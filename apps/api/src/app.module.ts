@@ -16,6 +16,7 @@ import { ReportsModule } from './modules/reports/reports.module';
 import { ExportModule } from './modules/export/export.module';
 import { JobsModule } from './modules/jobs/jobs.module';
 import { TransparencyModule } from './modules/transparency/transparency.module';
+import { ServiceAreaModule } from './modules/service-area/service-area.module';
 
 @Module({
   imports: [
@@ -35,7 +36,8 @@ import { TransparencyModule } from './modules/transparency/transparency.module';
     ReportsModule,
     ExportModule,
     JobsModule,
-    TransparencyModule
+    TransparencyModule,
+    ServiceAreaModule
   ]
 })
 export class AppModule {}

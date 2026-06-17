@@ -1,15 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateOccurrenceDto } from './dto/create-occurrence.dto';
 import { UpdateOccurrenceDto } from './dto/update-occurrence.dto';
-import { OccurrenceStatus, PriorityLevel, Prisma } from '@prisma/client';
+import { AlertLevel, OccurrenceStatus, PriorityLevel, Prisma } from '@prisma/client';
 import { PriorityService } from '../priority/priority.service';
+import { ServiceAreaService } from '../service-area/service-area.service';
 
 @Injectable()
 export class OccurrencesService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly priorityService: PriorityService
+    private readonly priorityService: PriorityService,
+    private readonly serviceAreaService: Pick<ServiceAreaService, 'validate'> = {
+      validate: async () => ({ valid: true, blocked: false, reason: 'Validação geográfica desativada.' })
+    } as unknown as Pick<ServiceAreaService, 'validate'>
   ) {}
 
   findAll() {
@@ -75,6 +79,14 @@ export class OccurrencesService {
 
   async create(data: CreateOccurrenceDto) {
     const normalizedStatus = (data.status ?? OccurrenceStatus.ABERTO) as OccurrenceStatus;
+    const areaValidation = await this.serviceAreaService.validate({
+      latitude: data.latitude,
+      longitude: data.longitude
+    });
+    if (!areaValidation.valid && areaValidation.blocked) {
+      throw new BadRequestException(areaValidation.reason ?? 'Ocorrência fora da área atendida.');
+    }
+
     const [category, departments] = await Promise.all([
       data.categoryId ? this.prisma.category.findUnique({ where: { id: data.categoryId } }) : Promise.resolve(null),
       this.prisma.department.findMany({ select: { id: true, name: true, municipalityId: true, createdAt: true, updatedAt: true } })
@@ -108,6 +120,18 @@ export class OccurrencesService {
         protocol: `OC-${Date.now()}`
       } as any
     });
+
+    if (!areaValidation.valid) {
+      await this.prisma.managerialAlert.create({
+        data: {
+          type: 'OUTSIDE_SERVICE_AREA',
+          title: `Ocorrência fora da área: ${occurrence.protocol}`,
+          message: areaValidation.reason ?? 'A ocorrência foi marcada fora da área atendida.',
+          level: AlertLevel.WARNING,
+          occurrenceId: occurrence.id
+        }
+      });
+    }
 
     await this.prisma.occurrenceMovement.create({
       data: {

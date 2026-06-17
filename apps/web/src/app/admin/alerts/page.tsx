@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { fetchAlerts } from '../../../lib/api';
+import { fetchAlerts, getStoredAccessToken } from '../../../lib/api';
 import { GlobalFiltersBar, type GlobalFilters } from '../../../components/global-filters';
 
 export default function AlertsPage() {
@@ -16,15 +16,20 @@ export default function AlertsPage() {
     priority: '',
     source: ''
   });
-  const alerts = useQuery({ queryKey: ['alerts', filters], queryFn: () => fetchAlerts(filters) });
+  const alerts = useQuery({
+    queryKey: ['alerts', filters],
+    queryFn: () => fetchAlerts(filters, getStoredAccessToken()),
+    staleTime: 60_000
+  });
 
   return (
     <section className="admin-shell">
       <header className="hero">
-        <p className="eyebrow">Alerts</p>
+        <p className="eyebrow">Alertas</p>
         <h2>Alertas gerenciais</h2>
       </header>
       <GlobalFiltersBar value={filters} onChange={setFilters} />
+      {alerts.isLoading ? <p>Carregando alertas...</p> : null}
       <div className="alert-list">
         {(alerts.data ?? []).map((item: any) => (
           <article className="list-item" key={item.id}>

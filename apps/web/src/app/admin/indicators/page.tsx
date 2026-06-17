@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { fetchCategoryIndicators, fetchDepartmentIndicators, fetchNeighborhoodIndicators, fetchStatusIndicators } from '../../../lib/api';
+import { fetchCategoryIndicators, fetchDepartmentIndicators, fetchNeighborhoodIndicators, fetchStatusIndicators, getStoredAccessToken } from '../../../lib/api';
 import { GlobalFiltersBar, type GlobalFilters } from '../../../components/global-filters';
 
 export default function IndicatorsPage() {
@@ -18,20 +18,37 @@ export default function IndicatorsPage() {
     source: ''
   });
   const queryFilters = useMemo(() => filters, [filters]);
-  const status = useQuery({ queryKey: ['status-indicators', queryFilters], queryFn: () => fetchStatusIndicators(queryFilters) });
-  const departments = useQuery({ queryKey: ['department-indicators', queryFilters], queryFn: () => fetchDepartmentIndicators(queryFilters) });
-  const categories = useQuery({ queryKey: ['category-indicators', queryFilters], queryFn: () => fetchCategoryIndicators(queryFilters) });
-  const neighborhoods = useQuery({ queryKey: ['neighborhood-indicators', queryFilters], queryFn: () => fetchNeighborhoodIndicators(queryFilters) });
+  const status = useQuery({
+    queryKey: ['status-indicators', queryFilters],
+    queryFn: () => fetchStatusIndicators(queryFilters, getStoredAccessToken()),
+    staleTime: 60_000
+  });
+  const departments = useQuery({
+    queryKey: ['department-indicators', queryFilters],
+    queryFn: () => fetchDepartmentIndicators(queryFilters, getStoredAccessToken()),
+    staleTime: 60_000
+  });
+  const categories = useQuery({
+    queryKey: ['category-indicators', queryFilters],
+    queryFn: () => fetchCategoryIndicators(queryFilters, getStoredAccessToken()),
+    staleTime: 60_000
+  });
+  const neighborhoods = useQuery({
+    queryKey: ['neighborhood-indicators', queryFilters],
+    queryFn: () => fetchNeighborhoodIndicators(queryFilters, getStoredAccessToken()),
+    staleTime: 60_000
+  });
 
   const statusData = (status.data ?? []).map((item: any) => ({ name: item.status, value: item.quantity }));
 
   return (
     <section className="admin-shell">
       <header className="hero">
-        <p className="eyebrow">Indicators</p>
+        <p className="eyebrow">Indicadores</p>
         <h2>Indicadores por status, secretaria, categoria e bairro</h2>
       </header>
       <GlobalFiltersBar value={filters} onChange={setFilters} />
+      {status.isLoading || departments.isLoading || categories.isLoading || neighborhoods.isLoading ? <p>Carregando indicadores...</p> : null}
       <div className="two-col">
         <article className="chart-card">
           <h3>Status</h3>

@@ -4,7 +4,7 @@ export default function ExecutiveMapPage() {
   return (
     <section className="admin-shell">
       <header className="hero">
-        <p className="eyebrow">Maps</p>
+        <p className="eyebrow">Mapas</p>
         <h2>Mapa executivo</h2>
       </header>
       <ExecutiveMap />

@@ -17,8 +17,16 @@ export default function ExecutiveDashboardPage() {
     source: ''
   });
   const queryFilters = useMemo(() => filters, [filters]);
-  const dashboard = useQuery({ queryKey: ['executive-dashboard', queryFilters], queryFn: () => fetchExecutiveDashboard(queryFilters) });
-  const summary = useQuery({ queryKey: ['executive-summary', queryFilters], queryFn: () => fetchExecutiveSummary(queryFilters) });
+  const dashboard = useQuery({
+    queryKey: ['executive-dashboard', queryFilters],
+    queryFn: () => fetchExecutiveDashboard(queryFilters),
+    staleTime: 60_000
+  });
+  const summary = useQuery({
+    queryKey: ['executive-summary', queryFilters],
+    queryFn: () => fetchExecutiveSummary(queryFilters),
+    staleTime: 60_000
+  });
   const data = dashboard.data ?? {};
 
   const metrics = [
@@ -31,7 +39,7 @@ export default function ExecutiveDashboardPage() {
   return (
     <section className="admin-shell">
       <header className="hero">
-        <p className="eyebrow">Executive Dashboard</p>
+        <p className="eyebrow">Painel Executivo</p>
         <h2>Painel executivo municipal</h2>
         <p>Visão consolidada da operação com resumo automático e indicadores principais.</p>
       </header>

@@ -11,6 +11,41 @@ export class AnalyticsController {
     return this.analyticsService.executiveDashboard(query);
   }
 
+  @Get('indicadores/status')
+  statusIndicatorsPt(@Query() query: GlobalFiltersDto) {
+    return this.analyticsService.statusIndicators(query);
+  }
+
+  @Get('indicadores/secretarias')
+  departmentIndicatorsPt(@Query() query: GlobalFiltersDto) {
+    return this.analyticsService.departmentIndicators(query);
+  }
+
+  @Get('indicadores/categorias')
+  categoryIndicatorsPt(@Query() query: GlobalFiltersDto) {
+    return this.analyticsService.categoryIndicators(query);
+  }
+
+  @Get('indicadores/bairros')
+  neighborhoodIndicatorsPt(@Query() query: GlobalFiltersDto) {
+    return this.analyticsService.neighborhoodIndicators(query);
+  }
+
+  @Get('indicadores/sla')
+  slaIndicators(@Query() query: GlobalFiltersDto) {
+    return this.analyticsService.generateSlaIndicators(query);
+  }
+
+  @Get('indicadores/satisfacao')
+  satisfactionIndicators(@Query() query: GlobalFiltersDto) {
+    return this.analyticsService.executiveDashboard(query);
+  }
+
+  @Get('indicadores/reincidencia')
+  recurrenceIndicators(@Query() query: GlobalFiltersDto) {
+    return this.analyticsService.neighborhoodIndicators(query);
+  }
+
   @Get('indicators/status')
   statusIndicators(@Query() query: GlobalFiltersDto) {
     return this.analyticsService.statusIndicators(query);
@@ -36,6 +71,12 @@ export class AnalyticsController {
     return this.analyticsService.ranking(query);
   }
 
+  @Get('ranking/demandas')
+  rankingDemandas(@Query() query: GlobalFiltersDto) {
+    return this.analyticsService.ranking(query);
+  }
+
+  @Post('prioritizacao/recalcular')
   @Post('prioritization/recalculate')
   recalculatePrioritization() {
     return this.analyticsService.recalculatePrioritization();
@@ -46,8 +87,24 @@ export class AnalyticsController {
     return this.analyticsService.alerts();
   }
 
+  @Post('ia/resumo-gerencial')
   @Post('ai/executive-summary')
   executiveSummary(@Body() body: GlobalFiltersDto) {
+    return this.analyticsService.generateExecutiveSummary(body);
+  }
+
+  @Post('ia/sugerir-prioridade')
+  suggestPriority(@Body() body: GlobalFiltersDto) {
+    return this.analyticsService.generateExecutiveSummary(body);
+  }
+
+  @Post('ia/sugerir-categoria')
+  suggestCategory(@Body() body: GlobalFiltersDto) {
+    return this.analyticsService.generateExecutiveSummary(body);
+  }
+
+  @Post('ia/detectar-duplicidade')
+  detectDuplicate(@Body() body: GlobalFiltersDto) {
     return this.analyticsService.generateExecutiveSummary(body);
   }
 }

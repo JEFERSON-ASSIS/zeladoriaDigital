@@ -30,6 +30,12 @@ export async function fetchDashboardData(accessToken?: string) {
   };
 }
 
+export async function fetchUsers(accessToken?: string) {
+  const response = await fetch(`${API_URL}/users`, { cache: 'no-store', headers: authHeaders(accessToken) });
+  const users = await safeJson<any[]>(response);
+  return users ?? [];
+}
+
 export async function fetchServiceOrders(accessToken?: string) {
   const response = await fetch(`${API_URL}/occurrences`, { cache: 'no-store', headers: authHeaders(accessToken) });
   const occurrences = await safeJson<any[]>(response);

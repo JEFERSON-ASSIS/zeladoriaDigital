@@ -17,21 +17,25 @@ export default function TransparencyPage() {
     source: ''
   });
   const queryFilters = useMemo(() => filters, [filters]);
-  const dashboard = useQuery({ queryKey: ['public-transparency', queryFilters], queryFn: () => fetchPublicTransparency(queryFilters) });
+  const dashboard = useQuery({
+    queryKey: ['public-transparency', queryFilters],
+    queryFn: () => fetchPublicTransparency(queryFilters),
+    staleTime: 60_000
+  });
   const data = dashboard.data ?? {};
 
   return (
     <section className="admin-shell">
       <header className="hero">
-        <p className="eyebrow">Transparency</p>
-        <h2>Portal de transparência</h2>
-        <p>Sem exposição de dados pessoais sensíveis.</p>
+        <p className="eyebrow">Transparencia</p>
+        <h2>Portal de transparencia</h2>
+        <p>Sem exposicao de dados pessoais sensiveis.</p>
       </header>
       <GlobalFiltersBar value={filters} onChange={setFilters} />
       <div className="metrics">
         <article className="metric"><span>Total de demandas</span><strong>{data.totalDemandas ?? 0}</strong></article>
-        <article className="metric"><span>Concluídas</span><strong>{data.demandasConcluidas ?? 0}</strong></article>
-        <article className="metric"><span>Tempo médio</span><strong>{data.tempoMedioHoras ?? 0}h</strong></article>
+        <article className="metric"><span>Concluidas</span><strong>{data.demandasConcluidas ?? 0}</strong></article>
+        <article className="metric"><span>Tempo medio</span><strong>{data.tempoMedioHoras ?? 0}h</strong></article>
         <article className="metric"><span>Sigilo</span><strong>Ativo</strong></article>
       </div>
       <div className="two-col">

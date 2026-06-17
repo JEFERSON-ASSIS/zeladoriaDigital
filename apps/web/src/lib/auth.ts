@@ -13,12 +13,12 @@ export type AuthSession = {
 };
 
 export const ROLE_NAVIGATION: Record<SessionRole, string[]> = {
-  ADMIN: ['Dashboard', 'Ocorrências', 'Ordens de serviço', 'Mapa', 'Relatórios', 'Usuários'],
-  PREFEITURA: ['Dashboard', 'Ocorrências', 'Ordens de serviço', 'Mapa', 'Relatórios'],
-  SECRETARIA: ['Dashboard', 'Ocorrências', 'Ordens de serviço', 'Mapa'],
-  TRIAGEM: ['Dashboard', 'Ocorrências', 'Ordens de serviço'],
-  EQUIPE_CAMPO: ['Dashboard', 'Ordens de serviço'],
-  CIDADAO: ['Dashboard', 'Nova ocorrência', 'Minhas solicitações']
+  ADMIN: ['Painel', 'Ocorrencias', 'Ordens de servico', 'Mapa', 'Relatorios', 'Usuarios'],
+  PREFEITURA: ['Painel', 'Ocorrencias', 'Ordens de servico', 'Mapa', 'Relatorios'],
+  SECRETARIA: ['Painel', 'Ocorrencias', 'Ordens de servico', 'Mapa'],
+  TRIAGEM: ['Painel', 'Ocorrencias', 'Ordens de servico'],
+  EQUIPE_CAMPO: ['Painel', 'Ordens de servico'],
+  CIDADAO: ['Painel', 'Nova ocorrencia', 'Minhas solicitacoes']
 };
 
 const SESSION_KEY = 'zeladoria.session';
@@ -49,21 +49,21 @@ export function getNavigationForRole(role?: SessionRole | null) {
 
 export function getNavigationHref(label: string) {
   switch (label) {
-    case 'Dashboard':
+    case 'Painel':
       return '/';
-    case 'Ocorrências':
+    case 'Ocorrencias':
       return '/ocorrencias';
-    case 'Ordens de serviço':
+    case 'Ordens de servico':
       return '/ordens-servico';
     case 'Mapa':
       return '/admin/maps/executive';
-    case 'Relatórios':
+    case 'Relatorios':
       return '/admin/reports';
-    case 'Usuários':
+    case 'Usuarios':
       return '/admin/users';
-    case 'Nova ocorrência':
+    case 'Nova ocorrencia':
       return '/nova-ocorrencia';
-    case 'Minhas solicitações':
+    case 'Minhas solicitacoes':
       return '/minhas-solicitacoes';
     default:
       return '#';

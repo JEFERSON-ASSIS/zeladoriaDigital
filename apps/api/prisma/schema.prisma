@@ -292,3 +292,19 @@ model OccurrenceRating {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
+
+model ServiceArea {
+  id                   String   @id @default(cuid())
+  nome                 String
+  municipio            String
+  estado               String
+  latitudeCentro       Float?
+  longitudeCentro      Float?
+  raioMetros           Int?
+  polygonJson          Json?
+  validacaoAtiva       Boolean  @default(true)
+  bloquearForaDaArea   Boolean  @default(false)
+  ativo                Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}

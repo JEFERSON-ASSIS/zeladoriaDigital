@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { OccurrenceStatus } from '@prisma/client';
+import { OccurrenceStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
@@ -7,32 +7,33 @@ export class TransparencyService {
   constructor(private readonly prisma: PrismaService) {}
 
   async summary(filters: { periodStart?: string; periodEnd?: string; categoryId?: string; neighborhoodId?: string; status?: string; priority?: string } = {}) {
-    const where: Record<string, unknown> = {};
+    const where: Prisma.OccurrenceWhereInput = {};
 
     if (filters.periodStart || filters.periodEnd) {
       where.createdAt = {};
-      if (filters.periodStart) (where.createdAt as Record<string, Date>).gte = new Date(filters.periodStart);
+      if (filters.periodStart) where.createdAt.gte = new Date(filters.periodStart);
       if (filters.periodEnd) {
         const end = new Date(filters.periodEnd);
         end.setHours(23, 59, 59, 999);
-        (where.createdAt as Record<string, Date>).lte = end;
+        where.createdAt.lte = end;
       }
     }
     if (filters.categoryId) where.categoryId = filters.categoryId;
     if (filters.neighborhoodId) where.neighborhoodId = filters.neighborhoodId;
-    if (filters.status) where.status = filters.status;
-    if (filters.priority) where.priority = filters.priority;
+    if (filters.status) where.status = filters.status as OccurrenceStatus;
+    if (filters.priority) where.priority = filters.priority as never;
 
     const occurrences = await this.prisma.occurrence.findMany({
-      where: where as never,
+      where,
       select: {
         id: true,
         status: true,
         priority: true,
         createdAt: true,
+        updatedAt: true,
         category: { select: { name: true } },
         neighborhood: { select: { name: true } },
-        serviceOrders: { select: { finishedAt: true, startedAt: true } }
+        serviceOrders: { select: { finishedAt: true, startedAt: true, slaHours: true } }
       },
       orderBy: { createdAt: 'desc' }
     });
@@ -55,11 +56,13 @@ export class TransparencyService {
 
     const topCategories = this.rank(occurrences.map((item) => item.category?.name ?? 'Sem categoria'));
     const topNeighborhoods = this.rank(occurrences.map((item) => item.neighborhood?.name ?? 'Sem bairro'));
+    const avgSla = this.averageSla(occurrences);
 
     return {
       totalDemandas: total,
       demandasConcluidas: completed,
       tempoMedioHoras: averageResolutionHours,
+      tempoMedioSlaHoras: avgSla,
       categoriasMaisFrequentes: topCategories.slice(0, 5),
       bairrosMaisAtendidos: topNeighborhoods.slice(0, 5)
     };
@@ -73,5 +76,11 @@ export class TransparencyService {
     return Object.entries(counts)
       .sort((a, b) => b[1] - a[1])
       .map(([label, value]) => ({ label, value }));
+  }
+
+  private averageSla(items: Array<{ serviceOrders: Array<{ slaHours: number | null }> }>) {
+    const orders = items.flatMap((item) => item.serviceOrders);
+    if (!orders.length) return 0;
+    return Math.round(orders.reduce((sum, order) => sum + (order.slaHours ?? 0), 0) / orders.length);
   }
 }

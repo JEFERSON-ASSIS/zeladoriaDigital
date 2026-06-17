@@ -55,6 +55,7 @@ export class PriorityService {
 
   async calculateAndPersist(occurrenceId: string, occurrence: Pick<Occurrence, 'address' | 'createdAt' | 'priority'>) {
     const score = this.calculatePriority({
+      title: undefined,
       description: occurrence.address,
       address: occurrence.address
     }).score;

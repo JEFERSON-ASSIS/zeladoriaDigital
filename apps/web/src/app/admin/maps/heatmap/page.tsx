@@ -4,7 +4,7 @@ export default function HeatmapPage() {
   return (
     <section className="admin-shell">
       <header className="hero">
-        <p className="eyebrow">Heatmap</p>
+        <p className="eyebrow">Mapa de calor</p>
         <h2>Mapa de calor</h2>
       </header>
       <HeatmapView />

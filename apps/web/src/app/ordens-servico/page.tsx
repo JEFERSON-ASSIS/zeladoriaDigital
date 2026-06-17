@@ -82,11 +82,11 @@ export default function ServiceOrdersPage() {
     await registerServiceOrderExecution(
       orderId,
       {
-        teamNote: draftNote || 'Execução registrada pela equipe.'
+        teamNote: draftNote || 'Execucao registrada pela equipe.'
       },
       currentSession.accessToken
     );
-    setActionMessage('Execução registrada.');
+    setActionMessage('Execucao registrada.');
     setDraftNote('');
     await refreshOrders();
   }
@@ -101,7 +101,7 @@ export default function ServiceOrdersPage() {
       },
       currentSession.accessToken
     );
-    setActionMessage('OS finalizada e ocorrência concluída.');
+    setActionMessage('OS finalizada e ocorrencia concluida.');
     setDraftNote('');
     await refreshOrders();
   }
@@ -111,8 +111,8 @@ export default function ServiceOrdersPage() {
       <main className="login-shell">
         <section className="login-card">
           <p className="eyebrow">Carregando</p>
-          <h1>Ordens de serviço...</h1>
-          <p className="login-copy">Buscando os registros vinculados às ocorrências.</p>
+          <h1>Ordens de servico...</h1>
+          <p className="login-copy">Buscando os registros vinculados as ocorrencias.</p>
         </section>
       </main>
     );
@@ -128,11 +128,11 @@ export default function ServiceOrdersPage() {
             <a
               key={item}
               href={
-                item === 'Dashboard'
+                item === 'Painel'
                   ? '/'
-                  : item === 'Ocorrências'
+                  : item === 'Ocorrencias'
                     ? '/ocorrencias'
-                    : item === 'Ordens de serviço'
+                    : item === 'Ordens de servico'
                       ? '/ordens-servico'
                       : '#'
               }
@@ -147,9 +147,9 @@ export default function ServiceOrdersPage() {
       </aside>
       <section className="content">
         <header className="hero">
-          <p className="eyebrow">Operação</p>
-          <h2>Ordens de serviço geradas a partir das ocorrências</h2>
-          <p>As OS são criadas automaticamente quando a ocorrência entra no fluxo operacional.</p>
+          <p className="eyebrow">Operacao</p>
+          <h2>Ordens de servico geradas a partir das ocorrencias</h2>
+          <p>As OS sao criadas automaticamente quando a ocorrencia entra no fluxo operacional.</p>
         </header>
 
         <div className="panel">
@@ -163,21 +163,21 @@ export default function ServiceOrdersPage() {
           {orders.length === 0 ? (
             <article className="panel">
               <h3>Nenhuma OS encontrada</h3>
-              <p>Atualize o status de uma ocorrência para EM_ANALISE, ENCAMINHADO ou EM_EXECUCAO para criar uma OS.</p>
+              <p>Atualize o status de uma ocorrencia para EM_ANALISE, ENCAMINHADO ou EM_EXECUCAO para criar uma OS.</p>
             </article>
           ) : (
             orders.map((order) => (
               <article key={order.id} className="panel order-card">
                 <p className="eyebrow">{order.occurrenceProtocol}</p>
                 <h3>{order.occurrenceTitle}</h3>
-                <p>Status da ocorrência: {order.occurrenceStatus}</p>
+                <p>Status da ocorrencia: {order.occurrenceStatus}</p>
                 <p>Prioridade: {order.priority}</p>
                 <p>SLA: {order.slaHours ?? '-'} horas</p>
-                <p>Secretaria: {order.department?.name ?? 'Não definida'}</p>
-                <p>Equipe: {order.fieldTeam?.name ?? 'Não definida'}</p>
-                <p>{order.teamNote ?? 'Sem observações adicionais.'}</p>
+                <p>Secretaria: {order.department?.name ?? 'Nao definida'}</p>
+                <p>Equipe: {order.fieldTeam?.name ?? 'Nao definida'}</p>
+                <p>{order.teamNote ?? 'Sem observacoes adicionais.'}</p>
                 <label style={{ display: 'grid', gap: 8, marginTop: 16 }}>
-                  Observação operacional
+                  Observacao operacional
                   <textarea
                     rows={3}
                     value={draftNote}
@@ -190,7 +190,7 @@ export default function ServiceOrdersPage() {
                     Iniciar OS
                   </button>
                   <button type="button" className="secondary-button" onClick={() => handleExecution(order.id)}>
-                    Registrar execução
+                    Registrar execucao
                   </button>
                   <button type="button" onClick={() => handleFinish(order.id)}>
                     Finalizar OS

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { exportAdminGrid, fetchReportsSummary } from '../../../lib/api';
+import { exportAdminGrid, fetchReportsSummary, getStoredAccessToken } from '../../../lib/api';
 import { GlobalFiltersBar, type GlobalFilters } from '../../../components/global-filters';
 
 export default function ReportsPage() {
@@ -21,7 +21,8 @@ export default function ReportsPage() {
 
   const report = useQuery({
     queryKey: ['reports-summary', queryFilters],
-    queryFn: () => fetchReportsSummary(queryFilters)
+    queryFn: () => fetchReportsSummary(queryFilters, getStoredAccessToken()),
+    staleTime: 60_000
   });
 
   async function handleExport() {
@@ -37,10 +38,11 @@ export default function ReportsPage() {
   return (
     <section className="admin-shell">
       <header className="hero">
-        <p className="eyebrow">Reports</p>
+        <p className="eyebrow">Relatórios</p>
         <h2>Relatórios gerenciais</h2>
       </header>
       <GlobalFiltersBar value={filters} onChange={setFilters} />
+      {report.isLoading ? <p>Carregando relatorios...</p> : null}
       <div className="toolbar">
         <select value={exportFormat} onChange={(e) => setExportFormat(e.target.value as 'pdf' | 'csv' | 'xlsx')}>
           <option value="csv">CSV</option>

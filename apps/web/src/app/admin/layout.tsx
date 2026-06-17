@@ -1,13 +1,14 @@
 import Link from 'next/link';
 
 const menu = [
-  ['Executive Dashboard', '/admin/executive-dashboard'],
-  ['Indicators', '/admin/indicators'],
+  ['Painel Executivo', '/admin/dashboard/executivo'],
+  ['Indicadores', '/admin/indicators'],
   ['Ranking', '/admin/ranking'],
-  ['Reports', '/admin/reports'],
-  ['Alerts', '/admin/alerts'],
-  ['Maps', '/admin/maps/executive'],
-  ['Transparency', '/transparency']
+  ['Relatorios', '/admin/reports'],
+  ['Alertas', '/admin/alerts'],
+  ['Area de Atendimento', '/admin/configuracoes/area-atendimento'],
+  ['Mapas', '/admin/maps/executive'],
+  ['Transparencia', '/transparency']
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -15,10 +16,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <main className="admin-layout">
       <aside className="admin-sidebar">
         <h1>Zeladoria Digital</h1>
-        <p>Gestão executiva e inteligência operacional</p>
+        <p>Gestao executiva e inteligencia operacional</p>
         <nav>
           {menu.map(([label, href]) => (
-            <Link key={href} href={href}>{label}</Link>
+            <Link key={href} href={href}>
+              {label}
+            </Link>
           ))}
         </nav>
       </aside>
