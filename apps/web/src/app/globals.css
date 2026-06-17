@@ -201,6 +201,25 @@ a { color: inherit; text-decoration: none; }
 .heat-row-top { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
 .heat-bar { height: 14px; border-radius: 999px; background: rgba(15,23,42,.08); overflow: hidden; }
 .heat-fill { height: 100%; background: linear-gradient(90deg, #2563eb, #7c3aed); border-radius: inherit; }
+.offline-screen {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at top left, rgba(37,99,235,.18), transparent 26%),
+    radial-gradient(circle at bottom right, rgba(124,58,237,.16), transparent 22%),
+    linear-gradient(180deg, #f7faff, var(--bg));
+}
+.offline-card {
+  width: min(640px, 100%);
+  background: rgba(255,255,255,.92);
+  border: 1px solid rgba(15,23,42,.08);
+  border-radius: 28px;
+  padding: 36px;
+  box-shadow: 0 20px 50px rgba(15,23,42,.12);
+}
+.offline-card h1 { margin: 8px 0 12px; font-size: clamp(2rem, 5vw, 3.2rem); }
 @media (max-width: 900px) {
   .shell { grid-template-columns: 1fr; }
   .admin-layout { grid-template-columns: 1fr; }
