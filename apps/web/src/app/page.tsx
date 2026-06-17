@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { clearSession, getNavigationForRole, getNavigationHref, getSession, type AuthSession } from '../lib/auth';
 import { fetchDashboardData } from '../lib/api';
 import { fetchCurrentUser } from '../lib/auth-api';
+import { InstallPWAButton } from '../components/install-pwa-button';
 
 type DashboardData = {
   occurrences: any[];
@@ -120,10 +121,11 @@ export default function HomePage() {
         </button>
       </aside>
       <section className="content">
-        <header className="hero">
+                <header className="hero">
           <p className="eyebrow">Plataforma municipal</p>
           <h2>Base executiva para operação, triagem e atendimento.</h2>
           <p>Visão executiva com indicadores de operação, mapa e status em tempo real a partir da base atual.</p>
+          {session?.user.role === 'CIDADAO' ? <InstallPWAButton /> : null}
         </header>
         <div className="cards">
           {[
@@ -235,3 +237,5 @@ export default function HomePage() {
     </main>
   );
 }
+
+

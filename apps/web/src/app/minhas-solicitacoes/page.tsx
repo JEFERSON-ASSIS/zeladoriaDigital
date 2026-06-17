@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -11,6 +11,7 @@ import {
 } from '../../lib/auth';
 import { fetchCurrentUser } from '../../lib/auth-api';
 import { fetchMyOccurrences, fetchOccurrenceByProtocol } from '../../lib/api';
+import { InstallPWAButton } from '../../components/install-pwa-button';
 
 type Movement = {
   id: string;
@@ -83,8 +84,8 @@ export default function MyRequestsPage() {
       <main className="login-shell">
         <section className="login-card">
           <p className="eyebrow">Carregando</p>
-          <h1>Minhas solicitações...</h1>
-          <p className="login-copy">Consultando o histórico do cidadão.</p>
+          <h1>Minhas solicitaÃ§Ãµes...</h1>
+          <p className="login-copy">Consultando o histÃ³rico do cidadÃ£o.</p>
         </section>
       </main>
     );
@@ -94,7 +95,7 @@ export default function MyRequestsPage() {
     <main className="shell">
       <aside className="sidebar">
         <h1>Zeladoria Digital</h1>
-        <p className="sidebar-user">{session?.user.name ?? 'Cidadão'}</p>
+        <p className="sidebar-user">{session?.user.name ?? 'CidadÃ£o'}</p>
         <nav>
           {navigation.map((item) => (
             <a key={item} href={getNavigationHref(item)}>
@@ -108,10 +109,11 @@ export default function MyRequestsPage() {
       </aside>
 
       <section className="content">
-        <header className="hero">
+                <header className="hero">
           <p className="eyebrow">Cidadão</p>
           <h2>Minhas solicitações</h2>
           <p>Acompanhe seus protocolos, status e o histórico de movimentações.</p>
+          <InstallPWAButton />
         </header>
 
         <section className="panel">
@@ -137,7 +139,7 @@ export default function MyRequestsPage() {
 
         <div className="cards">
           <article className="card">
-            <span>Total de solicitações</span>
+            <span>Total de solicitaÃ§Ãµes</span>
             <strong>{items.length}</strong>
           </article>
           <article className="card">
@@ -145,7 +147,7 @@ export default function MyRequestsPage() {
             <strong>{items.filter((item) => !['CONCLUIDO', 'CANCELADO'].includes(item.status)).length}</strong>
           </article>
           <article className="card">
-            <span>Concluídas</span>
+            <span>ConcluÃ­das</span>
             <strong>{items.filter((item) => item.status === 'CONCLUIDO').length}</strong>
           </article>
         </div>
@@ -153,8 +155,8 @@ export default function MyRequestsPage() {
         <div className="orders-grid">
           {items.length === 0 ? (
             <article className="panel">
-              <h3>Nenhuma solicitação encontrada</h3>
-              <p>Abra uma nova ocorrência para começar a acompanhar seu protocolo.</p>
+              <h3>Nenhuma solicitaÃ§Ã£o encontrada</h3>
+              <p>Abra uma nova ocorrÃªncia para comeÃ§ar a acompanhar seu protocolo.</p>
             </article>
           ) : (
             items.map((item) => (
@@ -165,12 +167,12 @@ export default function MyRequestsPage() {
                 <p>Prioridade: {item.priority}</p>
                 <p>Categoria: {item.category?.name ?? 'Sem categoria'}</p>
                 <p>Bairro: {item.neighborhood?.name ?? 'Sem bairro'}</p>
-                <p>Endereço: {item.address}</p>
+                <p>EndereÃ§o: {item.address}</p>
                 <div className="timeline">
                   {(item.movements ?? []).map((movement) => (
                     <article key={movement.id}>
                       <strong>{movement.toStatus}</strong>
-                      <p>{movement.note ?? 'Movimentação registrada.'}</p>
+                      <p>{movement.note ?? 'MovimentaÃ§Ã£o registrada.'}</p>
                     </article>
                   ))}
                 </div>
@@ -182,3 +184,6 @@ export default function MyRequestsPage() {
     </main>
   );
 }
+
+
+

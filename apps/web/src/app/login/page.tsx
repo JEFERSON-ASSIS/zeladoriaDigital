@@ -43,6 +43,7 @@ export default function LoginPage() {
         <p className="eyebrow">Acesso</p>
         <h1>Entrar no Zeladoria Digital</h1>
         <p className="login-copy">Use um usuário cadastrado no banco para acessar o painel.</p>
+        <p className="login-copy">No celular, o app pode ser instalado na tela inicial.</p>
         <form onSubmit={onSubmit} className="login-form">
           <label>
             E-mail

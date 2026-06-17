@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -11,6 +11,7 @@ import {
 } from '../../lib/auth';
 import { createOccurrence, fetchCategories, fetchNeighborhoods } from '../../lib/api';
 import { fetchCurrentUser } from '../../lib/auth-api';
+import { InstallPWAButton } from '../../components/install-pwa-button';
 
 export default function NewOccurrencePage() {
   const router = useRouter();
@@ -74,7 +75,7 @@ export default function NewOccurrencePage() {
         session?.accessToken
       );
 
-      setSuccess(`Ocorrência registrada com protocolo ${result.protocol}.`);
+      setSuccess(`OcorrÃªncia registrada com protocolo ${result.protocol}.`);
       setForm({
         title: '',
         description: '',
@@ -84,7 +85,7 @@ export default function NewOccurrencePage() {
       });
       setCoords({});
     } catch {
-      setError('Não foi possível registrar a ocorrência.');
+      setError('NÃ£o foi possÃ­vel registrar a ocorrÃªncia.');
     } finally {
       setSubmitting(false);
     }
@@ -92,7 +93,7 @@ export default function NewOccurrencePage() {
 
   function captureLocation() {
     if (!navigator.geolocation) {
-      setError('Seu navegador não suporta geolocalização.');
+      setError('Seu navegador nÃ£o suporta geolocalizaÃ§Ã£o.');
       return;
     }
 
@@ -103,7 +104,7 @@ export default function NewOccurrencePage() {
           longitude: position.coords.longitude
         });
       },
-      () => setError('Não foi possível capturar a localização.')
+      () => setError('NÃ£o foi possÃ­vel capturar a localizaÃ§Ã£o.')
     );
   }
 
@@ -117,8 +118,8 @@ export default function NewOccurrencePage() {
       <main className="login-shell">
         <section className="login-card">
           <p className="eyebrow">Carregando</p>
-          <h1>Nova ocorrência...</h1>
-          <p className="login-copy">Preparando o formulário de atendimento.</p>
+          <h1>Nova ocorrÃªncia...</h1>
+          <p className="login-copy">Preparando o formulÃ¡rio de atendimento.</p>
         </section>
       </main>
     );
@@ -128,7 +129,7 @@ export default function NewOccurrencePage() {
     <main className="shell">
       <aside className="sidebar">
         <h1>Zeladoria Digital</h1>
-        <p className="sidebar-user">{session?.user.name ?? 'Cidadão'}</p>
+        <p className="sidebar-user">{session?.user.name ?? 'CidadÃ£o'}</p>
         <nav>
           {navigation.map((item) => (
             <a key={item} href={getNavigationHref(item)}>
@@ -142,24 +143,25 @@ export default function NewOccurrencePage() {
       </aside>
 
       <section className="content">
-        <header className="hero">
+                <header className="hero">
           <p className="eyebrow">Cidadão</p>
           <h2>Abra sua ocorrência</h2>
           <p>Preencha os dados principais e acompanhe o protocolo gerado automaticamente.</p>
+          <InstallPWAButton />
         </header>
 
         <section className="panel">
           <form className="occurrence-form" onSubmit={handleSubmit}>
             <label>
-              Título
+              TÃ­tulo
               <input value={form.title} onChange={(e) => setForm((current) => ({ ...current, title: e.target.value }))} />
             </label>
             <label>
-              Descrição
+              DescriÃ§Ã£o
               <textarea value={form.description} onChange={(e) => setForm((current) => ({ ...current, description: e.target.value }))} rows={5} />
             </label>
             <label>
-              Endereço
+              EndereÃ§o
               <input value={form.address} onChange={(e) => setForm((current) => ({ ...current, address: e.target.value }))} />
             </label>
             <div className="panel-grid">
@@ -203,10 +205,10 @@ export default function NewOccurrencePage() {
 
             <div className="form-actions">
               <button type="button" className="secondary-button" onClick={captureLocation}>
-                Capturar localização
+                Capturar localizaÃ§Ã£o
               </button>
               <button type="submit" disabled={submitting}>
-                {submitting ? 'Enviando...' : 'Registrar ocorrência'}
+                {submitting ? 'Enviando...' : 'Registrar ocorrÃªncia'}
               </button>
             </div>
           </form>
@@ -215,3 +217,6 @@ export default function NewOccurrencePage() {
     </main>
   );
 }
+
+
+

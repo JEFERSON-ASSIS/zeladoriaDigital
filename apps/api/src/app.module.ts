@@ -17,6 +17,7 @@ import { ExportModule } from './modules/export/export.module';
 import { JobsModule } from './modules/jobs/jobs.module';
 import { TransparencyModule } from './modules/transparency/transparency.module';
 import { ServiceAreaModule } from './modules/service-area/service-area.module';
+import { PushNotificationsModule } from './modules/push-notifications/push-notifications.module';
 
 @Module({
   imports: [
@@ -37,7 +38,8 @@ import { ServiceAreaModule } from './modules/service-area/service-area.module';
     ExportModule,
     JobsModule,
     TransparencyModule,
-    ServiceAreaModule
+    ServiceAreaModule,
+    PushNotificationsModule
   ]
 })
 export class AppModule {}

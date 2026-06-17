@@ -1,35 +1,41 @@
 # Entrega Fase PWA - Zeladoria Digital
 
-## Visao geral
+## Visão geral
 
-A etapa PWA foi incorporada ao sistema com foco em acesso mobile, experiencia offline e instalacao como aplicativo.
+A etapa PWA foi incorporada ao sistema com foco em acesso mobile, uso offline e instalação como aplicativo, priorizando a jornada do cidadão.
 
 ## Entregue
 
-- manifest da aplicacao web
-- registro automatico do service worker
-- pagina de offline com layout dedicado
-- cache basico para rotas principais
-- icones do aplicativo
-- documentacao de uso do PWA
+- manifest público da aplicação
+- service worker com cache do app shell e fallback offline
+- página offline dedicada
+- botões de instalação do aplicativo nas telas do cidadão
+- ícones PNG padrão e maskable
+- base para notificações push no backend
+- documentação de uso do PWA
 
 ## Arquivos principais
 
-- `apps/web/src/app/manifest.ts`
+- `apps/web/public/manifest.json`
+- `apps/web/public/service-worker.js`
+- `apps/web/public/offline.html`
+- `apps/web/public/icons/icon-192.png`
+- `apps/web/public/icons/icon-512.png`
+- `apps/web/public/icons/apple-touch-icon.png`
+- `apps/web/src/components/install-pwa-button.tsx`
 - `apps/web/src/app/providers.tsx`
-- `apps/web/public/sw.js`
-- `apps/web/src/app/offline/page.tsx`
-- `apps/web/public/icon.svg`
-- `apps/web/public/icon-192.svg`
-- `apps/web/public/icon-512.svg`
+- `apps/web/src/app/layout.tsx`
+- `apps/api/src/modules/push-notifications/push-notification.service.ts`
+- `apps/api/src/modules/push-notifications/push-notifications.module.ts`
 - `PWA_USO.md`
 
-## Validacao
+## Validação
 
 - build do frontend executado com sucesso
-- pagina offline acessivel
-- manifest exposto em `/manifest.webmanifest`
+- build da API executado com sucesso
+- manifest exposto em `/manifest.json`
+- registro do service worker feito apenas em produção
 
-## Observacao final
+## Observação final
 
-Esta etapa nao depende de credenciais externas e pode ser validada localmente no navegador.
+Esta etapa não depende de credenciais externas e pode ser validada localmente no navegador. O backend de push foi preparado como base para a próxima integração com notificações.

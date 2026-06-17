@@ -2,9 +2,10 @@
 
 ## O que foi habilitado
 
-- Registro do `service worker` no carregamento da aplicação web.
-- Fallback de navegação para a tela `/offline` quando não houver conexão.
-- Manifest com ícones do aplicativo.
+- Registro do `service worker` somente em produção.
+- Fallback de navegação para `offline.html` quando não houver conexão.
+- Manifest público com ícones do aplicativo.
+- Botão de instalação nas telas do cidadão.
 
 ## Como testar
 
@@ -16,6 +17,6 @@
 
 ## Observações
 
-- O `service worker` é registrado automaticamente em produção e também em ambiente local.
-- Os ícones do app estão em `apps/web/public`.
+- Os ícones do app estão em `apps/web/public/icons`.
+- O botão de instalação aparece quando o navegador suporta instalação ou no iPhone com instruções de acesso rápido.
 - Se quiser forçar atualização do cache, limpe os dados do site no navegador.
