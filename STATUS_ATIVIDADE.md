@@ -49,6 +49,7 @@ Entregar uma base funcional da plataforma de zeladoria municipal com backend, fr
 - Detecção simples de duplicidade
 - Kanban de ocorrências com drag and drop
 - Proteção de rotas por perfil no backend nas entidades principais
+- PWA básico entregue com manifest, service worker, offline e ícones
 
 ## Parcial
 
@@ -64,6 +65,7 @@ Entregar uma base funcional da plataforma de zeladoria municipal com backend, fr
 - Testes de controller e integração com banco
 - Fluxos de mapa, relatórios e uploads
 - Revisão final de UX da tela principal
+- PWA avançado com estratégia mais refinada de cache e testes automatizados de offline
 
 ## Problemas já encontrados e corrigidos
 
@@ -90,3 +92,5 @@ A atividade só deve ser considerada finalizada quando:
 - os fluxos principais estiverem navegáveis
 - os testes principais estiverem cobrindo os casos centrais
 - a consulta por protocolo e o fluxo de OS estiverem completos no produto
+
+

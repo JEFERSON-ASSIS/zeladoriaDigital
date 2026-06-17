@@ -58,11 +58,12 @@ O sistema já possui uma base funcional e navegavel com:
 
 ## Etapa final restante
 
-O WhatsApp foi definido como a ultima etapa principal da criacao do sistema.
+O WhatsApp segue como uma etapa principal importante, mas o PWA basico ja foi entregue.
 
 ## Próximo foco
 
 1. Integração real com WhatsApp
 2. Refinos de erro e tipagem
 3. Ajustes finais de UX e cobertura de testes
+
 
