@@ -80,13 +80,9 @@ A Fase 3 foi incorporada ao sistema com foco em inteligência gerencial, indicad
 - `ai-assistant.controller.spec.ts`
 - `jobs.service.spec.ts`
 
-## Pendências para a Fase 4
+## Status da Fase 4
 
-- integrar provider real de IA
-- gerar exportações binárias reais para PDF/XLSX
-- ampliar georreferenciamento com clusterização e heatmap real
-- aumentar cobertura de integração com banco
-- revisar desempenho em maior volume de dados
+A etapa seguinte foi formalizada em `ETAPA_4.md` e em `docs/entrega-fase-4.md`.
 
 ## Observação Final
 
