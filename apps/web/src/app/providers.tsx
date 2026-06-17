@@ -9,7 +9,16 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
+    if (process.env.NODE_ENV === 'production') {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+      return;
+    }
+
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      registrations.forEach((registration) => {
+        registration.unregister().catch(() => {});
+      });
+    });
   }, []);
 
   return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
