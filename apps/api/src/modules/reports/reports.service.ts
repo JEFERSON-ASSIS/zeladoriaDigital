@@ -1,10 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { OccurrenceStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { ExportService } from '../export/export.service';
 
 @Injectable()
 export class ReportsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly exportService: Pick<ExportService, 'exportGrid'> = {
+      exportGrid: async (format: 'pdf' | 'csv' | 'xlsx') => ({
+        format,
+        contentType: 'text/plain',
+        filename: `export.${format}`,
+        body: ''
+      })
+    } as unknown as Pick<ExportService, 'exportGrid'>
+  ) {}
 
   async generate(input: { periodStart?: string; periodEnd?: string }) {
     const where: Prisma.OccurrenceWhereInput = {};
@@ -34,16 +45,12 @@ export class ReportsService {
       topNeighborhoods: this.rank(items.map((item) => item.neighborhood?.name ?? 'Sem bairro')),
       topCategories: this.rank(items.map((item) => item.category?.name ?? 'Sem categoria')),
       topDepartments: this.rank(items.map((item) => item.serviceOrders[0]?.department?.name ?? item.suggestedDepartment?.name ?? 'Sem secretaria')),
-      executiveSummary: `Relatório gerado para o período ${input.periodStart ?? 'início'} até ${input.periodEnd ?? 'fim'}.`
+      executiveSummary: `Relatorio gerado para o periodo ${input.periodStart ?? 'inicio'} ate ${input.periodEnd ?? 'fim'}.`
     };
   }
 
   download(format: 'pdf' | 'csv' | 'xlsx') {
-    return {
-      format,
-      status: 'queued',
-      message: `Exportação ${format.toUpperCase()} preparada em mock para a fase atual.`
-    };
+    return this.exportService.exportGrid(format, {});
   }
 
   private rank(values: string[]) {

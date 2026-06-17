@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AlertLevel, OccurrenceStatus, PriorityLevel, Prisma } from '@prisma/client';
+import { AiAssistantService } from '../ai-assistant/ai-assistant.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { PriorityService } from '../priority/priority.service';
 import { GlobalFiltersDto } from './dto/global-filters.dto';
@@ -8,7 +9,19 @@ import { GlobalFiltersDto } from './dto/global-filters.dto';
 export class AnalyticsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly priorityService: PriorityService
+    private readonly priorityService: PriorityService,
+    private readonly aiAssistantService: Pick<
+      AiAssistantService,
+      'suggestCategory' | 'suggestPriority' | 'detectDuplicate' | 'generateExecutiveSummary'
+    > = {
+      suggestCategory: async () => 'Sem sugestao',
+      suggestPriority: async () => 'MEDIA',
+      detectDuplicate: async () => false,
+      generateExecutiveSummary: async () => ({ summary: 'Resumo indisponivel.' })
+    } as unknown as Pick<
+      AiAssistantService,
+      'suggestCategory' | 'suggestPriority' | 'detectDuplicate' | 'generateExecutiveSummary'
+    >
   ) {}
 
   async executiveDashboard(filters: GlobalFiltersDto = {}) {
@@ -274,14 +287,28 @@ export class AnalyticsService {
 
   async generateExecutiveSummary(filters: GlobalFiltersDto = {}) {
     const items = await this.loadOccurrences(filters);
+    const aiSummary = await this.aiAssistantService.generateExecutiveSummary(filters);
     return {
       summary: this.priorityService.generateManagementSummary(items),
+      aiSummary,
       mainProblems: items.slice(0, 5).map((item) => item.title ?? item.description),
       criticalDepartments: this.groupRanking(items, [], (item) => item.serviceOrders[0]?.department?.name ?? item.suggestedDepartment?.name ?? 'Sem secretaria').slice(0, 3),
       criticalNeighborhoods: this.groupRanking(items, [], (item) => item.neighborhood?.name ?? 'Sem bairro').slice(0, 3),
       trends: ['Demanda concentrada em infraestrutura'],
       recommendations: ['Priorizar SLAs críticos', 'Redistribuir equipes']
     };
+  }
+
+  suggestCategory(input: { title?: string; description: string }) {
+    return this.aiAssistantService.suggestCategory(input);
+  }
+
+  suggestPriority(input: { title?: string; description: string }) {
+    return this.aiAssistantService.suggestPriority(input);
+  }
+
+  detectDuplicate(input: { title?: string; description: string }) {
+    return this.aiAssistantService.detectDuplicate(input);
   }
 
   async generateSlaIndicators(filters: GlobalFiltersDto = {}) {

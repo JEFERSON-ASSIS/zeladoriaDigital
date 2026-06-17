@@ -4,6 +4,7 @@ import { AiAssistantService, MockIAProvider } from './ai-assistant.service';
 
 @Module({
   controllers: [AiAssistantController],
-  providers: [AiAssistantService, MockIAProvider]
+  providers: [AiAssistantService, MockIAProvider],
+  exports: [AiAssistantService]
 })
 export class AiAssistantModule {}

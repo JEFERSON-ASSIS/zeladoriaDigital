@@ -94,17 +94,17 @@ export class AnalyticsController {
   }
 
   @Post('ia/sugerir-prioridade')
-  suggestPriority(@Body() body: GlobalFiltersDto) {
-    return this.analyticsService.generateExecutiveSummary(body);
+  suggestPriority(@Body() body: { title?: string; description: string }) {
+    return this.analyticsService.suggestPriority(body);
   }
 
   @Post('ia/sugerir-categoria')
-  suggestCategory(@Body() body: GlobalFiltersDto) {
-    return this.analyticsService.generateExecutiveSummary(body);
+  suggestCategory(@Body() body: { title?: string; description: string }) {
+    return this.analyticsService.suggestCategory(body);
   }
 
   @Post('ia/detectar-duplicidade')
-  detectDuplicate(@Body() body: GlobalFiltersDto) {
-    return this.analyticsService.generateExecutiveSummary(body);
+  detectDuplicate(@Body() body: { title?: string; description: string }) {
+    return this.analyticsService.detectDuplicate(body);
   }
 }

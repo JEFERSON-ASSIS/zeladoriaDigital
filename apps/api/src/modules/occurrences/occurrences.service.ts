@@ -5,6 +5,7 @@ import { UpdateOccurrenceDto } from './dto/update-occurrence.dto';
 import { AlertLevel, OccurrenceStatus, PriorityLevel, Prisma } from '@prisma/client';
 import { PriorityService } from '../priority/priority.service';
 import { ServiceAreaService } from '../service-area/service-area.service';
+import { WhatsAppService } from '../whatsapp/whatsapp.service';
 
 @Injectable()
 export class OccurrencesService {
@@ -13,7 +14,15 @@ export class OccurrencesService {
     private readonly priorityService: PriorityService,
     private readonly serviceAreaService: Pick<ServiceAreaService, 'validate'> = {
       validate: async () => ({ valid: true, blocked: false, reason: 'Validação geográfica desativada.' })
-    } as unknown as Pick<ServiceAreaService, 'validate'>
+    } as unknown as Pick<ServiceAreaService, 'validate'>,
+    private readonly whatsappService: Pick<
+      WhatsAppService,
+      'sendProtocolCreated' | 'sendStatusChanged' | 'sendOccurrenceFinished'
+    > = {
+      sendProtocolCreated: async () => ({ queued: false }),
+      sendStatusChanged: async () => ({ queued: false }),
+      sendOccurrenceFinished: async () => ({ queued: false })
+    } as unknown as Pick<WhatsAppService, 'sendProtocolCreated' | 'sendStatusChanged' | 'sendOccurrenceFinished'>
   ) {}
 
   findAll() {
@@ -142,6 +151,10 @@ export class OccurrencesService {
       }
     });
 
+    await this.whatsappService.sendProtocolCreated({
+      protocol: occurrence.protocol
+    });
+
     return this.prisma.occurrence.findUnique({
       where: { id: occurrence.id },
       include: {
@@ -203,6 +216,11 @@ export class OccurrencesService {
           toStatus: data.status as OccurrenceStatus,
           note: 'Status atualizado.'
         }
+      });
+
+      await this.whatsappService.sendStatusChanged({
+        protocol: current.protocol,
+        status: data.status as string
       });
     }
 
@@ -295,6 +313,16 @@ export class OccurrencesService {
         note: 'Ocorrência concluída após finalização da OS.'
       }
     });
+
+    const occurrence = await this.prisma.occurrence.findUnique({
+      where: { id: current.occurrenceId },
+      select: { protocol: true }
+    });
+    if (occurrence) {
+      await this.whatsappService.sendOccurrenceFinished({
+        protocol: occurrence.protocol
+      });
+    }
 
     return this.prisma.serviceOrder.findUnique({
       where: { id: updated.id },
