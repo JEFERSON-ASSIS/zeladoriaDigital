@@ -50,16 +50,16 @@ Entregar uma base funcional da plataforma de zeladoria municipal com backend, fr
 - Kanban de ocorrências com drag and drop
 - Proteção de rotas por perfil no backend nas entidades principais
 - PWA básico entregue com manifest, service worker, offline e ícones
+- WhatsApp com histórico persistido e envio opcional via API externa quando configurada
 
 ## Parcial
 
-- WhatsApp ainda é simulado, mas a priorização já calcula score, nível e sugestão de departamento
+- WhatsApp registra histórico persistido e pode enviar via API externa quando houver credenciais
 - README existe, mas ainda pode evoluir para refletir com mais precisão o estado final do produto
 - Base de dados já existe, mas ainda pode evoluir com mais dados de demo e cenários de teste
 
 ## Pendente
 
-- Integração real com WhatsApp
 - Melhor tratamento de erros na API
 - Tipagem mais forte nos payloads, reduzindo uso de `any`
 - Testes de controller e integração com banco
@@ -80,7 +80,7 @@ Entregar uma base funcional da plataforma de zeladoria municipal com backend, fr
 1. Evoluir relatórios, mapa e indicadores executivos
 2. Integrar upload real no MinIO
 3. Melhorar testes e tratamento de erros
-4. Conectar WhatsApp real quando houver credenciais
+4. Refinar a camada de comunicação com WhatsApp e notificações operacionais
 
 ## Critério de conclusão
 

@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { WhatsAppService } from './whatsapp.service';
 
 @Controller('whatsapp')
@@ -18,5 +18,10 @@ export class WhatsAppController {
   @Post('occurrence-finished')
   occurrenceFinished(@Body() body: { protocol: string; phone?: string; message?: string }) {
     return this.whatsappService.sendOccurrenceFinished(body);
+  }
+
+  @Get('history')
+  history(@Query('limit') limit?: string) {
+    return this.whatsappService.listHistory(limit ? Number(limit) : 50);
   }
 }

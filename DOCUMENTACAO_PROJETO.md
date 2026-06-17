@@ -90,7 +90,7 @@ O Zeladoria Digital é uma plataforma municipal para registro, triagem, encaminh
 - `categories`: categorias de ocorrência
 - `neighborhoods`: bairros
 - `priority`: priorização e sugestões
-- `whatsapp`: integração simulada por enquanto
+- `whatsapp`: histórico persistido e envio opcional via API externa configurável
 
 ### Frontend
 
@@ -113,7 +113,7 @@ O sistema já está em um estado funcional, com:
 
 ### Última etapa principal
 
-- Integração real com WhatsApp
+- Comunicação operacional com WhatsApp e histórico de mensagens
 
 ### Itens complementares
 
@@ -123,13 +123,14 @@ O sistema já está em um estado funcional, com:
 - Proteção de rotas por perfil mais refinada
 - Revisão final de UX
 - Fluxos de mapa, relatórios e uploads
+- Evolução da integração de notificações e mensagens
 
 ## Ordem de prioridade restante
 
-1. Integrar o WhatsApp de verdade
-2. Melhorar tratamento de erros e tipagem
-3. Ampliar testes
-4. Refinar experiência visual e navegação
+1. Melhorar tratamento de erros e tipagem
+2. Ampliar testes
+3. Refinar experiência visual e navegação
+4. Evoluir notificações e integrações externas
 
 ## Como executar localmente
 
@@ -169,4 +170,3 @@ npm run dev
 - O sistema foi construído para evoluir de forma incremental.
 - O WhatsApp é a última etapa da criação principal do sistema.
 - O documento de acompanhamento de progresso continua em `STATUS_ATIVIDADE.md`.
-

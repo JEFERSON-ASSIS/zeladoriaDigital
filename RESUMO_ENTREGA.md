@@ -2,7 +2,7 @@
 
 ## Estado atual
 
-O sistema já possui uma base funcional e navegavel com:
+O sistema já possui uma base funcional e navegável com:
 
 - monorepo estruturado
 - backend NestJS
@@ -17,6 +17,7 @@ O sistema já possui uma base funcional e navegavel com:
 - criação automática de ordem de serviço
 - priorização automática
 - testes da API passando
+- WhatsApp com histórico persistido e envio opcional via API externa
 
 ## O que foi entregue
 
@@ -41,6 +42,7 @@ O sistema já possui uma base funcional e navegavel com:
 - proteção básica de acesso
 - dashboard
 - página de ordens de serviço
+- PWA do cidadão com instalação e offline
 
 ### Regras de negócio
 
@@ -50,20 +52,20 @@ O sistema já possui uma base funcional e navegavel com:
 - SLA por prioridade
 - sugestão de departamento
 - detecção simples de duplicidade
+- histórico de mensagens do WhatsApp no backend
 
 ### Banco
 
 - schema aplicado
 - seed com admin, cidadão e dados mínimos
 
-## Etapa final restante
+## Etapa atual
 
-O WhatsApp segue como uma etapa principal importante, mas o PWA basico ja foi entregue.
+O WhatsApp agora foi integrado com histórico persistido e modo de envio opcional via API externa quando houver credenciais.
 
 ## Próximo foco
 
-1. Integração real com WhatsApp
-2. Refinos de erro e tipagem
-3. Ajustes finais de UX e cobertura de testes
-
+1. Refinos de erro e tipagem
+2. Ajustes finais de UX e cobertura de testes
+3. Evolução de notificações e integrações externas
 

@@ -5,6 +5,7 @@ const menu = [
   ['Indicadores', '/admin/indicators'],
   ['Ranking', '/admin/ranking'],
   ['Relatorios', '/admin/reports'],
+  ['WhatsApp', '/admin/whatsapp'],
   ['Alertas', '/admin/alerts'],
   ['Area de Atendimento', '/admin/configuracoes/area-atendimento'],
   ['Mapas', '/admin/maps/executive'],

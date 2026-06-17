@@ -236,6 +236,10 @@ export async function fetchPublicTransparency(filters: Record<string, unknown> =
   return (await fetchAdmin<any>(`/transparency${buildQueryString(filters)}`)) ?? {};
 }
 
+export async function fetchWhatsAppHistory(accessToken?: string, limit = 50) {
+  return (await fetchAdmin<any[]>(`/whatsapp/history?limit=${limit}`, accessToken)) ?? [];
+}
+
 export async function exportAdminGrid(
   format: 'pdf' | 'csv' | 'xlsx',
   filters: Record<string, unknown>,
