@@ -18,11 +18,16 @@ import { JobsModule } from './modules/jobs/jobs.module';
 import { TransparencyModule } from './modules/transparency/transparency.module';
 import { ServiceAreaModule } from './modules/service-area/service-area.module';
 import { PushNotificationsModule } from './modules/push-notifications/push-notifications.module';
+import { SchedulingRemindersModule } from './modules/scheduling-reminders/scheduling-reminders.module';
+import { PermissionsModule } from './modules/permissions/permissions.module';
+import { AccessModule } from './modules/access/access.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
+    AccessModule,
+    PermissionsModule,
     AuthModule,
     UsersModule,
     CitizensModule,
@@ -39,7 +44,8 @@ import { PushNotificationsModule } from './modules/push-notifications/push-notif
     JobsModule,
     TransparencyModule,
     ServiceAreaModule,
-    PushNotificationsModule
+    PushNotificationsModule,
+    SchedulingRemindersModule
   ]
 })
 export class AppModule {}

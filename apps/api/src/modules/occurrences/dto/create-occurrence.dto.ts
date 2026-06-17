@@ -1,11 +1,12 @@
-import { IsIn, IsNumber, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsIn, IsNumber, IsOptional, IsString, ValidateIf } from 'class-validator';
 
 export class CreateOccurrenceDto {
   @IsString()
   description!: string;
 
+  @ValidateIf((data: CreateOccurrenceDto) => data.latitude == null || data.longitude == null)
   @IsString()
-  address!: string;
+  address?: string;
 
   @IsOptional()
   @IsString()
@@ -28,22 +29,22 @@ export class CreateOccurrenceDto {
   priority?: string;
 
   @IsOptional()
-  @IsUUID()
+  @IsString()
   citizenId?: string;
 
   @IsOptional()
-  @IsUUID()
+  @IsString()
   municipalityId?: string;
 
   @IsOptional()
-  @IsUUID()
+  @IsString()
   categoryId?: string;
 
   @IsOptional()
-  @IsUUID()
+  @IsString()
   neighborhoodId?: string;
 
   @IsOptional()
-  @IsUUID()
+  @IsString()
   suggestedDepartmentId?: string;
 }

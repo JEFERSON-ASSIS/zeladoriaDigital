@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { clearSession, getNavigationForRole, getNavigationHref, getSession, type AuthSession } from '../lib/auth';
+import { clearSession, getSession, type AuthSession } from '../lib/auth';
 import { fetchDashboardData } from '../lib/api';
 import { fetchCurrentUser } from '../lib/auth-api';
 import { InstallPWAButton } from '../components/install-pwa-button';
+import { SidebarShell } from '../components/sidebar-shell';
+import { OperationalMapPanel } from '../components/operational-map-panel';
 
 type DashboardData = {
   occurrences: any[];
@@ -28,20 +30,25 @@ export default function HomePage() {
       return;
     }
     fetchCurrentUser(currentSession.accessToken)
-      .then((user) => setSession({ ...currentSession, user }))
+      .then((user) => {
+        if (user.role === 'CIDADAO') {
+          router.replace('/nova-ocorrencia');
+          setLoadingSession(false);
+          return;
+        }
+        setSession({ ...currentSession, user });
+        return fetchDashboardData(currentSession.accessToken)
+          .then((value) => setData(value))
+          .catch(() => setData({ occurrences: [], citizens: [], users: [], categories: [] }));
+      })
       .catch(() => {
         clearSession();
         router.replace('/login');
       })
       .finally(() => {
-        fetchDashboardData(currentSession.accessToken)
-          .then((value) => setData(value))
-          .catch(() => setData({ occurrences: [], citizens: [], users: [], categories: [] }))
-          .finally(() => setLoadingSession(false));
+        setLoadingSession(false);
       });
   }, [router]);
-
-  const visibleMenus = useMemo(() => getNavigationForRole(session?.user.role), [session]);
 
   const openOccurrences = data.occurrences.filter((item) => item.status === 'ABERTO').length;
   const inProgressOccurrences = data.occurrences.filter((item) => ['EM_ANALISE', 'ENCAMINHADO', 'EM_EXECUCAO'].includes(item.status)).length;
@@ -70,11 +77,6 @@ export default function HomePage() {
       return acc;
     }, {});
 
-  function logout() {
-    clearSession();
-    router.push('/login');
-  }
-
   if (loadingSession) {
     return (
       <main className="login-shell">
@@ -101,28 +103,10 @@ export default function HomePage() {
 
   return (
     <main className="shell">
-      <aside className="sidebar">
-        <h1>Zeladoria Digital</h1>
-        <p className="sidebar-user">{session?.user.name ?? 'Carregando...'}</p>
-        <nav>
-          {visibleMenus.map((item) => (
-            <button
-              key={item}
-              type="button"
-              className="menu-link"
-              onClick={() => router.push(getNavigationHref(item))}
-            >
-              {item}
-            </button>
-          ))}
-        </nav>
-        <button className="ghost-button" onClick={logout} type="button">
-          Sair
-        </button>
-      </aside>
+      <SidebarShell />
       <section className="content">
-                <header className="hero">
-          <p className="eyebrow">Plataforma municipal</p>
+        <header className="hero">
+          <p className="eyebrow">i7AI Sistemas</p>
           <h2>Base executiva para operação, triagem e atendimento.</h2>
           <p>Visão executiva com indicadores de operação, mapa e status em tempo real a partir da base atual.</p>
           {session?.user.role === 'CIDADAO' ? <InstallPWAButton /> : null}
@@ -166,25 +150,12 @@ export default function HomePage() {
             </div>
           </article>
 
-          <article className="panel">
+          <article className="panel panel-map-operational">
             <div className="panel-heading">
               <h3>Mapa operacional</h3>
-              <span>Camada base</span>
+              <span>Chamados abertos e em atendimento</span>
             </div>
-            <div className="map-stage">
-              <div className="map-glow map-glow-1" />
-              <div className="map-glow map-glow-2" />
-              <div className="map-glow map-glow-3" />
-              <div className="map-grid" />
-              <div className="map-pin map-pin-1" />
-              <div className="map-pin map-pin-2" />
-              <div className="map-pin map-pin-3" />
-              <div className="map-pin map-pin-4" />
-              <div className="map-card">
-                <strong>{data.occurrences.length}</strong>
-                <span>ocorrências georreferenciáveis</span>
-              </div>
-            </div>
+            <OperationalMapPanel occurrences={data.occurrences} />
           </article>
 
           <article className="panel panel-span-2">

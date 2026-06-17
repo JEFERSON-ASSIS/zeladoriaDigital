@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { clearSession, getNavigationForRole, getSession, type AuthSession } from '../../lib/auth';
+import { clearSession, getSession, type AuthSession } from '../../lib/auth';
 import {
   fetchServiceOrders,
   startServiceOrder,
@@ -10,6 +10,7 @@ import {
   finishServiceOrder
 } from '../../lib/api';
 import { fetchCurrentUser } from '../../lib/auth-api';
+import { SidebarShell } from '../../components/sidebar-shell';
 
 type ServiceOrderCard = {
   id: string;
@@ -53,13 +54,6 @@ export default function ServiceOrdersPage() {
           .finally(() => setLoading(false));
       });
   }, [router]);
-
-  const menu = getNavigationForRole(session?.user.role);
-
-  function logout() {
-    clearSession();
-    router.push('/login');
-  }
 
   async function refreshOrders() {
     const currentSession = getSession();
@@ -120,31 +114,7 @@ export default function ServiceOrdersPage() {
 
   return (
     <main className="shell">
-      <aside className="sidebar">
-        <h1>Zeladoria Digital</h1>
-        <p className="sidebar-user">{session?.user.name ?? 'Operador'}</p>
-        <nav>
-          {menu.map((item) => (
-            <a
-              key={item}
-              href={
-                item === 'Painel'
-                  ? '/'
-                  : item === 'Ocorrencias'
-                    ? '/ocorrencias'
-                    : item === 'Ordens de servico'
-                      ? '/ordens-servico'
-                      : '#'
-              }
-            >
-              {item}
-            </a>
-          ))}
-        </nav>
-        <button className="ghost-button" onClick={logout} type="button">
-          Sair
-        </button>
-      </aside>
+      <SidebarShell />
       <section className="content">
         <header className="hero">
           <p className="eyebrow">Operacao</p>

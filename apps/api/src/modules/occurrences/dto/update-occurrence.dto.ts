@@ -1,4 +1,4 @@
-import { IsIn, IsNumber, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsIn, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class UpdateOccurrenceDto {
   @IsOptional()
@@ -30,22 +30,22 @@ export class UpdateOccurrenceDto {
   priority?: string;
 
   @IsOptional()
-  @IsUUID()
+  @IsString()
   citizenId?: string;
 
   @IsOptional()
-  @IsUUID()
+  @IsString()
   municipalityId?: string;
 
   @IsOptional()
-  @IsUUID()
+  @IsString()
   categoryId?: string;
 
   @IsOptional()
-  @IsUUID()
+  @IsString()
   neighborhoodId?: string;
 
   @IsOptional()
-  @IsUUID()
+  @IsString()
   suggestedDepartmentId?: string;
 }

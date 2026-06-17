@@ -1,5 +1,7 @@
 'use client';
 
+import { formatOccurrenceStatus, formatPriority, OCCURRENCE_STATUS_LABELS, PRIORITY_LABELS } from '../lib/occurrence-map';
+
 export type GlobalFilters = {
   periodStart: string;
   periodEnd: string;
@@ -16,8 +18,8 @@ type Props = {
   onChange: (next: GlobalFilters) => void;
 };
 
-const statusOptions = ['ABERTO', 'EM_ANALISE', 'ENCAMINHADO', 'EM_EXECUCAO', 'CONCLUIDO', 'CANCELADO'];
-const priorityOptions = ['BAIXA', 'MEDIA', 'ALTA', 'URGENTE'];
+const statusOptions = Object.keys(OCCURRENCE_STATUS_LABELS);
+const priorityOptions = Object.keys(PRIORITY_LABELS);
 const sourceOptions = ['WEB', 'PWA', 'WHATSAPP', 'PRESENCIAL', 'INTERNO'];
 
 export function GlobalFiltersBar({ value, onChange }: Props) {
@@ -35,19 +37,25 @@ export function GlobalFiltersBar({ value, onChange }: Props) {
       <select value={value.status} onChange={(e) => updateField('status', e.target.value)}>
         <option value="">Status</option>
         {statusOptions.map((item) => (
-          <option key={item} value={item}>{item}</option>
+          <option key={item} value={item}>
+            {formatOccurrenceStatus(item)}
+          </option>
         ))}
       </select>
       <select value={value.priority} onChange={(e) => updateField('priority', e.target.value)}>
         <option value="">Prioridade</option>
         {priorityOptions.map((item) => (
-          <option key={item} value={item}>{item}</option>
+          <option key={item} value={item}>
+            {formatPriority(item)}
+          </option>
         ))}
       </select>
       <select value={value.source} onChange={(e) => updateField('source', e.target.value)}>
         <option value="">Origem</option>
         {sourceOptions.map((item) => (
-          <option key={item} value={item}>{item}</option>
+          <option key={item} value={item}>
+            {item}
+          </option>
         ))}
       </select>
     </div>

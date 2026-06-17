@@ -1,21 +1,35 @@
 export default function manifest() {
   return {
-    name: 'Zeladoria Digital',
+    name: 'Zeladoria Digital — i7AI Sistemas',
     short_name: 'Zeladoria',
     start_url: '/',
     display: 'standalone',
-    background_color: '#f4f7fb',
+    background_color: '#f8fafc',
     theme_color: '#2563eb',
     icons: [
       {
-        src: '/icon-192.svg',
-        sizes: '192x192',
-        type: 'image/svg+xml'
+        src: '/icon',
+        sizes: '32x32',
+        type: 'image/svg+xml',
+        purpose: 'any'
       },
       {
-        src: '/icon-512.svg',
+        src: '/apple-icon',
+        sizes: '180x180',
+        type: 'image/svg+xml',
+        purpose: 'any'
+      },
+      {
+        src: '/icons/icon-512.svg',
         sizes: '512x512',
-        type: 'image/svg+xml'
+        type: 'image/svg+xml',
+        purpose: 'any'
+      },
+      {
+        src: '/icons/icon-512.svg',
+        sizes: '512x512',
+        type: 'image/svg+xml',
+        purpose: 'maskable'
       }
     ]
   };

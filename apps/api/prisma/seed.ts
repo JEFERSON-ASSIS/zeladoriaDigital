@@ -17,7 +17,54 @@ async function main() {
   const operatorPassword = await bcrypt.hash('secret123', 10);
   const citizenPassword = await bcrypt.hash('secret123', 10);
 
-  const [admin, prefeitura, secretaria, triagem, equipe, citizen] = await Promise.all([
+  const departmentNames = [
+    'Secretaria Municipal de Agricultura, Meio Ambiente e Desenvolvimento Econômico',
+    'Secretaria Municipal de Desenvolvimento Social e Cidadania',
+    'Secretaria Municipal de Educação',
+    'Secretaria Municipal de Esporte, Cultura, Turismo e Juventude',
+    'Secretaria Municipal de Fazenda e Planejamento',
+    'Secretaria Municipal de Gestão',
+    'Secretaria Municipal de Obras e Serviços',
+    'Secretaria Municipal de Saúde'
+  ] as const;
+
+  const departmentIds = [
+    'dept-agricultura',
+    'dept-desenvolvimento-social',
+    'dept-educacao',
+    'dept-esporte-cultura',
+    'dept-fazenda',
+    'dept-gestao',
+    'dept-obras',
+    'dept-saude'
+  ] as const;
+
+  const departments = await Promise.all(
+    departmentNames.map((name, index) =>
+      prisma.department.upsert({
+        where: { id: departmentIds[index] },
+        update: { name, municipalityId: municipality.id },
+        create: {
+          id: departmentIds[index],
+          name,
+          municipalityId: municipality.id
+        }
+      })
+    )
+  );
+
+  const departmentObras = departments.find((item) => item.id === 'dept-obras') ?? departments[6];
+
+  await prisma.occurrenceMovement.updateMany({
+    where: { changedBy: { email: 'triagem@zeladoria.local' } },
+    data: { changedById: null }
+  });
+
+  await prisma.user.deleteMany({
+    where: { email: 'triagem@zeladoria.local' }
+  });
+
+  const [admin, prefeitura, secretaria, equipe, citizen] = await Promise.all([
     prisma.user.upsert({
       where: { email: 'admin@zeladoria.local' },
       update: {
@@ -51,46 +98,37 @@ async function main() {
     prisma.user.upsert({
       where: { email: 'secretaria@zeladoria.local' },
       update: {
+        name: 'Admin secretaria — Obras',
         password: operatorPassword,
         municipalityId: municipality.id,
-        role: UserRole.SECRETARIA
+        role: UserRole.SECRETARIA,
+        departmentId: departmentObras.id
       },
       create: {
-        name: 'Secretaria Demo',
+        name: 'Admin secretaria — Obras',
         email: 'secretaria@zeladoria.local',
         password: operatorPassword,
         role: UserRole.SECRETARIA,
-        municipalityId: municipality.id
-      }
-    }),
-    prisma.user.upsert({
-      where: { email: 'triagem@zeladoria.local' },
-      update: {
-        password: operatorPassword,
         municipalityId: municipality.id,
-        role: UserRole.TRIAGEM
-      },
-      create: {
-        name: 'Triagem Demo',
-        email: 'triagem@zeladoria.local',
-        password: operatorPassword,
-        role: UserRole.TRIAGEM,
-        municipalityId: municipality.id
+        departmentId: departmentObras.id
       }
     }),
     prisma.user.upsert({
       where: { email: 'equipe@zeladoria.local' },
       update: {
+        name: 'Usuário secretaria — Obras',
         password: operatorPassword,
         municipalityId: municipality.id,
-        role: UserRole.EQUIPE_CAMPO
+        role: UserRole.EQUIPE_CAMPO,
+        departmentId: departmentObras.id
       },
       create: {
-        name: 'Equipe de Campo',
+        name: 'Usuário secretaria — Obras',
         email: 'equipe@zeladoria.local',
         password: operatorPassword,
         role: UserRole.EQUIPE_CAMPO,
-        municipalityId: municipality.id
+        municipalityId: municipality.id,
+        departmentId: departmentObras.id
       }
     }),
     prisma.citizen.upsert({
@@ -118,16 +156,6 @@ async function main() {
       }
     }));
 
-  const department = await prisma.department.upsert({
-    where: { id: 'dept-infra-demo' },
-    update: {},
-    create: {
-      id: 'dept-infra-demo',
-      name: 'Secretaria de Infraestrutura',
-      municipalityId: municipality.id
-    }
-  });
-
   const neighborhood = await prisma.neighborhood.upsert({
     where: { id: 'bairro-centro-demo' },
     update: {},
@@ -141,32 +169,113 @@ async function main() {
   const fieldTeam = await prisma.fieldTeam.upsert({
     where: { id: 'team-infra-demo' },
     update: {
-      departmentId: department.id
+      departmentId: departmentObras.id
     },
     create: {
       id: 'team-infra-demo',
-      name: 'Equipe Infra Demo',
-      departmentId: department.id
+      name: 'Equipe Obras Demo',
+      departmentId: departmentObras.id
     }
   });
 
   const occurrence = await prisma.occurrence.upsert({
     where: { protocol: 'OC-0001' },
-    update: {},
+    update: {
+      latitude: -15.601,
+      longitude: -56.097,
+      status: OccurrenceStatus.ABERTO
+    },
     create: {
       protocol: 'OC-0001',
       title: 'Buraco na rua principal',
       description: 'Buraco grande na via, com risco para veículos e pedestres.',
       address: 'Rua Principal, 100',
+      latitude: -15.601,
+      longitude: -56.097,
       status: OccurrenceStatus.ABERTO,
       priority: PriorityLevel.ALTA,
       citizenId: citizen.id,
       municipalityId: municipality.id,
       categoryId: category.id,
       neighborhoodId: neighborhood.id,
-      suggestedDepartmentId: department.id,
+      suggestedDepartmentId: departmentObras.id,
       priorityScore: 82,
       aiSummary: 'Ocorrência prioritária por risco viário e alto impacto público.'
+    }
+  });
+
+  await prisma.occurrence.upsert({
+    where: { protocol: 'OC-0002' },
+    update: {
+      latitude: -15.608,
+      longitude: -56.104,
+      status: OccurrenceStatus.ABERTO
+    },
+    create: {
+      protocol: 'OC-0002',
+      title: 'Lâmpada queimada',
+      description: 'Poste sem iluminação na praça central.',
+      address: 'Praça Central, 45',
+      latitude: -15.608,
+      longitude: -56.104,
+      status: OccurrenceStatus.ABERTO,
+      priority: PriorityLevel.MEDIA,
+      citizenId: citizen.id,
+      municipalityId: municipality.id,
+      categoryId: category.id,
+      neighborhoodId: neighborhood.id,
+      suggestedDepartmentId: departmentObras.id,
+      priorityScore: 55
+    }
+  });
+
+  await prisma.occurrence.upsert({
+    where: { protocol: 'OC-0003' },
+    update: {
+      latitude: -15.595,
+      longitude: -56.088,
+      status: OccurrenceStatus.ENCAMINHADO
+    },
+    create: {
+      protocol: 'OC-0003',
+      title: 'Entulho em via pública',
+      description: 'Entulho de construção obstruindo a calçada.',
+      address: 'Av. Brasil, 220',
+      latitude: -15.595,
+      longitude: -56.088,
+      status: OccurrenceStatus.ENCAMINHADO,
+      priority: PriorityLevel.URGENTE,
+      citizenId: citizen.id,
+      municipalityId: municipality.id,
+      categoryId: category.id,
+      neighborhoodId: neighborhood.id,
+      suggestedDepartmentId: departmentObras.id,
+      priorityScore: 91
+    }
+  });
+
+  await prisma.occurrence.upsert({
+    where: { protocol: 'OC-0004' },
+    update: {
+      latitude: -15.612,
+      longitude: -56.11,
+      status: OccurrenceStatus.CONCLUIDO
+    },
+    create: {
+      protocol: 'OC-0004',
+      title: 'Poda de árvore concluída',
+      description: 'Serviço finalizado e não deve aparecer no mapa operacional.',
+      address: 'Rua das Palmeiras, 18',
+      latitude: -15.612,
+      longitude: -56.11,
+      status: OccurrenceStatus.CONCLUIDO,
+      priority: PriorityLevel.BAIXA,
+      citizenId: citizen.id,
+      municipalityId: municipality.id,
+      categoryId: category.id,
+      neighborhoodId: neighborhood.id,
+      suggestedDepartmentId: departmentObras.id,
+      priorityScore: 20
     }
   });
 
@@ -198,7 +307,7 @@ async function main() {
           fromStatus: OccurrenceStatus.ABERTO,
           toStatus: OccurrenceStatus.ENCAMINHADO,
           note: 'Encaminhamento automático de validação.',
-          changedById: triagem.id
+          changedById: prefeitura.id
         },
         {
           occurrenceId: occurrence.id,
@@ -214,7 +323,7 @@ async function main() {
   await prisma.serviceOrder.upsert({
     where: { occurrenceId: occurrence.id },
     update: {
-      departmentId: department.id,
+      departmentId: departmentObras.id,
       fieldTeamId: fieldTeam.id,
       priority: PriorityLevel.ALTA,
       slaHours: 48,
@@ -223,7 +332,7 @@ async function main() {
     },
     create: {
       occurrenceId: occurrence.id,
-      departmentId: department.id,
+      departmentId: departmentObras.id,
       fieldTeamId: fieldTeam.id,
       priority: PriorityLevel.ALTA,
       slaHours: 48,
@@ -248,6 +357,23 @@ async function main() {
       }
     });
   }
+
+  await prisma.serviceArea.upsert({
+    where: { id: 'service-area-demo' },
+    update: {},
+    create: {
+      id: 'service-area-demo',
+      nome: 'Município Demo',
+      municipio: 'Cuiabá',
+      estado: 'MT',
+      latitudeCentro: -15.601,
+      longitudeCentro: -56.097,
+      raioMetros: 15000,
+      validacaoAtiva: true,
+      bloquearForaDaArea: false,
+      ativo: true
+    }
+  });
 
   await prisma.auditLog.create({
     data: {

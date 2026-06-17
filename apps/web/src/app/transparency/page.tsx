@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchPublicTransparency } from '../../lib/api';
 import { GlobalFiltersBar, type GlobalFilters } from '../../components/global-filters';
+import { SidebarShell } from '../../components/sidebar-shell';
 
 export default function TransparencyPage() {
   const [filters, setFilters] = useState<GlobalFilters>({
@@ -25,7 +26,9 @@ export default function TransparencyPage() {
   const data = dashboard.data ?? {};
 
   return (
-    <section className="admin-shell">
+    <main className="shell">
+      <SidebarShell />
+      <section className="admin-shell">
       <header className="hero">
         <p className="eyebrow">Transparencia</p>
         <h2>Portal de transparencia</h2>
@@ -56,6 +59,7 @@ export default function TransparencyPage() {
           </ul>
         </article>
       </div>
-    </section>
+      </section>
+    </main>
   );
 }

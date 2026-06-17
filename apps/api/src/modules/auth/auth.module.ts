@@ -7,19 +7,27 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
 import { RolesGuard } from './roles.guard';
+import { JwtAuthGuard } from './jwt-auth.guard';
 import { APP_GUARD } from '@nestjs/core';
+import { PermissionsModule } from '../permissions/permissions.module';
 
 @Module({
   imports: [
     UsersModule,
     CitizensModule,
+    PermissionsModule,
     PassportModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET ?? 'change-this-in-production',
       signOptions: { expiresIn: process.env.JWT_EXPIRES_IN ?? '1d' }
     })
   ],
-  providers: [AuthService, JwtStrategy, { provide: APP_GUARD, useClass: RolesGuard }],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard }
+  ],
   controllers: [AuthController],
   exports: [AuthService]
 })

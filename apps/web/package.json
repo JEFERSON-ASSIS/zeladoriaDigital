@@ -10,7 +10,9 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.51.23",
+    "@zeladoria/shared": "file:../../packages/shared",
     "leaflet": "^1.9.4",
+    "maplibre-gl": "^5.24.0",
     "next": "^14.2.14",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

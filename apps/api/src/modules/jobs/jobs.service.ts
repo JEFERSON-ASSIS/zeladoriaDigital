@@ -16,28 +16,8 @@ export class JobsService {
     private readonly analyticsService: AnalyticsService,
     private readonly priorityService: PriorityService,
     private readonly priorityEngineService: PriorityEngineService,
-    private readonly reportsService: Pick<ReportsService, 'generate'> = {
-      generate: async () => ({
-        totalOccurrences: 0,
-        completedOccurrences: 0,
-        openOccurrences: 0,
-        overdueOccurrences: 0,
-        averageSlaHours: 0,
-        averageResolutionHours: 0,
-        topNeighborhoods: [],
-        topCategories: [],
-        topDepartments: [],
-        executiveSummary: 'Relatório indisponível'
-      })
-    } as unknown as Pick<ReportsService, 'generate'>,
-    private readonly exportService: Pick<ExportService, 'exportGrid'> = {
-      exportGrid: async (format: 'pdf' | 'csv' | 'xlsx') => ({
-        format,
-        contentType: 'text/plain',
-        filename: `export.${format}`,
-        body: ''
-      })
-    } as unknown as Pick<ExportService, 'exportGrid'>
+    private readonly reportsService: ReportsService,
+    private readonly exportService: ExportService,
   ) {}
 
   @Cron(CronExpression.EVERY_DAY_AT_1AM)

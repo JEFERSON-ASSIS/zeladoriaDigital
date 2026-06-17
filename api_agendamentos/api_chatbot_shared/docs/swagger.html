@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>API Chatbot PSF — Swagger</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css" />
+  <style>
+    html { box-sizing: border-box; }
+    *, *::before, *::after { box-sizing: inherit; }
+    body { margin: 0; background: #fafafa; }
+    .topbar {
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 12px 24px;
+      font-family: system-ui, sans-serif;
+      font-size: 14px;
+    }
+    .topbar a { color: #38bdf8; }
+    .topbar strong { color: #f8fafc; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <strong>API Chatbot PSF</strong> — Selecione o servidor (PSF1 / PSF2 / PSF3) no dropdown.
+    Especificação: <a href="openapi.yaml">openapi.yaml</a> ·
+    Doc: <a href="../../DOCUMENTACAO_API_CHATBOT.md">DOCUMENTACAO_API_CHATBOT.md</a>
+  </div>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-bundle.js" crossorigin></script>
+  <script>
+    window.onload = function () {
+      window.ui = SwaggerUIBundle({
+        url: 'openapi.yaml',
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIBundle.SwaggerUIStandalonePreset
+        ],
+        layout: 'BaseLayout',
+        defaultModelsExpandDepth: 1,
+        docExpansion: 'list',
+        tryItOutEnabled: true,
+        persistAuthorization: true,
+        filter: true,
+        syntaxHighlight: { activate: true, theme: 'monokai' }
+      });
+    };
+  </script>
+</body>
+</html>

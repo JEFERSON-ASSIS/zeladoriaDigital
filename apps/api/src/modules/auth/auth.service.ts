@@ -3,23 +3,28 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { UsersService } from '../users/users.service';
 import { CitizensService } from '../citizens/citizens.service';
+import { PermissionsService } from '../permissions/permissions.service';
 import { UserRole } from '@prisma/client';
 
 const DEV_ACCOUNTS = [
   { id: 'dev-admin', name: 'Administrador', email: 'admin@zeladoria.local', password: 'secret123', role: UserRole.ADMIN },
   { id: 'dev-prefeitura', name: 'Atendimento Prefeitura', email: 'prefeitura@zeladoria.local', password: 'secret123', role: UserRole.PREFEITURA },
-  { id: 'dev-secretaria', name: 'Secretaria Demo', email: 'secretaria@zeladoria.local', password: 'secret123', role: UserRole.SECRETARIA },
-  { id: 'dev-triagem', name: 'Triagem Demo', email: 'triagem@zeladoria.local', password: 'secret123', role: UserRole.TRIAGEM },
-  { id: 'dev-equipe', name: 'Equipe de Campo', email: 'equipe@zeladoria.local', password: 'secret123', role: UserRole.EQUIPE_CAMPO },
+  { id: 'dev-secretaria', name: 'Admin secretaria — Obras', email: 'secretaria@zeladoria.local', password: 'secret123', role: UserRole.SECRETARIA },
+  { id: 'dev-equipe', name: 'Usuário secretaria — Obras', email: 'equipe@zeladoria.local', password: 'secret123', role: UserRole.EQUIPE_CAMPO },
   { id: 'dev-cidadao', name: 'Cidadão Demo', email: 'cidadao@zeladoria.local', password: 'secret123', role: UserRole.CIDADAO }
 ] as const;
+
+function isDevAuthFallbackEnabled() {
+  return process.env.NODE_ENV !== 'production' && process.env.DISABLE_DEV_AUTH !== 'true';
+}
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly citizensService: CitizensService,
-    private readonly jwtService: JwtService
+    private readonly jwtService: JwtService,
+    private readonly permissionsService: PermissionsService
   ) {}
 
   async validateUser(email: string, password: string) {
@@ -30,6 +35,7 @@ export class AuthService {
       if (!ok) return null;
       return user;
     } catch {
+      if (!isDevAuthFallbackEnabled()) return null;
       const fallback = DEV_ACCOUNTS.find((account) => account.email === email && account.role !== UserRole.CIDADAO);
       return fallback && fallback.password === password ? fallback : null;
     }
@@ -43,6 +49,7 @@ export class AuthService {
       if (!ok) return null;
       return citizen;
     } catch {
+      if (!isDevAuthFallbackEnabled()) return null;
       const fallback = DEV_ACCOUNTS.find((account) => account.email === email && account.role === UserRole.CIDADAO);
       return fallback && fallback.password === password ? fallback : null;
     }
@@ -82,6 +89,7 @@ export class AuthService {
           role: UserRole.CIDADAO
         };
       } catch {
+        if (!isDevAuthFallbackEnabled()) throw new UnauthorizedException('Sessão inválida');
         const fallback = DEV_ACCOUNTS.find((account) => account.id === userId && account.role === UserRole.CIDADAO);
         if (!fallback) throw new UnauthorizedException('Sessão inválida');
         return fallback;
@@ -91,13 +99,18 @@ export class AuthService {
     try {
       const user = await this.usersService.findById(userId);
       if (!user) throw new UnauthorizedException('Sessão inválida');
+      const menuKeys = await this.permissionsService.getMenuKeysForRole(user.role);
       return {
         id: user.id,
         name: user.name,
         email: user.email,
-        role: user.role
+        role: user.role,
+        departmentId: user.departmentId,
+        department: user.department ? { id: user.department.id, name: user.department.name } : null,
+        menuKeys
       };
     } catch {
+      if (!isDevAuthFallbackEnabled()) throw new UnauthorizedException('Sessão inválida');
       const fallback = DEV_ACCOUNTS.find((account) => account.id === userId && account.role === role);
       if (!fallback) throw new UnauthorizedException('Sessão inválida');
       return fallback;

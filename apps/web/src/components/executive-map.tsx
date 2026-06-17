@@ -1,46 +1,57 @@
 'use client';
 
-import 'leaflet/dist/leaflet.css';
-import { useEffect, useRef } from 'react';
-
-const occurrences = [
-  { id: 'OC-0001', label: 'Buraco na rua principal', lat: -15.601, lng: -56.097, status: 'EM_EXECUCAO', priority: 'ALTA' },
-  { id: 'OC-0002', label: 'Lâmpada queimada', lat: -15.605, lng: -56.102, status: 'ABERTO', priority: 'MEDIA' },
-  { id: 'OC-0003', label: 'Entulho em via pública', lat: -15.612, lng: -56.09, status: 'ENCAMINHADO', priority: 'URGENTE' }
-];
+import { useQuery } from '@tanstack/react-query';
+import { MapRegionPicker } from './map-region-picker';
+import { fetchOccurrences, fetchServiceAreas, getStoredAccessToken } from '../lib/api';
+import { useOccurrenceMapMarkers } from '../hooks/use-occurrence-map-markers';
+import { DEFAULT_MAP_REGION, mapRegionFromServiceArea } from '../lib/map-region';
 
 export function ExecutiveMap() {
-  const mapRef = useRef<HTMLDivElement | null>(null);
+  const regionQuery = useQuery({
+    queryKey: ['map-region'],
+    queryFn: () => fetchServiceAreas(getStoredAccessToken()),
+    staleTime: 60_000
+  });
 
-  useEffect(() => {
-    let disposed = false;
-    let map: any;
+  const occurrencesQuery = useQuery({
+    queryKey: ['executive-map-occurrences'],
+    queryFn: () => fetchOccurrences(getStoredAccessToken()),
+    staleTime: 30_000
+  });
 
-    async function init() {
-      const L = await import('leaflet');
-      if (disposed || !mapRef.current) return;
+  const activeArea = (regionQuery.data ?? []).find((area) => area.ativo) ?? regionQuery.data?.[0];
+  const region = activeArea ? mapRegionFromServiceArea(activeArea) : DEFAULT_MAP_REGION;
+  const { markers, activeCount, withoutLocation, geocoding } = useOccurrenceMapMarkers(
+    occurrencesQuery.data ?? [],
+    region
+  );
 
-      map = L.map(mapRef.current).setView([-15.601, -56.097], 13);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-      }).addTo(map);
-
-      occurrences.forEach((item) => {
-        L.marker([item.lat, item.lng])
-          .addTo(map)
-          .bindPopup(
-            `<strong>${item.id}</strong><br />${item.label}<br />Status: ${item.status}<br />Prioridade: ${item.priority}`
-          );
-      });
-    }
-
-    void init();
-
-    return () => {
-      disposed = true;
-      map?.remove?.();
-    };
-  }, []);
-
-  return <div ref={mapRef} className="leaflet-map" />;
+  return (
+    <section className="executive-map-shell">
+      <div className="panel-heading">
+        <h3>
+          {region.municipio} — {region.estado}
+        </h3>
+        <span>{markers.length} chamados no mapa</span>
+      </div>
+      <MapRegionPicker
+        latitude={region.latitudeCentro}
+        longitude={region.longitudeCentro}
+        raioMetros={region.raioMetros}
+        interactive={false}
+        showCenterPin={false}
+        markers={markers}
+      />
+      {geocoding ? <p className="muted-copy">Localizando chamados pelo endereço...</p> : null}
+      {!geocoding && activeCount === 0 ? (
+        <p className="muted-copy">Nenhum chamado aberto ou em atendimento.</p>
+      ) : null}
+      {!geocoding && activeCount > 0 && markers.length === 0 ? (
+        <p className="muted-copy">Chamados ativos sem localização para exibir no mapa.</p>
+      ) : null}
+      {!geocoding && withoutLocation > 0 && markers.length > 0 ? (
+        <p className="muted-copy">{withoutLocation} chamado(s) ainda sem pin no mapa.</p>
+      ) : null}
+    </section>
+  );
 }

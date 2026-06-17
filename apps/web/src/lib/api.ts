@@ -101,6 +101,116 @@ export async function fetchOccurrences(accessToken?: string) {
   return occurrences ?? [];
 }
 
+export async function fetchDepartments(accessToken?: string) {
+  const response = await fetch(`${API_URL}/departments`, { cache: 'no-store', headers: authHeaders(accessToken) });
+  const departments = await safeJson<any[]>(response);
+  return departments ?? [];
+}
+
+export async function createDepartment(payload: { name: string }, accessToken?: string) {
+  const response = await fetch(`${API_URL}/departments`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders(accessToken) },
+    body: JSON.stringify(payload)
+  });
+  if (!response.ok) throw new Error('Falha ao cadastrar secretaria');
+  return response.json();
+}
+
+export async function deleteDepartment(id: string, accessToken?: string) {
+  const response = await fetch(`${API_URL}/departments/${id}`, {
+    method: 'DELETE',
+    headers: authHeaders(accessToken)
+  });
+  if (!response.ok) throw new Error('Falha ao excluir secretaria');
+  return response.json();
+}
+
+export async function createUser(
+  payload: {
+    name: string;
+    email: string;
+    password: string;
+    role: string;
+    departmentId?: string;
+  },
+  accessToken?: string
+) {
+  const response = await fetch(`${API_URL}/users`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders(accessToken) },
+    body: JSON.stringify(payload)
+  });
+  if (!response.ok) throw new Error(await readApiError(response, 'Falha ao cadastrar usuário'));
+  return response.json();
+}
+
+export async function updateUser(
+  id: string,
+  payload: {
+    name?: string;
+    email?: string;
+    password?: string;
+    role?: string;
+    departmentId?: string;
+  },
+  accessToken?: string
+) {
+  const response = await fetch(`${API_URL}/users/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...authHeaders(accessToken) },
+    body: JSON.stringify(payload)
+  });
+  if (!response.ok) throw new Error(await readApiError(response, 'Falha ao atualizar usuário'));
+  return response.json();
+}
+
+export async function deleteUser(id: string, accessToken?: string) {
+  const response = await fetch(`${API_URL}/users/${id}`, {
+    method: 'DELETE',
+    headers: authHeaders(accessToken)
+  });
+  if (!response.ok) throw new Error(await readApiError(response, 'Falha ao excluir usuário'));
+  return response.json();
+}
+
+export type ServiceAreaRecord = {
+  id: string;
+  nome: string;
+  municipio: string;
+  estado: string;
+  latitudeCentro?: number | null;
+  longitudeCentro?: number | null;
+  raioMetros?: number | null;
+  validacaoAtiva: boolean;
+  bloquearForaDaArea: boolean;
+  ativo: boolean;
+};
+
+export async function fetchServiceAreas(accessToken?: string) {
+  const response = await fetch(`${API_URL}/admin/service-area`, {
+    cache: 'no-store',
+    headers: authHeaders(accessToken)
+  });
+  const areas = await safeJson<ServiceAreaRecord[]>(response);
+  return areas ?? [];
+}
+
+export async function saveServiceArea(payload: Record<string, unknown>, accessToken?: string) {
+  const areas = await fetchServiceAreas(accessToken);
+  const existing = areas.find((area) => area.ativo) ?? areas[0];
+  const response = await fetch(
+    existing?.id ? `${API_URL}/admin/service-area/${existing.id}` : `${API_URL}/admin/service-area`,
+    {
+      method: existing?.id ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders(accessToken) },
+      body: JSON.stringify(payload)
+    }
+  );
+  if (!response.ok) throw new Error('Falha ao salvar região');
+  return response.json() as Promise<ServiceAreaRecord>;
+}
+
 export async function fetchCategories(accessToken?: string) {
   const response = await fetch(`${API_URL}/categories`, { cache: 'no-store', headers: authHeaders(accessToken) });
   const categories = await safeJson<any[]>(response);
@@ -124,7 +234,34 @@ export async function createOccurrence(payload: Record<string, unknown>, accessT
   });
 
   if (!response.ok) {
-    throw new Error('Falha ao criar ocorrência');
+    throw new Error(await readApiError(response, 'Falha ao criar ocorrência'));
+  }
+
+  return response.json();
+}
+
+export function resolveAttachmentUrl(fileUrl: string) {
+  if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) return fileUrl;
+  return `${API_URL}${fileUrl.startsWith('/') ? fileUrl : `/${fileUrl}`}`;
+}
+
+export async function uploadOccurrenceAttachment(occurrenceId: string, file: File, accessToken?: string) {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  let response: Response;
+  try {
+    response = await fetch(`${API_URL}/occurrences/${occurrenceId}/attachments`, {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+      body: formData
+    });
+  } catch {
+    throw new Error('Não foi possível enviar o anexo.');
+  }
+
+  if (!response.ok) {
+    throw new Error(await readApiError(response, 'Falha ao enviar anexo'));
   }
 
   return response.json();
@@ -145,17 +282,41 @@ export async function fetchOccurrenceByProtocol(protocol: string, accessToken?: 
 }
 
 export async function updateOccurrenceStatus(id: string, status: string, accessToken?: string) {
-  const response = await fetch(`${API_URL}/occurrences/${id}`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      ...authHeaders(accessToken)
-    },
-    body: JSON.stringify({ status })
-  });
+  return updateOccurrence(id, { status }, accessToken);
+}
+
+async function readApiError(response: Response, fallback: string) {
+  try {
+    const body = (await response.json()) as { message?: string | string[] };
+    if (Array.isArray(body.message)) return body.message.join(', ');
+    if (body.message) return body.message;
+  } catch {
+    // ignore parse errors
+  }
+  return fallback;
+}
+
+export async function updateOccurrence(
+  id: string,
+  payload: Record<string, unknown>,
+  accessToken?: string
+) {
+  let response: Response;
+  try {
+    response = await fetch(`${API_URL}/occurrences/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders(accessToken)
+      },
+      body: JSON.stringify(payload)
+    });
+  } catch {
+    throw new Error('Não foi possível conectar à API. Verifique se o servidor está ativo.');
+  }
 
   if (!response.ok) {
-    throw new Error('Falha ao atualizar ocorrência');
+    throw new Error(await readApiError(response, 'Falha ao atualizar ocorrência'));
   }
 
   return response.json();

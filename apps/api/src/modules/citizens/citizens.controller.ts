@@ -3,6 +3,7 @@ import { CitizensService } from './citizens.service';
 import { CreateCitizenDto } from './dto/create-citizen.dto';
 import { UpdateCitizenDto } from './dto/update-citizen.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Public } from '../auth/public.decorator';
 import { Roles } from '../auth/roles.decorator';
 
 @Controller('citizens')
@@ -16,6 +17,7 @@ export class CitizensController {
     return this.citizensService.findAll();
   }
 
+  @Public()
   @Post()
   create(@Body() body: CreateCitizenDto) {
     return this.citizensService.create(body);

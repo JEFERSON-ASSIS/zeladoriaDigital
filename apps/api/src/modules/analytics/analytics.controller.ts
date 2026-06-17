@@ -1,109 +1,135 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { UserRole } from '@prisma/client';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Roles } from '../auth/roles.decorator';
 import { AnalyticsService } from './analytics.service';
 import { GlobalFiltersDto } from './dto/global-filters.dto';
 
+type RequestUser = { sub: string; role: UserRole };
+
+@UseGuards(JwtAuthGuard)
 @Controller('admin')
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
 
   @Get('dashboard/executive')
-  executiveDashboard(@Query() query: GlobalFiltersDto) {
-    return this.analyticsService.executiveDashboard(query);
+  @Roles('ADMIN', 'PREFEITURA')
+  executiveDashboard(@Query() query: GlobalFiltersDto, @Req() req: { user: RequestUser }) {
+    return this.analyticsService.executiveDashboard(query, req.user);
   }
 
   @Get('indicadores/status')
-  statusIndicatorsPt(@Query() query: GlobalFiltersDto) {
-    return this.analyticsService.statusIndicators(query);
+  @Roles('ADMIN', 'PREFEITURA')
+  statusIndicatorsPt(@Query() query: GlobalFiltersDto, @Req() req: { user: RequestUser }) {
+    return this.analyticsService.statusIndicators(query, req.user);
   }
 
   @Get('indicadores/secretarias')
-  departmentIndicatorsPt(@Query() query: GlobalFiltersDto) {
-    return this.analyticsService.departmentIndicators(query);
+  @Roles('ADMIN', 'PREFEITURA')
+  departmentIndicatorsPt(@Query() query: GlobalFiltersDto, @Req() req: { user: RequestUser }) {
+    return this.analyticsService.departmentIndicators(query, req.user);
   }
 
   @Get('indicadores/categorias')
-  categoryIndicatorsPt(@Query() query: GlobalFiltersDto) {
-    return this.analyticsService.categoryIndicators(query);
+  @Roles('ADMIN', 'PREFEITURA')
+  categoryIndicatorsPt(@Query() query: GlobalFiltersDto, @Req() req: { user: RequestUser }) {
+    return this.analyticsService.categoryIndicators(query, req.user);
   }
 
   @Get('indicadores/bairros')
-  neighborhoodIndicatorsPt(@Query() query: GlobalFiltersDto) {
-    return this.analyticsService.neighborhoodIndicators(query);
+  @Roles('ADMIN', 'PREFEITURA', 'SECRETARIA')
+  neighborhoodIndicatorsPt(@Query() query: GlobalFiltersDto, @Req() req: { user: RequestUser }) {
+    return this.analyticsService.neighborhoodIndicators(query, req.user);
   }
 
   @Get('indicadores/sla')
-  slaIndicators(@Query() query: GlobalFiltersDto) {
-    return this.analyticsService.generateSlaIndicators(query);
+  @Roles('ADMIN', 'PREFEITURA', 'SECRETARIA')
+  slaIndicators(@Query() query: GlobalFiltersDto, @Req() req: { user: RequestUser }) {
+    return this.analyticsService.generateSlaIndicators(query, req.user);
   }
 
   @Get('indicadores/satisfacao')
-  satisfactionIndicators(@Query() query: GlobalFiltersDto) {
-    return this.analyticsService.executiveDashboard(query);
+  @Roles('ADMIN', 'PREFEITURA')
+  satisfactionIndicators(@Query() query: GlobalFiltersDto, @Req() req: { user: RequestUser }) {
+    return this.analyticsService.executiveDashboard(query, req.user);
   }
 
   @Get('indicadores/reincidencia')
-  recurrenceIndicators(@Query() query: GlobalFiltersDto) {
-    return this.analyticsService.neighborhoodIndicators(query);
+  @Roles('ADMIN', 'PREFEITURA')
+  recurrenceIndicators(@Query() query: GlobalFiltersDto, @Req() req: { user: RequestUser }) {
+    return this.analyticsService.neighborhoodIndicators(query, req.user);
   }
 
   @Get('indicators/status')
-  statusIndicators(@Query() query: GlobalFiltersDto) {
-    return this.analyticsService.statusIndicators(query);
+  @Roles('ADMIN', 'PREFEITURA')
+  statusIndicators(@Query() query: GlobalFiltersDto, @Req() req: { user: RequestUser }) {
+    return this.analyticsService.statusIndicators(query, req.user);
   }
 
   @Get('indicators/departments')
-  departmentIndicators(@Query() query: GlobalFiltersDto) {
-    return this.analyticsService.departmentIndicators(query);
+  @Roles('ADMIN', 'PREFEITURA')
+  departmentIndicators(@Query() query: GlobalFiltersDto, @Req() req: { user: RequestUser }) {
+    return this.analyticsService.departmentIndicators(query, req.user);
   }
 
   @Get('indicators/categories')
-  categoryIndicators(@Query() query: GlobalFiltersDto) {
-    return this.analyticsService.categoryIndicators(query);
+  @Roles('ADMIN', 'PREFEITURA')
+  categoryIndicators(@Query() query: GlobalFiltersDto, @Req() req: { user: RequestUser }) {
+    return this.analyticsService.categoryIndicators(query, req.user);
   }
 
   @Get('indicators/neighborhoods')
-  neighborhoodIndicators(@Query() query: GlobalFiltersDto) {
-    return this.analyticsService.neighborhoodIndicators(query);
+  @Roles('ADMIN', 'PREFEITURA', 'SECRETARIA')
+  neighborhoodIndicators(@Query() query: GlobalFiltersDto, @Req() req: { user: RequestUser }) {
+    return this.analyticsService.neighborhoodIndicators(query, req.user);
   }
 
   @Get('ranking')
-  ranking(@Query() query: GlobalFiltersDto) {
-    return this.analyticsService.ranking(query);
+  @Roles('ADMIN', 'PREFEITURA')
+  ranking(@Query() query: GlobalFiltersDto, @Req() req: { user: RequestUser }) {
+    return this.analyticsService.ranking(query, req.user);
   }
 
   @Get('ranking/demandas')
-  rankingDemandas(@Query() query: GlobalFiltersDto) {
-    return this.analyticsService.ranking(query);
+  @Roles('ADMIN', 'PREFEITURA')
+  rankingDemandas(@Query() query: GlobalFiltersDto, @Req() req: { user: RequestUser }) {
+    return this.analyticsService.ranking(query, req.user);
   }
 
   @Post('prioritizacao/recalcular')
   @Post('prioritization/recalculate')
-  recalculatePrioritization() {
-    return this.analyticsService.recalculatePrioritization();
+  @Roles('ADMIN', 'PREFEITURA')
+  recalculatePrioritization(@Req() req: { user: RequestUser }) {
+    return this.analyticsService.ranking({}, req.user);
   }
 
   @Get('alerts')
-  alerts() {
-    return this.analyticsService.alerts();
+  @Roles('ADMIN', 'PREFEITURA', 'SECRETARIA')
+  alerts(@Req() req: { user: RequestUser }) {
+    return this.analyticsService.alerts(req.user);
   }
 
   @Post('ia/resumo-gerencial')
   @Post('ai/executive-summary')
-  executiveSummary(@Body() body: GlobalFiltersDto) {
-    return this.analyticsService.generateExecutiveSummary(body);
+  @Roles('ADMIN', 'PREFEITURA')
+  executiveSummary(@Body() body: GlobalFiltersDto, @Req() req: { user: RequestUser }) {
+    return this.analyticsService.generateExecutiveSummary(body, req.user);
   }
 
   @Post('ia/sugerir-prioridade')
+  @Roles('ADMIN', 'PREFEITURA')
   suggestPriority(@Body() body: { title?: string; description: string }) {
     return this.analyticsService.suggestPriority(body);
   }
 
   @Post('ia/sugerir-categoria')
+  @Roles('ADMIN', 'PREFEITURA')
   suggestCategory(@Body() body: { title?: string; description: string }) {
     return this.analyticsService.suggestCategory(body);
   }
 
   @Post('ia/detectar-duplicidade')
+  @Roles('ADMIN', 'PREFEITURA')
   detectDuplicate(@Body() body: { title?: string; description: string }) {
     return this.analyticsService.detectDuplicate(body);
   }

@@ -8,12 +8,16 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspaces --if-present",
-    "start": "npm --workspace apps/api run start",
+    "start": "npm run start --workspaces --if-present",
+    "start:api": "npm --workspace apps/api run start",
+    "start:web": "npm --workspace apps/web run start",
     "build": "npm run build --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "prisma:generate": "npm --workspace apps/api run prisma:generate",
     "prisma:migrate": "npm --workspace apps/api run prisma:migrate",
+    "prisma:migrate:deploy": "npm --workspace apps/api run prisma:migrate:deploy",
+    "prisma:seed": "npm --workspace apps/api run prisma:seed",
     "prisma:studio": "npm --workspace apps/api run prisma:studio"
   },
   "devDependencies": {

@@ -1,10 +1,25 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { clearSession, getNavigationForRole, getSession, type AuthSession } from '../../lib/auth';
+import { clearSession, getSession, type AuthSession } from '../../lib/auth';
 import { fetchCurrentUser } from '../../lib/auth-api';
-import { fetchOccurrences, updateOccurrenceStatus } from '../../lib/api';
+import {
+  createOccurrence,
+  fetchCategories,
+  fetchDepartments,
+  fetchNeighborhoods,
+  fetchOccurrences,
+  updateOccurrence,
+  updateOccurrenceStatus
+} from '../../lib/api';
+import { formatOccurrenceStatus, formatPriority } from '../../lib/occurrence-map';
+import { SidebarShell } from '../../components/sidebar-shell';
+import {
+  EMPTY_OCCURRENCE_FORM,
+  KanbanOccurrenceModal,
+  type OccurrenceFormValues
+} from '../../components/kanban-occurrence-modal';
 
 type Occurrence = {
   id: string;
@@ -14,8 +29,12 @@ type Occurrence = {
   status: string;
   priority: string;
   address: string;
-  category?: { name?: string | null } | null;
-  neighborhood?: { name?: string | null } | null;
+  categoryId?: string | null;
+  neighborhoodId?: string | null;
+  suggestedDepartmentId?: string | null;
+  category?: { id?: string; name?: string | null } | null;
+  neighborhood?: { id?: string; name?: string | null } | null;
+  suggestedDepartment?: { id?: string; name?: string | null } | null;
 };
 
 const columns = [
@@ -26,13 +45,90 @@ const columns = [
   { key: 'CONCLUIDO', label: 'Concluído' }
 ];
 
+function pickValidId(
+  value: string | null | undefined,
+  fallback: string | undefined,
+  options: { id: string }[]
+) {
+  const candidate = value ?? fallback ?? '';
+  return candidate && options.some((item) => item.id === candidate) ? candidate : '';
+}
+
+function resolveOptionId(
+  value: string | null | undefined,
+  related: { id?: string; name?: string | null } | null | undefined,
+  options: { id: string; name?: string | null }[]
+) {
+  const byId = pickValidId(value, related?.id, options);
+  if (byId) return byId;
+
+  const name = related?.name?.trim();
+  if (!name) return '';
+
+  return options.find((item) => item.name === name)?.id ?? '';
+}
+
+function formatSaveError(error: unknown) {
+  if (error instanceof Error && error.message) return error.message;
+  if (typeof error === 'string' && error.trim()) return error;
+  return 'Não foi possível salvar a ocorrência.';
+}
+
+function getAccessToken(session: AuthSession | null) {
+  return session?.accessToken ?? getSession()?.accessToken;
+}
+
+function mapOccurrenceToForm(
+  item: Occurrence,
+  categories: { id: string; name?: string | null }[],
+  neighborhoods: { id: string; name?: string | null }[],
+  departments: { id: string; name?: string | null }[]
+): OccurrenceFormValues {
+  return {
+    title: item.title ?? '',
+    description: item.description ?? '',
+    address: item.address ?? '',
+    status: item.status,
+    priority: item.priority,
+    categoryId: resolveOptionId(item.categoryId, item.category, categories),
+    neighborhoodId: resolveOptionId(item.neighborhoodId, item.neighborhood, neighborhoods),
+    suggestedDepartmentId: resolveOptionId(
+      item.suggestedDepartmentId,
+      item.suggestedDepartment,
+      departments
+    )
+  };
+}
+
+function mapFormToPayload(form: OccurrenceFormValues) {
+  return {
+    title: form.title.trim() || undefined,
+    description: form.description.trim(),
+    address: form.address.trim(),
+    status: form.status,
+    priority: form.priority,
+    categoryId: form.categoryId || undefined,
+    neighborhoodId: form.neighborhoodId || undefined,
+    suggestedDepartmentId: form.suggestedDepartmentId || undefined
+  };
+}
+
 export default function OccurrencesPage() {
   const router = useRouter();
   const [session, setSession] = useState<AuthSession | null>(null);
   const [items, setItems] = useState<Occurrence[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [neighborhoods, setNeighborhoods] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState<OccurrenceFormValues>(EMPTY_OCCURRENCE_FORM);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [savingForm, setSavingForm] = useState(false);
 
   useEffect(() => {
     const currentSession = getSession();
@@ -48,28 +144,95 @@ export default function OccurrencesPage() {
         router.replace('/login');
       })
       .finally(() => {
-        fetchOccurrences(currentSession.accessToken)
-          .then(setItems)
+        Promise.all([
+          fetchOccurrences(currentSession.accessToken),
+          fetchCategories(currentSession.accessToken),
+          fetchNeighborhoods(currentSession.accessToken),
+          fetchDepartments(currentSession.accessToken)
+        ])
+          .then(([occurrences, loadedCategories, loadedNeighborhoods, loadedDepartments]) => {
+            setItems(occurrences);
+            setCategories(loadedCategories);
+            setNeighborhoods(loadedNeighborhoods);
+            setDepartments(loadedDepartments);
+          })
           .catch(() => setItems([]))
           .finally(() => setLoading(false));
       });
   }, [router]);
 
-  const menu = useMemo(() => getNavigationForRole(session?.user.role), [session]);
+  function openCreateModal(status = 'ABERTO') {
+    setModalMode('create');
+    setEditingId(null);
+    setForm({ ...EMPTY_OCCURRENCE_FORM, status });
+    setFormError(null);
+    setModalOpen(true);
+  }
+
+  function openEditModal(item: Occurrence) {
+    setModalMode('edit');
+    setEditingId(item.id);
+    setForm(mapOccurrenceToForm(item, categories, neighborhoods, departments));
+    setFormError(null);
+    setModalOpen(true);
+  }
+
+  function closeModal() {
+    setModalOpen(false);
+    setEditingId(null);
+    setFormError(null);
+  }
 
   async function moveOccurrence(id: string, status: string) {
     setBusyId(id);
     try {
-      const updated = await updateOccurrenceStatus(id, status, session?.accessToken);
-      setItems((current) => current.map((item) => (item.id === id ? { ...item, status: updated.status } : item)));
+      const updated = await updateOccurrenceStatus(id, status, getAccessToken(session));
+      setItems((current) =>
+        current.map((item) => (item.id === id ? { ...item, ...updated, status: updated.status } : item))
+      );
     } finally {
       setBusyId(null);
     }
   }
 
-  function logout() {
-    clearSession();
-    router.push('/login');
+  async function handleSaveForm() {
+    if (!form.description.trim() || !form.address.trim()) {
+      setFormError('Preencha descrição e endereço.');
+      return;
+    }
+    if (!form.suggestedDepartmentId) {
+      setFormError('Selecione a secretaria responsável.');
+      return;
+    }
+
+    setSavingForm(true);
+    setFormError(null);
+
+    try {
+      const payload = mapFormToPayload(form);
+      const accessToken = getAccessToken(session);
+
+      if (!accessToken) {
+        setFormError('Sessão expirada. Faça login novamente.');
+        return;
+      }
+
+      if (modalMode === 'create') {
+        const created = await createOccurrence(payload, accessToken);
+        setItems((current) => [created, ...current]);
+      } else if (editingId) {
+        const updated = await updateOccurrence(editingId, payload, accessToken);
+        setItems((current) =>
+          current.map((item) => (item.id === editingId ? { ...item, ...updated } : item))
+        );
+      }
+
+      closeModal();
+    } catch (error) {
+      setFormError(formatSaveError(error));
+    } finally {
+      setSavingForm(false);
+    }
   }
 
   function handleDragStart(id: string) {
@@ -95,26 +258,18 @@ export default function OccurrencesPage() {
 
   return (
     <main className="shell">
-      <aside className="sidebar">
-        <h1>Zeladoria Digital</h1>
-        <p className="sidebar-user">{session?.user.name ?? 'Operador'}</p>
-        <nav>
-          {menu.map((item) => (
-            <a key={item} href={item === 'Ordens de serviço' ? '/ordens-servico' : item === 'Ocorrências' ? '/ocorrencias' : '#'}>
-              {item}
-            </a>
-          ))}
-        </nav>
-        <button className="ghost-button" onClick={logout} type="button">
-          Sair
-        </button>
-      </aside>
+      <SidebarShell />
 
       <section className="content">
-        <header className="hero">
-          <p className="eyebrow">Operação</p>
-          <h2>Kanban de ocorrências</h2>
-          <p>Arraste mentalmente o fluxo enquanto move os chamados pelos status operacionais.</p>
+        <header className="hero kanban-hero">
+          <div>
+            <p className="eyebrow">Operação</p>
+            <h2>Kanban de ocorrências</h2>
+            <p>Arraste os cards, crie novos chamados ou edite os existentes.</p>
+          </div>
+          <button type="button" className="btn-primary" onClick={() => openCreateModal()}>
+            Nova ocorrência
+          </button>
         </header>
 
         <div className="kanban">
@@ -127,39 +282,78 @@ export default function OccurrencesPage() {
             >
               <div className="kanban-column-header">
                 <h3>{column.label}</h3>
-                <span>{items.filter((item) => item.status === column.key).length}</span>
+                <div className="kanban-column-tools">
+                  <span>{items.filter((item) => item.status === column.key).length}</span>
+                  <button type="button" className="kanban-add-btn" onClick={() => openCreateModal(column.key)}>
+                    +
+                  </button>
+                </div>
               </div>
               <div className="kanban-list">
-                {items.filter((item) => item.status === column.key).map((item) => {
-                  const nextColumn = columns.find((candidate) => columns.indexOf(candidate) === columns.indexOf(column) + 1);
-                  return (
-                    <article
-                      key={item.id}
-                      className={`kanban-card ${draggingId === item.id ? 'is-dragging' : ''}`}
-                      draggable
-                      onDragStart={() => handleDragStart(item.id)}
-                      onDragEnd={() => setDraggingId(null)}
-                    >
-                      <p className="eyebrow">{item.protocol}</p>
-                      <h4>{item.title ?? item.description}</h4>
-                      <p>{item.address}</p>
-                      <p>{item.category?.name ?? 'Sem categoria'} • {item.neighborhood?.name ?? 'Sem bairro'}</p>
-                      <p className="kanban-meta">Prioridade: {item.priority}</p>
-                      <div className="kanban-actions">
-                        {nextColumn ? (
-                          <button disabled={busyId === item.id} onClick={() => moveOccurrence(item.id, nextColumn.key)} type="button">
-                            {busyId === item.id ? 'Salvando...' : `Mover para ${nextColumn.label}`}
+                {items
+                  .filter((item) => item.status === column.key)
+                  .map((item) => {
+                    const nextColumn = columns.find(
+                      (candidate) => columns.indexOf(candidate) === columns.indexOf(column) + 1
+                    );
+                    return (
+                      <article
+                        key={item.id}
+                        className={`kanban-card ${draggingId === item.id ? 'is-dragging' : ''}`}
+                        draggable
+                        onDragStart={() => handleDragStart(item.id)}
+                        onDragEnd={() => setDraggingId(null)}
+                      >
+                        <div className="kanban-card-top">
+                          <p className="eyebrow">{item.protocol}</p>
+                          <button type="button" className="kanban-edit-btn" onClick={() => openEditModal(item)}>
+                            Editar
                           </button>
+                        </div>
+                        <h4>{item.title ?? item.description}</h4>
+                        <p>{item.address}</p>
+                        <p>
+                          {item.category?.name ?? 'Sem categoria'} • {item.neighborhood?.name ?? 'Sem bairro'}
+                        </p>
+                        <p className="kanban-meta">
+                          {formatOccurrenceStatus(item.status)} • {formatPriority(item.priority)}
+                        </p>
+                        {item.suggestedDepartment?.name ? (
+                          <p className="kanban-meta">{item.suggestedDepartment.name}</p>
                         ) : null}
-                      </div>
-                    </article>
-                  );
-                })}
+                        <div className="kanban-actions">
+                          {nextColumn ? (
+                            <button
+                              disabled={busyId === item.id}
+                              onClick={() => moveOccurrence(item.id, nextColumn.key)}
+                              type="button"
+                            >
+                              {busyId === item.id ? 'Salvando...' : `Mover para ${nextColumn.label}`}
+                            </button>
+                          ) : null}
+                        </div>
+                      </article>
+                    );
+                  })}
               </div>
             </article>
           ))}
         </div>
       </section>
+
+      <KanbanOccurrenceModal
+        open={modalOpen}
+        mode={modalMode}
+        saving={savingForm}
+        error={formError}
+        form={form}
+        categories={categories}
+        neighborhoods={neighborhoods}
+        departments={departments}
+        onClose={closeModal}
+        onChange={setForm}
+        onSubmit={handleSaveForm}
+      />
     </main>
   );
 }

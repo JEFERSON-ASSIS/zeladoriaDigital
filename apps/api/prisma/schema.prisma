@@ -308,3 +308,29 @@ model ServiceArea {
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 }
+
+model SchedulingPushSubscription {
+  id         String   @id @default(cuid())
+  cpf        String
+  psfId      String
+  endpoint   String   @unique
+  p256dh     String
+  auth       String
+  remindedAt Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([cpf, psfId])
+}
+
+model RoleMenuPermission {
+  id        String   @id @default(cuid())
+  role      UserRole
+  menuKey   String
+  allowed   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([role, menuKey])
+  @@index([role])
+}

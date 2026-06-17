@@ -1,3 +1,4 @@
+import type { MenuKey } from '@zeladoria/shared';
 import type { SessionRole } from './auth';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3333';
@@ -38,5 +39,8 @@ export async function fetchCurrentUser(accessToken: string) {
     name: string;
     email: string;
     role: SessionRole;
+    departmentId?: string | null;
+    department?: { id: string; name: string } | null;
+    menuKeys?: MenuKey[];
   }>;
 }

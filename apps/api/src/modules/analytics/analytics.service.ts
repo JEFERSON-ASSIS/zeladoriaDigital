@@ -1,31 +1,24 @@
 import { Injectable } from '@nestjs/common';
-import { AlertLevel, OccurrenceStatus, PriorityLevel, Prisma } from '@prisma/client';
+import { AlertLevel, OccurrenceStatus, PriorityLevel, Prisma, UserRole } from '@prisma/client';
 import { AiAssistantService } from '../ai-assistant/ai-assistant.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { PriorityService } from '../priority/priority.service';
+import { AccessScopeService } from '../access/access-scope.service';
 import { GlobalFiltersDto } from './dto/global-filters.dto';
+
+type RequestUser = { sub: string; role: UserRole };
 
 @Injectable()
 export class AnalyticsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly priorityService: PriorityService,
-    private readonly aiAssistantService: Pick<
-      AiAssistantService,
-      'suggestCategory' | 'suggestPriority' | 'detectDuplicate' | 'generateExecutiveSummary'
-    > = {
-      suggestCategory: async () => 'Sem sugestao',
-      suggestPriority: async () => 'MEDIA',
-      detectDuplicate: async () => false,
-      generateExecutiveSummary: async () => ({ summary: 'Resumo indisponivel.' })
-    } as unknown as Pick<
-      AiAssistantService,
-      'suggestCategory' | 'suggestPriority' | 'detectDuplicate' | 'generateExecutiveSummary'
-    >
+    private readonly aiAssistantService: AiAssistantService,
+    private readonly accessScope: AccessScopeService
   ) {}
 
-  async executiveDashboard(filters: GlobalFiltersDto = {}) {
-    const items = await this.loadOccurrences(filters);
+  async executiveDashboard(filters: GlobalFiltersDto = {}, user?: RequestUser) {
+    const items = await this.loadOccurrences(filters, user);
     const total = items.length;
     const completed = items.filter((item) => item.status === OccurrenceStatus.CONCLUIDO).length;
     const payload = {
@@ -46,8 +39,8 @@ export class AnalyticsService {
     return this.cacheIndicator('executive-dashboard', filters, payload);
   }
 
-  async statusIndicators(filters: GlobalFiltersDto = {}) {
-    const items = await this.loadOccurrences(filters);
+  async statusIndicators(filters: GlobalFiltersDto = {}, user?: RequestUser) {
+    const items = await this.loadOccurrences(filters, user);
     const total = items.length;
     return this.cacheIndicator(
       'status-indicators',
@@ -59,8 +52,8 @@ export class AnalyticsService {
     );
   }
 
-  async departmentIndicators(filters: GlobalFiltersDto = {}) {
-    const items = await this.loadOccurrences(filters);
+  async departmentIndicators(filters: GlobalFiltersDto = {}, user?: RequestUser) {
+    const items = await this.loadOccurrences(filters, user);
     const departments = await this.prisma.department.findMany();
     return this.cacheIndicator(
       'department-indicators',
@@ -84,8 +77,8 @@ export class AnalyticsService {
     );
   }
 
-  async categoryIndicators(filters: GlobalFiltersDto = {}) {
-    const items = await this.loadOccurrences(filters);
+  async categoryIndicators(filters: GlobalFiltersDto = {}, user?: RequestUser) {
+    const items = await this.loadOccurrences(filters, user);
     const grouped = this.groupBy(items, (item) => item.category?.name ?? 'Sem categoria');
     const list = Object.entries(grouped).map(([category, scoped]) => ({
       category,
@@ -98,8 +91,8 @@ export class AnalyticsService {
     return this.cacheIndicator('category-indicators', filters, list);
   }
 
-  async neighborhoodIndicators(filters: GlobalFiltersDto = {}) {
-    const items = await this.loadOccurrences(filters);
+  async neighborhoodIndicators(filters: GlobalFiltersDto = {}, user?: RequestUser) {
+    const items = await this.loadOccurrences(filters, user);
     const grouped = this.groupBy(items, (item) => item.neighborhood?.name ?? 'Sem bairro');
     const list = Object.entries(grouped).map(([neighborhood, scoped]) => ({
       neighborhood,
@@ -114,8 +107,8 @@ export class AnalyticsService {
     return this.cacheIndicator('neighborhood-indicators', filters, list);
   }
 
-  async ranking(filters: GlobalFiltersDto = {}) {
-    const items = await this.loadOccurrences(filters);
+  async ranking(filters: GlobalFiltersDto = {}, user?: RequestUser) {
+    const items = await this.loadOccurrences(filters, user);
     const calculations = await Promise.all(items.map((item) => this.priorityService.calculateAndPersist(item.id, item)));
     return {
       city: this.buildRankingList(items, calculations),
@@ -138,8 +131,14 @@ export class AnalyticsService {
     return true;
   }
 
-  async alerts() {
+  async alerts(user?: RequestUser) {
     const existing = await this.prisma.managerialAlert.findMany({ orderBy: { createdAt: 'desc' } });
+    if (user) {
+      const scope = await this.accessScope.occurrenceScopeForUser(user);
+      const scoped = await this.prisma.occurrence.findMany({ where: scope, select: { id: true } });
+      const allowedIds = new Set(scoped.map((item) => item.id));
+      return existing.filter((alert) => !alert.occurrenceId || allowedIds.has(alert.occurrenceId));
+    }
     if (existing.length) return existing;
     const overdue = await this.prisma.occurrence.findMany({
       where: { status: { not: OccurrenceStatus.CONCLUIDO } },
@@ -285,8 +284,8 @@ export class AnalyticsService {
     return this.prisma.managerialAlert.findMany({ orderBy: { createdAt: 'desc' } });
   }
 
-  async generateExecutiveSummary(filters: GlobalFiltersDto = {}) {
-    const items = await this.loadOccurrences(filters);
+  async generateExecutiveSummary(filters: GlobalFiltersDto = {}, user?: RequestUser) {
+    const items = await this.loadOccurrences(filters, user);
     const aiSummary = await this.aiAssistantService.generateExecutiveSummary(filters);
     return {
       summary: this.priorityService.generateManagementSummary(items),
@@ -311,8 +310,8 @@ export class AnalyticsService {
     return this.aiAssistantService.detectDuplicate(input);
   }
 
-  async generateSlaIndicators(filters: GlobalFiltersDto = {}) {
-    const items = await this.loadOccurrences(filters);
+  async generateSlaIndicators(filters: GlobalFiltersDto = {}, user?: RequestUser) {
+    const items = await this.loadOccurrences(filters, user);
     const totalOrders = items.flatMap((item) => item.serviceOrders);
     const overdueOrders = totalOrders.filter((order) => {
       if (!order.slaHours || !order.createdAt) return false;
@@ -326,7 +325,7 @@ export class AnalyticsService {
     };
   }
 
-  private async loadOccurrences(filters: GlobalFiltersDto) {
+  private buildFilterWhere(filters: GlobalFiltersDto): Prisma.OccurrenceWhereInput {
     const where: Prisma.OccurrenceWhereInput = {};
     if (filters.periodStart || filters.periodEnd) {
       where.createdAt = {};
@@ -342,8 +341,22 @@ export class AnalyticsService {
     if (filters.neighborhoodId) where.neighborhoodId = filters.neighborhoodId;
     if (filters.status) where.status = filters.status as OccurrenceStatus;
     if (filters.priority) where.priority = filters.priority as PriorityLevel;
+    return where;
+  }
+
+  private async loadOccurrences(filters: GlobalFiltersDto, user?: RequestUser) {
+    const filterWhere = this.buildFilterWhere(filters);
+    if (!user) {
+      return this.prisma.occurrence.findMany({
+        where: filterWhere,
+        include: { category: true, neighborhood: true, citizen: true, serviceOrders: { include: { department: true } }, suggestedDepartment: true, ratings: true },
+        orderBy: { createdAt: 'desc' }
+      });
+    }
+
+    const scope = await this.accessScope.occurrenceScopeForUser(user);
     return this.prisma.occurrence.findMany({
-      where,
+      where: { AND: [scope, filterWhere] },
       include: { category: true, neighborhood: true, citizen: true, serviceOrders: { include: { department: true } }, suggestedDepartment: true, ratings: true },
       orderBy: { createdAt: 'desc' }
     });

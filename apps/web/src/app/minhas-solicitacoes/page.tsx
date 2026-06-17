@@ -1,17 +1,13 @@
-﻿'use client';
+'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  clearSession,
-  getNavigationForRole,
-  getNavigationHref,
-  getSession,
-  type AuthSession
-} from '../../lib/auth';
+import { clearSession, getSession, type AuthSession } from '../../lib/auth';
 import { fetchCurrentUser } from '../../lib/auth-api';
 import { fetchMyOccurrences, fetchOccurrenceByProtocol } from '../../lib/api';
-import { InstallPWAButton } from '../../components/install-pwa-button';
+import { formatOccurrenceStatus, formatPriority } from '../../lib/occurrence-map';
+import { CitizenShell } from '../../components/citizen-shell';
+import { OccurrenceAttachments } from '../../components/occurrence-attachments';
 
 type Movement = {
   id: string;
@@ -31,8 +27,10 @@ type CitizenOccurrence = {
   address: string;
   category?: { name?: string | null } | null;
   neighborhood?: { name?: string | null } | null;
-  serviceOrders?: { id: string }[];
+  suggestedDepartment?: { name?: string | null } | null;
+  serviceOrders?: { department?: { name?: string | null } | null }[];
   movements?: Movement[];
+  attachments?: { id: string; fileUrl: string; fileType: string }[];
 };
 
 export default function MyRequestsPage() {
@@ -64,13 +62,6 @@ export default function MyRequestsPage() {
       });
   }, [router]);
 
-  const navigation = useMemo(() => getNavigationForRole(session?.user.role), [session]);
-
-  function logout() {
-    clearSession();
-    router.push('/login');
-  }
-
   async function handleProtocolSearch(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const currentSession = getSession();
@@ -84,39 +75,16 @@ export default function MyRequestsPage() {
       <main className="login-shell">
         <section className="login-card">
           <p className="eyebrow">Carregando</p>
-          <h1>Minhas solicitaÃ§Ãµes...</h1>
-          <p className="login-copy">Consultando o histÃ³rico do cidadÃ£o.</p>
+          <h1>Minhas solicitações...</h1>
+          <p className="login-copy">Consultando o histórico do cidadão.</p>
         </section>
       </main>
     );
   }
 
   return (
-    <main className="shell">
-      <aside className="sidebar">
-        <h1>Zeladoria Digital</h1>
-        <p className="sidebar-user">{session?.user.name ?? 'CidadÃ£o'}</p>
-        <nav>
-          {navigation.map((item) => (
-            <a key={item} href={getNavigationHref(item)}>
-              {item}
-            </a>
-          ))}
-        </nav>
-        <button className="ghost-button" onClick={logout} type="button">
-          Sair
-        </button>
-      </aside>
-
-      <section className="content">
-                <header className="hero">
-          <p className="eyebrow">Cidadão</p>
-          <h2>Minhas solicitações</h2>
-          <p>Acompanhe seus protocolos, status e o histórico de movimentações.</p>
-          <InstallPWAButton />
-        </header>
-
-        <section className="panel">
+    <CitizenShell title="Minhas solicitações" subtitle="Acompanhe protocolos, secretaria responsável e histórico.">
+      <section className="panel">
           <h3>Consultar por protocolo</h3>
           <form className="protocol-search" onSubmit={handleProtocolSearch}>
             <input
@@ -130,8 +98,8 @@ export default function MyRequestsPage() {
             <article className="panel" style={{ marginTop: 16 }}>
               <p className="eyebrow">{foundProtocol.protocol}</p>
               <h3>{foundProtocol.title ?? foundProtocol.description}</h3>
-              <p>Status: {foundProtocol.status}</p>
-              <p>Prioridade: {foundProtocol.priority}</p>
+              <p>Status: {formatOccurrenceStatus(foundProtocol.status)}</p>
+              <p>Prioridade: {formatPriority(foundProtocol.priority)}</p>
               <p>{foundProtocol.address}</p>
             </article>
           ) : null}
@@ -139,7 +107,7 @@ export default function MyRequestsPage() {
 
         <div className="cards">
           <article className="card">
-            <span>Total de solicitaÃ§Ãµes</span>
+            <span>Total de solicitações</span>
             <strong>{items.length}</strong>
           </article>
           <article className="card">
@@ -147,7 +115,7 @@ export default function MyRequestsPage() {
             <strong>{items.filter((item) => !['CONCLUIDO', 'CANCELADO'].includes(item.status)).length}</strong>
           </article>
           <article className="card">
-            <span>ConcluÃ­das</span>
+            <span>Concluídas</span>
             <strong>{items.filter((item) => item.status === 'CONCLUIDO').length}</strong>
           </article>
         </div>
@@ -155,24 +123,29 @@ export default function MyRequestsPage() {
         <div className="orders-grid">
           {items.length === 0 ? (
             <article className="panel">
-              <h3>Nenhuma solicitaÃ§Ã£o encontrada</h3>
-              <p>Abra uma nova ocorrÃªncia para comeÃ§ar a acompanhar seu protocolo.</p>
+              <h3>Nenhuma solicitação encontrada</h3>
+              <p>Abra uma nova ocorrência para começar a acompanhar seu protocolo.</p>
             </article>
           ) : (
             items.map((item) => (
               <article key={item.id} className="panel order-card">
                 <p className="eyebrow">{item.protocol}</p>
                 <h3>{item.title ?? item.description}</h3>
-                <p>Status: {item.status}</p>
-                <p>Prioridade: {item.priority}</p>
-                <p>Categoria: {item.category?.name ?? 'Sem categoria'}</p>
+                <div className="occurrence-status-row">
+                  <span className={`pill pill-status pill-status--${item.status.toLowerCase()}`}>
+                    {formatOccurrenceStatus(item.status)}
+                  </span>
+                  <span className="pill">{formatPriority(item.priority)}</span>
+                </div>
+                <p>Secretaria: {item.suggestedDepartment?.name ?? item.serviceOrders?.[0]?.department?.name ?? 'Em análise'}</p>
                 <p>Bairro: {item.neighborhood?.name ?? 'Sem bairro'}</p>
-                <p>EndereÃ§o: {item.address}</p>
+                <p>Endereço: {item.address}</p>
+                <OccurrenceAttachments attachments={item.attachments} />
                 <div className="timeline">
                   {(item.movements ?? []).map((movement) => (
                     <article key={movement.id}>
-                      <strong>{movement.toStatus}</strong>
-                      <p>{movement.note ?? 'MovimentaÃ§Ã£o registrada.'}</p>
+                      <strong>{formatOccurrenceStatus(movement.toStatus)}</strong>
+                      <p>{movement.note ?? 'Movimentação registrada.'}</p>
                     </article>
                   ))}
                 </div>
@@ -180,10 +153,6 @@ export default function MyRequestsPage() {
             ))
           )}
         </div>
-      </section>
-    </main>
+    </CitizenShell>
   );
 }
-
-
-

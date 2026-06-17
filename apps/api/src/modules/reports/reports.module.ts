@@ -7,6 +7,7 @@ import { ExportModule } from '../export/export.module';
 @Module({
   imports: [PrismaModule, ExportModule],
   controllers: [ReportsController],
-  providers: [ReportsService]
+  providers: [ReportsService],
+  exports: [ReportsService]
 })
 export class ReportsModule {}
