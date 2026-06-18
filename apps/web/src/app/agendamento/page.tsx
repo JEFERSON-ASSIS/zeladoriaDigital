@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSession } from '../../lib/auth';
 import { CitizenShell } from '../../components/citizen-shell';
+import { PWA_LOGIN, pwaPath } from '../../lib/pwa';
 import { PsfSelectionFlow } from '../../components/psf-selection-flow';
 import { getAvailableServices, type PsfConfig, type ServiceKind } from '../../lib/scheduling/psf-config';
 import {
@@ -56,7 +57,7 @@ export default function SchedulingPage() {
 
   useEffect(() => {
     if (!getSession()) {
-      router.replace('/login');
+      router.replace(PWA_LOGIN);
       return;
     }
 
@@ -227,7 +228,7 @@ export default function SchedulingPage() {
         <section className="panel scheduling-panel">
           <p className="success-message">{successMessage}</p>
           <div className="form-actions">
-            <button type="button" onClick={() => router.push('/meus-agendamentos')}>
+            <button type="button" onClick={() => router.push(pwaPath('/meus-agendamentos'))}>
               Ver meus agendamentos
             </button>
             <button

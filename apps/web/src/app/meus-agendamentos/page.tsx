@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSession } from '../../lib/auth';
 import { CitizenShell } from '../../components/citizen-shell';
+import { PWA_LOGIN, pwaPath } from '../../lib/pwa';
 import { CitizenConfirmDialog } from '../../components/citizen-confirm-dialog';
 import { PsfSelectionFlow } from '../../components/psf-selection-flow';
 import {
@@ -105,7 +106,7 @@ export default function MyAppointmentsPage() {
 
   useEffect(() => {
     if (!getSession()) {
-      router.replace('/login');
+      router.replace(PWA_LOGIN);
       return;
     }
 
@@ -297,7 +298,7 @@ export default function MyAppointmentsPage() {
         ) : null}
 
         <div className="form-actions" style={{ marginTop: 16 }}>
-          <button type="button" onClick={() => router.push('/agendamento')}>
+          <button type="button" onClick={() => router.push(pwaPath('/agendamento'))}>
             Novo agendamento
           </button>
         </div>

@@ -1,22 +1,30 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { BrandLogo } from '../../components/brand-logo';
 import { login, fetchCurrentUser } from '../../lib/auth-api';
 import { getSession, setSession } from '../../lib/auth';
+import { PWA_HOME } from '../../lib/pwa';
+import { showDemoHints } from '../../lib/demo-hints';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('admin@zeladoria.local');
-  const [password, setPassword] = useState('secret123');
+  const demoHints = showDemoHints();
+  const [email, setEmail] = useState(demoHints ? 'admin@zeladoria.local' : '');
+  const [password, setPassword] = useState(demoHints ? 'secret123' : '');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (getSession()) {
-      router.replace('/');
+    const session = getSession();
+    if (!session) return;
+    if (session.user.role === 'CIDADAO') {
+      router.replace(PWA_HOME);
+      return;
     }
+    router.replace('/');
   }, [router]);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -25,12 +33,22 @@ export default function LoginPage() {
     setError(null);
     try {
       const result = await login(email, password);
-      const user = await fetchCurrentUser(result.access_token);
+      let user;
+      try {
+        user = await fetchCurrentUser(result.access_token);
+      } catch {
+        user = {
+          id: result.user.id,
+          name: result.user.name,
+          email: result.user.email,
+          role: result.user.role
+        };
+      }
       setSession({
         accessToken: result.access_token,
         user
       });
-      router.push(user.role === 'CIDADAO' ? '/nova-ocorrencia' : '/');
+      router.push(user.role === 'CIDADAO' ? PWA_HOME : '/');
       router.refresh();
     } catch {
       setError('Não foi possível entrar. Verifique as credenciais.');
@@ -40,7 +58,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="login-shell login-shell--pwa">
+    <main className="login-shell">
       <aside className="login-brand-panel" aria-hidden="true">
         <div className="login-brand-content">
           <BrandLogo variant="light" size="lg" showTagline />
@@ -58,19 +76,18 @@ export default function LoginPage() {
       </aside>
       <section className="login-form-panel">
         <div className="login-card">
-          <div className="login-mobile-brand">
-            <BrandLogo variant="dark" size="md" showTagline={false} />
-          </div>
           <span className="login-product-label">Prefeitura na Mão</span>
-          <p className="eyebrow">Acesso à plataforma</p>
+          <p className="eyebrow">Sistema web — gestão municipal</p>
           <h1>Entrar no sistema</h1>
-          <p className="login-copy">No celular, instale o app na tela inicial para usar como aplicativo nativo.</p>
-          <details className="login-demo-details">
-            <summary>Usuários de teste</summary>
-            <p className="login-copy login-copy--hint">
-              Cidadão: <strong>cidadao@zeladoria.local</strong> · Secretaria: <strong>secretaria@zeladoria.local</strong> · Equipe: <strong>equipe@zeladoria.local</strong> · Admin: <strong>admin@zeladoria.local</strong> · Senha: <strong>secret123</strong>
-            </p>
-          </details>
+          <p className="login-copy">Acesso para administradores, secretarias e equipes de campo.</p>
+          {demoHints ? (
+            <details className="login-demo-details">
+              <summary>Usuários de teste</summary>
+              <p className="login-copy login-copy--hint">
+                Admin: <strong>admin@zeladoria.local</strong> · Secretaria: <strong>secretaria@zeladoria.local</strong> · Equipe: <strong>equipe@zeladoria.local</strong> · Senha: <strong>secret123</strong>
+              </p>
+            </details>
+          ) : null}
           <form onSubmit={onSubmit} className="login-form">
             <label>
               E-mail
@@ -85,6 +102,9 @@ export default function LoginPage() {
               {loading ? 'Entrando...' : 'Entrar'}
             </button>
           </form>
+          <p className="login-copy login-copy--hint">
+            É cidadão? <Link href="/app">Abrir aplicativo do cidadão (PWA)</Link>
+          </p>
         </div>
       </section>
     </main>

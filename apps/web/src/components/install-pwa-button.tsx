@@ -23,6 +23,8 @@ function wasDismissed() {
 export type InstallPWAButtonProps = {
   /** `toast` = aviso flutuante; `card` = bloco embutido (admin) */
   variant?: 'toast' | 'card';
+  /** Não fecha sozinho nem grava dismiss no /app */
+  persistent?: boolean;
 };
 
 type BeforeInstallPromptEvent = Event & {
@@ -30,7 +32,7 @@ type BeforeInstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
 };
 
-export function InstallPWAButton({ variant = 'toast' }: InstallPWAButtonProps) {
+export function InstallPWAButton({ variant = 'toast', persistent = false }: InstallPWAButtonProps) {
   const [ready, setReady] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [visible, setVisible] = useState(false);
@@ -49,7 +51,8 @@ export function InstallPWAButton({ variant = 'toast' }: InstallPWAButtonProps) {
 
   useEffect(() => {
     if (!ready) return;
-    if (isStandaloneMode() || wasDismissed()) return;
+    if (isStandaloneMode()) return;
+    if (!persistent && wasDismissed()) return;
 
     const ios = isIOSDevice();
     setIosMode(ios);
@@ -86,13 +89,13 @@ export function InstallPWAButton({ variant = 'toast' }: InstallPWAButtonProps) {
       window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt);
       window.removeEventListener('appinstalled', onAppInstalled);
     };
-  }, [ready, variant]);
+  }, [ready, variant, persistent]);
 
   useEffect(() => {
-    if (!visible || variant !== 'toast') return;
+    if (!visible || variant !== 'toast' || persistent) return;
     const timer = window.setTimeout(() => dismiss(), 12000);
     return () => window.clearTimeout(timer);
-  }, [visible, variant, dismiss]);
+  }, [visible, variant, dismiss, persistent]);
 
   async function handleInstall() {
     if (deferredPrompt) {
@@ -105,6 +108,10 @@ export function InstallPWAButton({ variant = 'toast' }: InstallPWAButtonProps) {
       }
     }
     dismiss();
+  }
+
+  function handleDismiss() {
+    if (!persistent) dismiss();
   }
 
   if (!ready) return null;
@@ -144,9 +151,11 @@ export function InstallPWAButton({ variant = 'toast' }: InstallPWAButtonProps) {
             Instalar
           </button>
         ) : null}
-        <button type="button" className="pwa-install-toast__close" onClick={dismiss} aria-label="Fechar aviso">
-          ×
-        </button>
+        {!persistent ? (
+          <button type="button" className="pwa-install-toast__close" onClick={handleDismiss} aria-label="Fechar aviso">
+            ×
+          </button>
+        ) : null}
       </div>
     </div>
   );
@@ -163,5 +172,5 @@ export function PwaInstallPrompt() {
 
   if (!active) return null;
 
-  return <InstallPWAButton variant="toast" />;
+  return <InstallPWAButton variant="toast" persistent />;
 }

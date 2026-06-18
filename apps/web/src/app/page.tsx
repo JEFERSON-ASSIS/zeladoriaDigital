@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { clearSession, getSession, type AuthSession } from '../lib/auth';
 import { fetchDashboardData } from '../lib/api';
 import { fetchCurrentUser } from '../lib/auth-api';
-import { InstallPWAButton } from '../components/install-pwa-button';
+import { PWA_HOME } from '../lib/pwa';
 import { SidebarShell } from '../components/sidebar-shell';
 import { OperationalMapPanel } from '../components/operational-map-panel';
 
@@ -32,7 +32,7 @@ export default function HomePage() {
     fetchCurrentUser(currentSession.accessToken)
       .then((user) => {
         if (user.role === 'CIDADAO') {
-          router.replace('/nova-ocorrencia');
+          router.replace(PWA_HOME);
           setLoadingSession(false);
           return;
         }
@@ -109,7 +109,6 @@ export default function HomePage() {
           <p className="eyebrow">i7AI Sistemas</p>
           <h2>Base executiva para operação, triagem e atendimento.</h2>
           <p>Visão executiva com indicadores de operação, mapa e status em tempo real a partir da base atual.</p>
-          {session?.user.role === 'CIDADAO' ? <InstallPWAButton variant="card" /> : null}
         </header>
         <div className="cards">
           {[

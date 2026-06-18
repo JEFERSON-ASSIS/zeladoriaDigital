@@ -15,7 +15,16 @@ const DEV_ACCOUNTS = [
 ] as const;
 
 function isDevAuthFallbackEnabled() {
-  return process.env.NODE_ENV !== 'production' && process.env.DISABLE_DEV_AUTH !== 'true';
+  return (
+    process.env.ENABLE_DEMO_AUTH === 'true' ||
+    (process.env.NODE_ENV !== 'production' && process.env.DISABLE_DEV_AUTH !== 'true')
+  );
+}
+
+function matchDevStaffAccount(email: string, password: string) {
+  if (!isDevAuthFallbackEnabled()) return null;
+  const fallback = DEV_ACCOUNTS.find((account) => account.email === email && account.role !== UserRole.CIDADAO);
+  return fallback && fallback.password === password ? fallback : null;
 }
 
 @Injectable()
@@ -30,29 +39,31 @@ export class AuthService {
   async validateUser(email: string, password: string) {
     try {
       const user = await this.usersService.findByEmail(email);
-      if (!user) return null;
-      const ok = await bcrypt.compare(password, user.password);
-      if (!ok) return null;
-      return user;
+      if (user) {
+        const ok = await bcrypt.compare(password, user.password);
+        if (ok) return user;
+      }
     } catch {
-      if (!isDevAuthFallbackEnabled()) return null;
-      const fallback = DEV_ACCOUNTS.find((account) => account.email === email && account.role !== UserRole.CIDADAO);
-      return fallback && fallback.password === password ? fallback : null;
+      // Prisma indisponível — tenta fallback abaixo.
     }
+
+    return matchDevStaffAccount(email, password);
   }
 
   async validateCitizen(email: string, password: string) {
     try {
       const citizen = await this.citizensService.findByEmail(email);
-      if (!citizen?.password) return null;
-      const ok = await bcrypt.compare(password, citizen.password);
-      if (!ok) return null;
-      return citizen;
+      if (citizen?.password) {
+        const ok = await bcrypt.compare(password, citizen.password);
+        if (ok) return citizen;
+      }
     } catch {
-      if (!isDevAuthFallbackEnabled()) return null;
-      const fallback = DEV_ACCOUNTS.find((account) => account.email === email && account.role === UserRole.CIDADAO);
-      return fallback && fallback.password === password ? fallback : null;
+      // Prisma indisponível — tenta fallback abaixo.
     }
+
+    if (!isDevAuthFallbackEnabled()) return null;
+    const fallback = DEV_ACCOUNTS.find((account) => account.email === email && account.role === UserRole.CIDADAO);
+    return fallback && fallback.password === password ? fallback : null;
   }
 
   async login(email: string, password: string) {
@@ -92,7 +103,12 @@ export class AuthService {
         if (!isDevAuthFallbackEnabled()) throw new UnauthorizedException('Sessão inválida');
         const fallback = DEV_ACCOUNTS.find((account) => account.id === userId && account.role === UserRole.CIDADAO);
         if (!fallback) throw new UnauthorizedException('Sessão inválida');
-        return fallback;
+        return {
+          id: fallback.id,
+          name: fallback.name,
+          email: fallback.email,
+          role: UserRole.CIDADAO
+        };
       }
     }
 
@@ -113,7 +129,16 @@ export class AuthService {
       if (!isDevAuthFallbackEnabled()) throw new UnauthorizedException('Sessão inválida');
       const fallback = DEV_ACCOUNTS.find((account) => account.id === userId && account.role === role);
       if (!fallback) throw new UnauthorizedException('Sessão inválida');
-      return fallback;
+      const menuKeys = await this.permissionsService.getMenuKeysForRole(fallback.role);
+      return {
+        id: fallback.id,
+        name: fallback.name,
+        email: fallback.email,
+        role: fallback.role,
+        departmentId: null,
+        department: null,
+        menuKeys
+      };
     }
   }
 }

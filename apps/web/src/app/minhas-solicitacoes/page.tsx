@@ -7,6 +7,7 @@ import { fetchCurrentUser } from '../../lib/auth-api';
 import { fetchMyOccurrences, fetchOccurrenceByProtocol } from '../../lib/api';
 import { formatOccurrenceStatus, formatPriority } from '../../lib/occurrence-map';
 import { CitizenShell } from '../../components/citizen-shell';
+import { PWA_LOGIN, pwaPath } from '../../lib/pwa';
 import { OccurrenceAttachments } from '../../components/occurrence-attachments';
 
 type Movement = {
@@ -44,7 +45,7 @@ export default function MyRequestsPage() {
   useEffect(() => {
     const currentSession = getSession();
     if (!currentSession) {
-      router.replace('/login');
+      router.replace(PWA_LOGIN);
       return;
     }
 
@@ -52,7 +53,7 @@ export default function MyRequestsPage() {
       .then((user) => setSession({ ...currentSession, user }))
       .catch(() => {
         clearSession();
-        router.replace('/login');
+        router.replace(PWA_LOGIN);
       })
       .finally(() => {
         fetchMyOccurrences(currentSession.accessToken)

@@ -1,6 +1,8 @@
 import { getSession } from '../auth';
 import { getSavedPsfConfig, getPatientProfile, onlyDigits } from './psf-storage';
 
+import { getPwaServiceWorkerRegistration } from '../pwa';
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3333';
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? '';
 
@@ -15,22 +17,12 @@ function urlBase64ToUint8Array(base64String: string) {
   return output;
 }
 
-export async function registerSchedulingServiceWorker() {
-  if (!('serviceWorker' in navigator)) return null;
-
-  try {
-    return await navigator.serviceWorker.register('/service-worker.js', { scope: '/' });
-  } catch {
-    return null;
-  }
-}
-
 export async function requestSchedulingNotificationPermission() {
   if (!('Notification' in window)) {
     return 'unsupported' as const;
   }
 
-  await registerSchedulingServiceWorker();
+  await getPwaServiceWorkerRegistration();
 
   if (Notification.permission === 'granted') {
     return 'granted' as const;
@@ -58,7 +50,7 @@ export async function subscribeSchedulingPush() {
     return { ok: false as const, reason: permission };
   }
 
-  const registration = await registerSchedulingServiceWorker();
+  const registration = await getPwaServiceWorkerRegistration();
   if (!registration) {
     return { ok: false as const, reason: 'sw-failed' };
   }

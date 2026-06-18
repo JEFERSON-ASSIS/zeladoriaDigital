@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
-    "build": "next build",
+    "build": "node scripts/generate-pwa-icons.mjs && node scripts/generate-pwa-splash.mjs && next build && node scripts/inject-pwa-precache.mjs",
     "start": "next start -p 3000",
     "lint": "next lint"
   },
@@ -23,6 +23,7 @@
     "@types/node": "^22.7.4",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
+    "sharp": "^0.33.5",
     "typescript": "^5.5.4"
   }
 }

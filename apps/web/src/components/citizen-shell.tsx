@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { clearSession } from '../lib/auth';
+import { PWA_LOGIN, pwaPath } from '../lib/pwa';
 import { BrandMark } from './brand-logo';
 
 type CitizenShellProps = {
@@ -13,7 +14,7 @@ type CitizenShellProps = {
 
 const NAV_ITEMS = [
   {
-    href: '/nova-ocorrencia',
+    href: pwaPath('/nova-ocorrencia'),
     label: 'Solicitar',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
@@ -22,7 +23,7 @@ const NAV_ITEMS = [
     )
   },
   {
-    href: '/minhas-solicitacoes',
+    href: pwaPath('/minhas-solicitacoes'),
     label: 'Chamados',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
@@ -33,7 +34,7 @@ const NAV_ITEMS = [
     )
   },
   {
-    href: '/agendamento',
+    href: pwaPath('/agendamento'),
     label: 'Agendar',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
@@ -44,7 +45,7 @@ const NAV_ITEMS = [
     )
   },
   {
-    href: '/meus-agendamentos',
+    href: pwaPath('/meus-agendamentos'),
     label: 'Consultas',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
@@ -60,20 +61,17 @@ export function CitizenShell({ children, title, subtitle }: CitizenShellProps) {
 
   function logout() {
     clearSession();
-    router.push('/login');
+    router.push(PWA_LOGIN);
   }
 
   return (
-    <div className="citizen-app">
+    <div className="citizen-app citizen-app--native">
       <header className="citizen-app__header">
         <div className="citizen-app__brand">
           <BrandMark size="sm" className="citizen-app__mark" />
-          <div>
-            <strong>Prefeitura na Mão</strong>
-            <span>App do cidadão</span>
-          </div>
+          <strong>Prefeitura na Mão</strong>
         </div>
-        <button type="button" className="citizen-app__logout" onClick={logout}>
+        <button type="button" className="citizen-app__logout" onClick={logout} aria-label="Sair">
           Sair
         </button>
       </header>

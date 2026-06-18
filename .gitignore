@@ -8,6 +8,7 @@ out
 .env.*.local
 !.env.example
 prisma/dev.db
+apps/api/prisma/dist-seed
 *.log
 *.tsbuildinfo
 .DS_Store

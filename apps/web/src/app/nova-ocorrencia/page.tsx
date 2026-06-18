@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { clearSession, getSession, type AuthSession } from '../../lib/auth';
 import { createOccurrence, fetchCategories, fetchDepartments, fetchNeighborhoods, uploadOccurrenceAttachment } from '../../lib/api';
 import { fetchCurrentUser } from '../../lib/auth-api';
+import { PWA_LOGIN } from '../../lib/pwa';
 import { CitizenShell } from '../../components/citizen-shell';
 import { CitizenMediaPicker, type PendingMedia } from '../../components/citizen-media-picker';
 
@@ -62,7 +63,7 @@ export default function NewOccurrencePage() {
   useEffect(() => {
     const currentSession = getSession();
     if (!currentSession) {
-      router.replace('/login');
+      router.replace(PWA_LOGIN);
       return;
     }
 
@@ -70,7 +71,7 @@ export default function NewOccurrencePage() {
       .then((user) => setSession({ ...currentSession, user }))
       .catch(() => {
         clearSession();
-        router.replace('/login');
+        router.replace(PWA_LOGIN);
       })
       .finally(() => {
         Promise.all([

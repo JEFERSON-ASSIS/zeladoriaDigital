@@ -105,7 +105,7 @@ export async function showAppointmentReminder(
       await registration.showNotification(title, {
         body,
         tag: `appointment-${appointment.id}`,
-        data: { url: '/meus-agendamentos' }
+        data: { url: '/app/meus-agendamentos' }
       });
     } else {
       new Notification(title, { body });

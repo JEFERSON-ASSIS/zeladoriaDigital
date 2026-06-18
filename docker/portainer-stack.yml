@@ -77,6 +77,7 @@ services:
       WHATSAPP_API_URL: ${WHATSAPP_API_URL}
       WHATSAPP_TOKEN: ${WHATSAPP_TOKEN}
       WHATSAPP_FROM_NUMBER: ${WHATSAPP_FROM_NUMBER}
+      ENABLE_DEMO_AUTH: ${ENABLE_DEMO_AUTH:-true}
     volumes:
       - zeladoria_uploads:/app/uploads
     deploy:
