@@ -24,6 +24,7 @@ import { PermissionsModule } from './modules/permissions/permissions.module';
 import { AccessModule } from './modules/access/access.module';
 import { WebPushModule } from './modules/web-push/web-push.module';
 import { AnnouncementsModule } from './modules/announcements/announcements.module';
+import { PushLogsModule } from './modules/push-logs/push-logs.module';
 
 @Module({
   imports: [
@@ -53,7 +54,8 @@ import { AnnouncementsModule } from './modules/announcements/announcements.modul
     ServiceAreaModule,
     PushNotificationsModule,
     SchedulingRemindersModule,
-    AnnouncementsModule
+    AnnouncementsModule,
+    PushLogsModule
   ]
 })
 export class AppModule {}

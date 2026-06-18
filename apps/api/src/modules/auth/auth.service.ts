@@ -1,10 +1,11 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { UsersService } from '../users/users.service';
 import { CitizensService } from '../citizens/citizens.service';
 import { PermissionsService } from '../permissions/permissions.service';
 import { UserRole } from '@prisma/client';
+import { isValidCitizenCpf, normalizeCitizenCpf, normalizeCitizenPhone } from '../citizens/citizen-identifiers';
 
 const DEV_ACCOUNTS = [
   { id: 'dev-admin', name: 'Administrador', email: 'admin@zeladoria.local', password: 'secret123', role: UserRole.ADMIN },
@@ -71,7 +72,43 @@ export class AuthService {
     const citizen = user ? null : await this.validateCitizen(email, password);
     const account = user ?? citizen;
     if (!account) throw new UnauthorizedException('Credenciais inválidas');
-    const normalizedUser = 'role' in account
+    return this.issueToken(account);
+  }
+
+  async citizenAccess(phone: string, cpf: string, lgpdAccepted: boolean) {
+    const normalizedPhone = normalizeCitizenPhone(phone);
+    const normalizedCpf = normalizeCitizenCpf(cpf);
+
+    if (!isValidCitizenCpf(normalizedCpf)) {
+      throw new BadRequestException('CPF inválido');
+    }
+
+    let citizen = await this.citizensService.findByCpf(normalizedCpf);
+
+    if (citizen) {
+      const storedPhone = citizen.phone ? normalizeCitizenPhone(citizen.phone) : '';
+      if (storedPhone !== normalizedPhone) {
+        throw new UnauthorizedException('CPF ou celular incorretos');
+      }
+    } else {
+      if (!lgpdAccepted) {
+        throw new BadRequestException('É necessário aceitar os termos de privacidade');
+      }
+      citizen = await this.citizensService.registerAccess(normalizedPhone, normalizedCpf);
+    }
+
+    if (!citizen.lgpdAcceptedAt) {
+      if (!lgpdAccepted) {
+        throw new BadRequestException('É necessário aceitar os termos de privacidade');
+      }
+      citizen = await this.citizensService.acceptLgpd(citizen.id);
+    }
+
+    return this.issueToken({ ...citizen, role: 'CIDADAO' as const });
+  }
+
+  private async issueToken(account: { id: string; name: string; email?: string | null; role?: UserRole }) {
+    const normalizedUser = 'role' in account && account.role
       ? account
       : {
           ...account,
@@ -80,7 +117,7 @@ export class AuthService {
     const payload = {
       sub: normalizedUser.id,
       role: normalizedUser.role,
-      email: normalizedUser.email
+      email: normalizedUser.email ?? ''
     };
     return {
       access_token: await this.jwtService.signAsync(payload),
@@ -99,6 +136,9 @@ export class AuthService {
           id: citizen.id,
           name: citizen.name,
           email: citizen.email ?? '',
+          phone: citizen.phone ?? '',
+          cpf: citizen.cpf ?? '',
+          lgpdAcceptedAt: citizen.lgpdAcceptedAt,
           role: UserRole.CIDADAO,
           menuKeys
         };

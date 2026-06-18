@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { CitizenProductLogo } from './brand-logo';
-import { skipPwaInstallGate } from '../lib/demo-hints';
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void> | void;
@@ -24,6 +23,16 @@ function isAndroidChrome() {
 
 function isIOSDevice() {
   return /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+}
+
+function isLocalPreviewHost(hostname: string) {
+  return (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname.startsWith('192.168.') ||
+    hostname.startsWith('10.') ||
+    hostname.endsWith('.local')
+  );
 }
 
 export function PwaInstallGate({ onInstalled }: { onInstalled: () => void }) {
@@ -112,11 +121,8 @@ export function usePwaDisplayMode() {
       setMode('standalone');
       return;
     }
-    if (skipPwaInstallGate()) {
-      setMode('preview');
-      return;
-    }
-    setMode('gate');
+    const host = window.location.hostname;
+    setMode(isLocalPreviewHost(host) ? 'preview' : 'gate');
   }, []);
 
   const markInstalled = useCallback(() => {

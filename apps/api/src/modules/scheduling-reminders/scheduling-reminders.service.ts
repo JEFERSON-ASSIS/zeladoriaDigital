@@ -1,8 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
+import { PushNotificationSource } from '@prisma/client';
 import * as webpush from 'web-push';
 import { PrismaService } from '../../prisma/prisma.service';
+import { PushLogsService } from '../push-logs/push-logs.service';
 import { SubscribeSchedulingReminderDto } from './dto/subscribe.dto';
 
 type PsfConfig = {
@@ -28,7 +30,8 @@ export class SchedulingRemindersService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly config: ConfigService
+    private readonly config: ConfigService,
+    private readonly pushLogs: PushLogsService
   ) {
     this.configureWebPush();
   }
@@ -88,27 +91,55 @@ export class SchedulingRemindersService {
           const remindedAt = (subscription.remindedAt as Record<string, string> | null) ?? {};
           if (remindedAt[reminderKey]) continue;
 
-          await webpush.sendNotification(
-            {
-              endpoint: subscription.endpoint,
-              keys: { p256dh: subscription.p256dh, auth: subscription.auth }
-            },
-            JSON.stringify({
-              title: 'Consulta amanhã',
-              body: `${appointment.servico ?? 'Consulta'} · ${appointment.data ?? '—'}${
-                appointment.hora ? ` às ${appointment.hora}` : ''
-              } · ${psf.label}`,
-              url: '/meus-agendamentos'
-            })
-          );
+          const title = 'Consulta amanhã';
+          const body = `${appointment.servico ?? 'Consulta'} · ${appointment.data ?? '—'}${
+            appointment.hora ? ` às ${appointment.hora}` : ''
+          } · ${psf.label}`;
+          const contact = await this.resolveCitizenContact(subscription.cpf);
 
-          remindedAt[reminderKey] = new Date().toISOString();
-          await this.prisma.schedulingPushSubscription.update({
-            where: { id: subscription.id },
-            data: { remindedAt }
-          });
+          try {
+            await webpush.sendNotification(
+              {
+                endpoint: subscription.endpoint,
+                keys: { p256dh: subscription.p256dh, auth: subscription.auth }
+              },
+              JSON.stringify({
+                title,
+                body,
+                url: '/meus-agendamentos'
+              })
+            );
 
-          sent += 1;
+            remindedAt[reminderKey] = new Date().toISOString();
+            await this.prisma.schedulingPushSubscription.update({
+              where: { id: subscription.id },
+              data: { remindedAt }
+            });
+
+            await this.pushLogs.recordBatch({
+              source: PushNotificationSource.SCHEDULING_REMINDER,
+              title,
+              body,
+              url: '/meus-agendamentos',
+              results: [{ ...contact, ok: true }]
+            });
+
+            sent += 1;
+          } catch (error) {
+            await this.pushLogs.recordBatch({
+              source: PushNotificationSource.SCHEDULING_REMINDER,
+              title,
+              body,
+              url: '/meus-agendamentos',
+              results: [
+                {
+                  ...contact,
+                  ok: false,
+                  error: error instanceof Error ? error.message : 'Falha ao enviar push'
+                }
+              ]
+            });
+          }
         }
       } catch (error) {
         this.logger.warn(`Falha ao enviar lembrete (${subscription.id}): ${String(error)}`);
@@ -227,5 +258,18 @@ export class SchedulingRemindersService {
     const now = new Date();
     const day = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     return `${appointmentId}:${day}`;
+  }
+
+  private async resolveCitizenContact(cpf: string) {
+    const citizen = await this.prisma.citizen.findUnique({
+      where: { cpf },
+      select: { id: true, phone: true, cpf: true }
+    });
+
+    return {
+      citizenId: citizen?.id ?? null,
+      phone: citizen?.phone ?? null,
+      cpf: citizen?.cpf ?? cpf
+    };
   }
 }

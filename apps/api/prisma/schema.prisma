@@ -70,17 +70,19 @@ model User {
 }
 
 model Citizen {
-  id             String   @id @default(cuid())
-  name           String
-  email          String?  @unique
-  password       String?
-  phone          String?
-  cpf            String?  @unique
-  municipalityId String?
-  municipality   Municipality? @relation(fields: [municipalityId], references: [id])
-  occurrences    Occurrence[]
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id              String    @id @default(cuid())
+  name            String
+  email           String?   @unique
+  password        String?
+  phone           String?
+  cpf             String?   @unique
+  lgpdAcceptedAt  DateTime?
+  municipalityId  String?
+  municipality    Municipality? @relation(fields: [municipalityId], references: [id])
+  occurrences     Occurrence[]
+  pushSubscriptions CitizenPushSubscription[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }
 
 model Department {
@@ -356,6 +358,7 @@ model CitizenAnnouncement {
 model CitizenPushSubscription {
   id        String   @id @default(cuid())
   citizenId String?
+  citizen   Citizen? @relation(fields: [citizenId], references: [id], onDelete: SetNull)
   endpoint  String   @unique
   p256dh    String
   auth      String
@@ -363,4 +366,41 @@ model CitizenPushSubscription {
   updatedAt DateTime @updatedAt
 
   @@index([citizenId])
+}
+
+enum PushNotificationSource {
+  ANNOUNCEMENT
+  SCHEDULING_REMINDER
+}
+
+model PushNotificationLog {
+  id             String                 @id @default(cuid())
+  source         PushNotificationSource
+  title          String
+  body           String
+  url            String?
+  targetCount    Int                    @default(0)
+  successCount   Int                    @default(0)
+  failureCount   Int                    @default(0)
+  announcementId String?
+  createdById    String?
+  sentAt         DateTime               @default(now())
+  recipients     PushNotificationRecipient[]
+
+  @@index([sentAt])
+  @@index([source])
+}
+
+model PushNotificationRecipient {
+  id        String              @id @default(cuid())
+  logId     String
+  log       PushNotificationLog @relation(fields: [logId], references: [id], onDelete: Cascade)
+  citizenId String?
+  phone     String?
+  cpf       String?
+  status    String
+  error     String?
+  sentAt    DateTime            @default(now())
+
+  @@index([logId])
 }

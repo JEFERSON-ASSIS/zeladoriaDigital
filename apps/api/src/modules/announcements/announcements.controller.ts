@@ -103,8 +103,8 @@ export class AnnouncementsController {
 
   @Post(':id/publish')
   @Roles('ADMIN', 'PREFEITURA')
-  publish(@Param('id') id: string, @Body() body: PublishAnnouncementDto) {
-    return this.service.publish(id, body);
+  publish(@Param('id') id: string, @Body() body: PublishAnnouncementDto, @Req() req: { user: { sub: string } }) {
+    return this.service.publish(id, body, req.user.sub);
   }
 
   @Delete(':id')

@@ -1,5 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { PushNotificationSource } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { PushLogsService } from '../push-logs/push-logs.service';
 import { WebPushService } from '../web-push/web-push.service';
 import {
   CreateAnnouncementDto,
@@ -19,7 +21,8 @@ export class AnnouncementsService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly webPush: WebPushService
+    private readonly webPush: WebPushService,
+    private readonly pushLogs: PushLogsService
   ) {}
 
   findFeed() {
@@ -52,7 +55,12 @@ export class AnnouncementsService {
     let push: AnnouncementPushResult | null = null;
 
     if (dto.published && dto.sendPush) {
-      push = await this.sendPushForAnnouncement(announcement.id, announcement.title, announcement.summary).catch(
+      push = await this.sendPushForAnnouncement(
+        announcement.id,
+        announcement.title,
+        announcement.summary,
+        createdById
+      ).catch(
         (error) => {
           this.logger.warn(`Aviso ${announcement.id} salvo, mas o push falhou.`, error);
           return { sent: 0 } satisfies AnnouncementPushResult;
@@ -83,7 +91,7 @@ export class AnnouncementsService {
     });
   }
 
-  async publish(id: string, dto: PublishAnnouncementDto) {
+  async publish(id: string, dto: PublishAnnouncementDto, createdById?: string) {
     const current = await this.prisma.citizenAnnouncement.findUnique({ where: { id } });
     if (!current) throw new NotFoundException('Aviso não encontrado.');
 
@@ -98,7 +106,12 @@ export class AnnouncementsService {
     let push: AnnouncementPushResult | null = null;
 
     if (dto.sendPush) {
-      push = await this.sendPushForAnnouncement(announcement.id, announcement.title, announcement.summary).catch(
+      push = await this.sendPushForAnnouncement(
+        announcement.id,
+        announcement.title,
+        announcement.summary,
+        createdById
+      ).catch(
         (error) => {
           this.logger.warn(`Aviso ${announcement.id} publicado, mas o push falhou.`, error);
           return { sent: 0 } satisfies AnnouncementPushResult;
@@ -143,14 +156,32 @@ export class AnnouncementsService {
     return `/uploads/announcements/${filename}`;
   }
 
-  private async sendPushForAnnouncement(id: string, title: string, summary: string): Promise<AnnouncementPushResult> {
+  private async sendPushForAnnouncement(
+    id: string,
+    title: string,
+    summary: string,
+    createdById?: string
+  ): Promise<AnnouncementPushResult> {
     if (!this.webPush.isConfigured()) {
       this.logger.warn('Push não configurado (VAPID ausente) — aviso salvo sem notificação.');
       return { sent: 0, skipped: 'missing-vapid' as const };
     }
 
-    const subscriptions = await this.prisma.citizenPushSubscription.findMany();
-    let sent = 0;
+    const subscriptions = await this.prisma.citizenPushSubscription.findMany({
+      include: {
+        citizen: {
+          select: { id: true, phone: true, cpf: true }
+        }
+      }
+    });
+
+    const results: Array<{
+      citizenId?: string | null;
+      phone?: string | null;
+      cpf?: string | null;
+      ok: boolean;
+      error?: string;
+    }> = [];
 
     for (const subscription of subscriptions) {
       try {
@@ -166,10 +197,36 @@ export class AnnouncementsService {
             url: '/app/inicio'
           }
         );
-        if (result.ok) sent += 1;
-      } catch {
+        results.push({
+          citizenId: subscription.citizenId,
+          phone: subscription.citizen?.phone ?? null,
+          cpf: subscription.citizen?.cpf ?? null,
+          ok: result.ok
+        });
+      } catch (error) {
         await this.prisma.citizenPushSubscription.delete({ where: { id: subscription.id } }).catch(() => undefined);
+        results.push({
+          citizenId: subscription.citizenId,
+          phone: subscription.citizen?.phone ?? null,
+          cpf: subscription.citizen?.cpf ?? null,
+          ok: false,
+          error: error instanceof Error ? error.message : 'Falha ao enviar push'
+        });
       }
+    }
+
+    const sent = results.filter((item) => item.ok).length;
+
+    if (results.length > 0) {
+      await this.pushLogs.recordBatch({
+        source: PushNotificationSource.ANNOUNCEMENT,
+        title,
+        body: summary,
+        url: '/app/inicio',
+        announcementId: id,
+        createdById,
+        results
+      });
     }
 
     if (sent > 0) {

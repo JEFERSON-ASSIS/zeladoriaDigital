@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MapRegionPicker } from '../../../components/map-region-picker';
+import { PushLogsHistory } from '../../../components/push-logs-history';
 import { fetchServiceAreas, getStoredAccessToken, saveServiceArea } from '../../../lib/api';
 import { DEFAULT_MAP_REGION, mapRegionFromServiceArea, type MapRegionConfig } from '../../../lib/map-region';
 
@@ -230,6 +231,8 @@ export default function ConfiguracoesPage() {
           </form>
         </section>
       </div>
+
+      <PushLogsHistory />
     </section>
   );
 }
