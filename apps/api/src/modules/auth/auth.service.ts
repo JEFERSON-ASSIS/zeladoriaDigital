@@ -75,8 +75,24 @@ export class AuthService {
     return this.issueToken(account);
   }
 
-  async citizenAccess(phone: string, cpf: string, lgpdAccepted: boolean) {
+  async citizenPhoneLookup(phone: string) {
+    const citizen = await this.citizensService.findByPhone(normalizeCitizenPhone(phone));
+    return {
+      registered: Boolean(citizen?.cpf && citizen.lgpdAcceptedAt)
+    };
+  }
+
+  async citizenAccess(phone: string, cpf?: string, lgpdAccepted = false) {
     const normalizedPhone = normalizeCitizenPhone(phone);
+
+    if (!cpf) {
+      const citizen = await this.citizensService.findByPhone(normalizedPhone);
+      if (!citizen?.cpf || !citizen.lgpdAcceptedAt) {
+        throw new BadRequestException('Complete seu cadastro informando CPF e aceite LGPD.');
+      }
+      return this.issueToken({ ...citizen, role: 'CIDADAO' as const });
+    }
+
     const normalizedCpf = normalizeCitizenCpf(cpf);
 
     if (!isValidCitizenCpf(normalizedCpf)) {

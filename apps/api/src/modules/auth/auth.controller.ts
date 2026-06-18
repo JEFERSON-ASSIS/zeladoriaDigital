@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Post, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
-import { CitizenAccessDto } from './dto/citizen-access.dto';
+import { CitizenAccessDto, CitizenPhoneLookupDto } from './dto/citizen-access.dto';
 import { Public } from './public.decorator';
 import { UserRole } from '@prisma/client';
 
@@ -16,9 +16,15 @@ export class AuthController {
   }
 
   @Public()
+  @Post('citizen/lookup')
+  citizenLookup(@Body() body: CitizenPhoneLookupDto) {
+    return this.authService.citizenPhoneLookup(body.phone);
+  }
+
+  @Public()
   @Post('citizen/access')
   citizenAccess(@Body() body: CitizenAccessDto) {
-    return this.authService.citizenAccess(body.phone, body.cpf, body.lgpdAccepted);
+    return this.authService.citizenAccess(body.phone, body.cpf, body.lgpdAccepted ?? false);
   }
 
   @Get('me')

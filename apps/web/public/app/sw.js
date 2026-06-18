@@ -1,5 +1,5 @@
 /* Gerado em build — não edite sw.js diretamente; use sw.template.js */
-const CACHE_VERSION = 'prefeitura-pwa-cSBrWm3iakqoqsiqSw9SC';
+const CACHE_VERSION = 'prefeitura-pwa-UnDobAkmdlN3NJhyx1Nfa';
 const OFFLINE_URL = '/app/offline';
 
 const PRECACHE = [
@@ -30,23 +30,23 @@ const PRECACHE = [
   "/_next/static/chunks/app/layout-63ade7159f7f0591.js",
   "/_next/static/chunks/2738-5ca37ba278de3305.js",
   "/_next/static/chunks/4558-846999df0a001358.js",
-  "/_next/static/chunks/1590-e6f5b815b0663982.js",
-  "/_next/static/chunks/244-36f8fe96d247ee49.js",
-  "/_next/static/chunks/app/app/agendamento/page-75774c98812bb010.js",
-  "/_next/static/chunks/app/app/layout-41bae3c585bf1ba4.js",
   "/_next/static/chunks/app/app/inicio/page-904804c0344b1b77.js",
-  "/_next/static/chunks/app/app/login/page-d60ae4314abb10f2.js",
-  "/_next/static/chunks/9837-48ec3e257566610d.js",
-  "/_next/static/chunks/app/app/minhas-solicitacoes/page-c8cfa6616ee6696d.js",
+  "/_next/static/chunks/app/app/layout-41bae3c585bf1ba4.js",
+  "/_next/static/chunks/1590-e6f5b815b0663982.js",
   "/_next/static/chunks/465-e94801917468f4d7.js",
   "/_next/static/chunks/app/app/meus-agendamentos/page-da385f44b14721a5.js",
+  "/_next/static/chunks/app/app/login/page-b357e90e8df84edb.js",
+  "/_next/static/chunks/244-36f8fe96d247ee49.js",
+  "/_next/static/chunks/app/app/agendamento/page-75774c98812bb010.js",
+  "/_next/static/chunks/9837-48ec3e257566610d.js",
+  "/_next/static/chunks/app/app/minhas-solicitacoes/page-c8cfa6616ee6696d.js",
+  "/_next/static/chunks/app/app/page-84ce0e5da223d955.js",
   "/_next/static/chunks/306-7d13a46b7dcc6c74.js",
   "/_next/static/chunks/app/app/nova-ocorrencia/page-dacb8cff98c6be40.js",
   "/_next/static/chunks/app/app/offline/page-386fc33fb4479871.js",
-  "/_next/static/chunks/app/app/page-84ce0e5da223d955.js",
   "/_next/static/chunks/polyfills-42372ed130431b0a.js",
-  "/_next/static/cSBrWm3iakqoqsiqSw9SC/_buildManifest.js",
-  "/_next/static/cSBrWm3iakqoqsiqSw9SC/_ssgManifest.js"
+  "/_next/static/UnDobAkmdlN3NJhyx1Nfa/_buildManifest.js",
+  "/_next/static/UnDobAkmdlN3NJhyx1Nfa/_ssgManifest.js"
 ];
 
 self.addEventListener('install', (event) => {

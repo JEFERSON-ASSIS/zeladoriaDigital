@@ -28,6 +28,12 @@ export class CitizensService {
     return this.prisma.citizen.findUnique({ where: { cpf: normalizeCitizenCpf(cpf) } });
   }
 
+  findByPhone(phone: string) {
+    return this.prisma.citizen.findFirst({
+      where: { phone: normalizeCitizenPhone(phone) }
+    });
+  }
+
   findById(id: string) {
     return this.prisma.citizen.findUnique({ where: { id } });
   }
