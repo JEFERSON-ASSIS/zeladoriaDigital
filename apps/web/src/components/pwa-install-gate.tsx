@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { BrandLogo } from './brand-logo';
+import { CitizenProductLogo } from './brand-logo';
+import { skipPwaInstallGate } from '../lib/demo-hints';
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void> | void;
@@ -59,7 +60,7 @@ export function PwaInstallGate({ onInstalled }: { onInstalled: () => void }) {
   return (
     <div className="pwa-install-gate">
       <div className="pwa-install-gate__card">
-        <BrandLogo variant="dark" size="md" showTagline={false} />
+        <CitizenProductLogo size="md" />
         <p className="eyebrow">App do cidadão</p>
         <h1>Instale o aplicativo</h1>
 
@@ -95,17 +96,24 @@ export function PwaInstallGate({ onInstalled }: { onInstalled: () => void }) {
         <p className="pwa-install-gate__hint">
           Se a barra de endereço do Chrome ainda aparecer, o app não foi instalado corretamente.
         </p>
+        <p className="login-credit">
+          Desenvolvido por <strong>i7AI Sistemas inteligentes</strong>
+        </p>
       </div>
     </div>
   );
 }
 
 export function usePwaDisplayMode() {
-  const [mode, setMode] = useState<'loading' | 'standalone' | 'gate'>('loading');
+  const [mode, setMode] = useState<'loading' | 'standalone' | 'gate' | 'preview'>('loading');
 
   useEffect(() => {
     if (isStandaloneMode()) {
       setMode('standalone');
+      return;
+    }
+    if (skipPwaInstallGate()) {
+      setMode('preview');
       return;
     }
     setMode('gate');

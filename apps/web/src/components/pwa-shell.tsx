@@ -43,5 +43,17 @@ export function PwaShell({ children }: { children: React.ReactNode }) {
     return <PwaInstallGate onInstalled={markInstalled} />;
   }
 
+  if (mode === 'preview') {
+    return (
+      <>
+        <div className="pwa-preview-banner" role="status">
+          Modo preview (rede local). Para instalar o app de verdade, use{' '}
+          <strong>homolog.prefeituranamao.com.br/app</strong>
+        </div>
+        {children}
+      </>
+    );
+  }
+
   return <>{children}</>;
 }

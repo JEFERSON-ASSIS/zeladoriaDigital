@@ -1,3 +1,5 @@
+import type { MenuKey } from '@zeladoria/shared';
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3333';
 
 export async function fetchMenuPermissionsMatrix(accessToken?: string) {
@@ -11,6 +13,21 @@ export async function fetchMenuPermissionsMatrix(accessToken?: string) {
     roles: string[];
     matrix: Record<string, Record<string, boolean>>;
   }>;
+}
+
+export async function fetchMyMenuPermissions(accessToken: string) {
+  const response = await fetch(`${API_URL}/permissions/menus/me`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`
+    },
+    cache: 'no-store'
+  });
+
+  if (!response.ok) {
+    throw new Error('Não foi possível carregar permissões do app.');
+  }
+
+  return response.json() as Promise<MenuKey[]>;
 }
 
 export async function saveMenuPermissionsMatrix(

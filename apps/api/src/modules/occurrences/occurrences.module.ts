@@ -6,9 +6,10 @@ import { ServiceAreaModule } from '../service-area/service-area.module';
 import { WhatsAppModule } from '../whatsapp/whatsapp.module';
 import { PrismaModule } from '../../prisma/prisma.module';
 import { AccessModule } from '../access/access.module';
+import { PermissionsModule } from '../permissions/permissions.module';
 
 @Module({
-  imports: [PriorityModule, ServiceAreaModule, WhatsAppModule, PrismaModule, AccessModule],
+  imports: [PriorityModule, ServiceAreaModule, WhatsAppModule, PrismaModule, AccessModule, PermissionsModule],
   providers: [OccurrencesService],
   controllers: [OccurrencesController]
 })

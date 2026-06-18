@@ -57,3 +57,25 @@ export function ProductBadge({
     </div>
   );
 }
+
+type CitizenProductLogoProps = {
+  size?: 'sm' | 'md' | 'lg';
+  className?: string;
+  tagline?: string;
+};
+
+export function CitizenProductLogo({
+  size = 'md',
+  className = '',
+  tagline = 'Serviços ao cidadão'
+}: CitizenProductLogoProps) {
+  return (
+    <div className={`citizen-product-logo citizen-product-logo--${size} ${className}`.trim()}>
+      <BrandMark size={size} />
+      <div className="citizen-product-logo__text">
+        <strong className="citizen-product-logo__name">Prefeitura na Mão</strong>
+        {tagline ? <span className="citizen-product-logo__tagline">{tagline}</span> : null}
+      </div>
+    </div>
+  );
+}

@@ -73,7 +73,7 @@ export default function AdminPermissionsPage() {
       <h1>Permissões de menu</h1>
       <p className="scheduling-copy">
         Defina quais telas cada perfil pode acessar. Secretarias podem ver apenas as demandas da própria unidade;
-        o menu controla o que aparece no sistema.
+        o menu controla o que aparece no sistema web e no app do cidadão.
       </p>
 
       {error ? <p className="login-error">{error}</p> : null}
@@ -81,7 +81,21 @@ export default function AdminPermissionsPage() {
 
       {Object.entries(groupedCatalog).map(([group, items]) => (
         <div key={group} className="permissions-group">
-          <h3>{group === 'operacao' ? 'Operação' : group === 'gestao' ? 'Gestão' : group === 'admin' ? 'Administração' : 'Cidadão'}</h3>
+          <h3>
+            {group === 'operacao'
+              ? 'Operação'
+              : group === 'gestao'
+                ? 'Gestão'
+                : group === 'admin'
+                  ? 'Administração'
+                  : 'App do cidadão (PWA)'}
+          </h3>
+          {group === 'cidadao' ? (
+            <p className="scheduling-copy">
+              Controla quais abas aparecem no aplicativo do cidadão. Afeta todos os usuários com perfil Cidadão.
+              Após salvar, peça para sair e entrar de novo no app.
+            </p>
+          ) : null}
           <div className="permissions-table-wrap">
             <table className="permissions-table">
               <thead>

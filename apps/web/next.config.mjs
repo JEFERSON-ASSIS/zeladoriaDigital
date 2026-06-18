@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Permite acessar o dev server pelo IP da rede local (celular na mesma Wi‑Fi)
+  allowedDevOrigins: ['192.168.1.5'],
   async headers() {
     return [
       {

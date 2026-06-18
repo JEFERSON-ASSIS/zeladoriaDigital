@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import {
+  CITIZEN_PWA_MODULES,
   DEFAULT_ROLE_MENU_KEYS,
   MENU_CATALOG,
   PERMISSION_MATRIX_ROLES,
@@ -16,6 +17,7 @@ export class PermissionsService implements OnModuleInit {
     try {
       await this.purgeDeprecatedRoles();
       await this.ensureDefaults();
+      await this.syncMissingDefaultMenuKeys();
     } catch (error) {
       console.warn('Permissions bootstrap skipped because Prisma is unavailable.');
       console.warn(error);
@@ -67,6 +69,31 @@ export class PermissionsService implements OnModuleInit {
     await this.prisma.roleMenuPermission.createMany({ data: rows, skipDuplicates: true });
   }
 
+  /** Novos itens do catálogo entram automaticamente conforme DEFAULT_ROLE_MENU_KEYS */
+  private async syncMissingDefaultMenuKeys() {
+    for (const role of PERMISSION_MATRIX_ROLES) {
+      const defaults = DEFAULT_ROLE_MENU_KEYS[role as keyof typeof DEFAULT_ROLE_MENU_KEYS] ?? [];
+      if (!defaults.length) continue;
+
+      const existing = await this.prisma.roleMenuPermission.findMany({
+        where: { role: role as UserRole },
+        select: { menuKey: true }
+      });
+      const existingKeys = new Set(existing.map((row) => row.menuKey));
+      const missing = defaults.filter((menuKey) => !existingKeys.has(menuKey));
+      if (!missing.length) continue;
+
+      await this.prisma.roleMenuPermission.createMany({
+        data: missing.map((menuKey) => ({
+          role: role as UserRole,
+          menuKey,
+          allowed: true
+        })),
+        skipDuplicates: true
+      });
+    }
+  }
+
   getCatalog() {
     return MENU_CATALOG;
   }
@@ -77,15 +104,22 @@ export class PermissionsService implements OnModuleInit {
     }
 
     const rows = await this.prisma.roleMenuPermission.findMany({
-      where: { role, allowed: true },
-      select: { menuKey: true }
+      where: { role },
+      select: { menuKey: true, allowed: true }
     });
 
     if (rows.length === 0) {
       return DEFAULT_ROLE_MENU_KEYS[role as keyof typeof DEFAULT_ROLE_MENU_KEYS] ?? [];
     }
 
-    return rows.map((row) => row.menuKey as MenuKey);
+    const allowedKeys = rows.filter((row) => row.allowed).map((row) => row.menuKey as MenuKey);
+
+    if (role === UserRole.CIDADAO) {
+      const pwaKeys = new Set<string>(CITIZEN_PWA_MODULES.map((module) => module.key));
+      return allowedKeys.filter((key) => pwaKeys.has(key));
+    }
+
+    return allowedKeys;
   }
 
   async getMatrix() {

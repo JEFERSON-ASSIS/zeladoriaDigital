@@ -206,8 +206,9 @@ export default function NewOccurrencePage() {
       title="Nova solicitação"
       subtitle="Descreva o problema, informe onde está ou compartilhe sua localização pelo celular."
     >
-      <section className="panel citizen-form-panel">
-        <form className="occurrence-form" onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} style={{ display: 'block' }}>
+        <h3 className="form-section-title">Dados Gerais</h3>
+        <div className="form-group-card">
           <label>
             Secretaria responsável *
             <select
@@ -243,40 +244,42 @@ export default function NewOccurrencePage() {
               placeholder="Explique o que está acontecendo com o máximo de detalhes possível."
             />
           </label>
+        </div>
 
-          <section className="citizen-location-block">
-            <div className="citizen-location-block__header">
-              <div>
-                <p className="eyebrow">Localização</p>
-                <h3>Onde está o problema?</h3>
-              </div>
+        <h3 className="form-section-title">Localização</h3>
+        <section className="citizen-location-block">
+          <div className="citizen-location-block__header">
+            <div>
+              <h3>Onde está o problema?</h3>
             </div>
+          </div>
 
-            <button
-              type="button"
-              className="citizen-location-block__gps-btn"
-              onClick={captureLocation}
-              disabled={locating}
-            >
-              {locating ? 'Capturando localização...' : usingGps ? 'Atualizar minha localização' : 'Usar minha localização'}
-            </button>
+          <button
+            type="button"
+            className="citizen-location-block__gps-btn"
+            onClick={captureLocation}
+            disabled={locating}
+          >
+            {locating ? 'Capturando localização...' : usingGps ? 'Atualizar minha localização' : 'Usar minha localização'}
+          </button>
 
-            {usingGps ? (
-              <div className="citizen-location-block__status citizen-location-block__status--ok">
-                <p>Localização capturada. Bairro e rua não são necessários.</p>
-                <p className="citizen-location-block__coords">
-                  {coords.latitude?.toFixed(5)}, {coords.longitude?.toFixed(5)}
-                </p>
-                <button type="button" className="citizen-location-block__link" onClick={clearLocation}>
-                  Informar endereço manualmente
-                </button>
-              </div>
-            ) : (
-              <>
-                <p className="citizen-location-block__hint">
-                  Sem GPS, informe bairro e rua para localizar a solicitação.
-                </p>
+          {usingGps ? (
+            <div className="citizen-location-block__status citizen-location-block__status--ok">
+              <p>Localização capturada. Bairro e rua não são necessários.</p>
+              <p className="citizen-location-block__coords">
+                {coords.latitude?.toFixed(5)}, {coords.longitude?.toFixed(5)}
+              </p>
+              <button type="button" className="citizen-location-block__link" onClick={clearLocation}>
+                Informar endereço manualmente
+              </button>
+            </div>
+          ) : (
+            <>
+              <p className="citizen-location-block__hint">
+                Sem GPS, informe bairro e rua para localizar a solicitação.
+              </p>
 
+              <div className="form-group-card" style={{ margin: '12px 0 0' }}>
                 <label>
                   Bairro *
                   <select
@@ -300,12 +303,16 @@ export default function NewOccurrencePage() {
                     placeholder="Nome da rua, número ou ponto de referência"
                   />
                 </label>
-              </>
-            )}
-          </section>
+              </div>
+            </>
+          )}
+        </section>
 
-          <CitizenMediaPicker items={mediaItems} onChange={setMediaItems} disabled={submitting} />
+        <h3 className="form-section-title">Anexos</h3>
+        <CitizenMediaPicker items={mediaItems} onChange={setMediaItems} disabled={submitting} />
 
+        <h3 className="form-section-title">Classificação</h3>
+        <div className="form-group-card">
           <label>
             Categoria
             <select value={form.categoryId} onChange={(e) => setForm((current) => ({ ...current, categoryId: e.target.value }))}>
@@ -317,17 +324,17 @@ export default function NewOccurrencePage() {
               ))}
             </select>
           </label>
+        </div>
 
-          <div className="form-actions">
-            <button type="submit" disabled={submitting}>
-              {submitting ? 'Enviando...' : 'Enviar solicitação'}
-            </button>
-          </div>
+        <div className="form-actions">
+          <button type="submit" disabled={submitting}>
+            {submitting ? 'Enviando...' : 'Enviar solicitação'}
+          </button>
+        </div>
 
-          {success ? <p className="success-message">{success}</p> : null}
-          {error ? <p className="login-error">{error}</p> : null}
-        </form>
-      </section>
+        {success ? <p className="success-message">{success}</p> : null}
+        {error ? <p className="login-error">{error}</p> : null}
+      </form>
     </CitizenShell>
   );
 }

@@ -3,7 +3,8 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSession } from '../../lib/auth';
-import { PWA_HOME, PWA_LOGIN } from '../../lib/pwa';
+import { resolveCitizenPwaHome } from '../../lib/citizen-pwa-access';
+import { PWA_LOGIN } from '../../lib/pwa';
 
 export default function PwaLauncherPage() {
   const router = useRouter();
@@ -16,18 +17,30 @@ export default function PwaLauncherPage() {
     }
 
     if (session.user.role === 'CIDADAO') {
-      router.replace(PWA_HOME);
+      const home = resolveCitizenPwaHome(session.user.menuKeys);
+      if (home !== PWA_LOGIN) {
+        router.replace(home);
+      }
       return;
     }
 
     router.replace('/');
   }, [router]);
 
+  const session = getSession();
+  const noModules =
+    session?.user.role === 'CIDADAO' && resolveCitizenPwaHome(session.user.menuKeys) === PWA_LOGIN;
+
   return (
     <main className="offline-screen">
       <section className="offline-card">
         <p className="eyebrow">Prefeitura na Mão</p>
-        <h1>Abrindo o aplicativo...</h1>
+        <h1>{noModules ? 'Nenhum serviço disponível' : 'Abrindo o aplicativo...'}</h1>
+        {noModules ? (
+          <p className="scheduling-copy">
+            Os módulos do aplicativo estão temporariamente indisponíveis. Tente novamente mais tarde.
+          </p>
+        ) : null}
       </section>
     </main>
   );

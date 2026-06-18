@@ -67,6 +67,9 @@ export function isNavItemActive(pathname: string, href: string) {
   if (href === '/admin/permissoes') {
     return pathname.startsWith('/admin/permissoes');
   }
+  if (href === '/admin/avisos') {
+    return pathname.startsWith('/admin/avisos');
+  }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 

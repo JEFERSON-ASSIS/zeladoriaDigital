@@ -90,6 +90,8 @@ export class AuthService {
 
   async me(userId: string, role: UserRole) {
     if (role === UserRole.CIDADAO) {
+      const menuKeys = await this.permissionsService.getMenuKeysForRole(UserRole.CIDADAO);
+
       try {
         const citizen = await this.citizensService.findById(userId);
         if (!citizen) throw new UnauthorizedException('Sessão inválida');
@@ -97,7 +99,8 @@ export class AuthService {
           id: citizen.id,
           name: citizen.name,
           email: citizen.email ?? '',
-          role: UserRole.CIDADAO
+          role: UserRole.CIDADAO,
+          menuKeys
         };
       } catch {
         if (!isDevAuthFallbackEnabled()) throw new UnauthorizedException('Sessão inválida');
@@ -107,7 +110,8 @@ export class AuthService {
           id: fallback.id,
           name: fallback.name,
           email: fallback.email,
-          role: UserRole.CIDADAO
+          role: UserRole.CIDADAO,
+          menuKeys
         };
       }
     }

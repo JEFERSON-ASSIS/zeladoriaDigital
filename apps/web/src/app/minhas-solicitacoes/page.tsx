@@ -85,28 +85,31 @@ export default function MyRequestsPage() {
 
   return (
     <CitizenShell title="Minhas solicitações" subtitle="Acompanhe protocolos, secretaria responsável e histórico.">
-      <section className="panel">
-          <h3>Consultar por protocolo</h3>
-          <form className="protocol-search" onSubmit={handleProtocolSearch}>
-            <input
-              value={protocolQuery}
-              onChange={(event) => setProtocolQuery(event.target.value)}
-              placeholder="Ex.: OC-0001"
-            />
-            <button type="submit">Buscar</button>
-          </form>
-          {foundProtocol ? (
-            <article className="panel" style={{ marginTop: 16 }}>
-              <p className="eyebrow">{foundProtocol.protocol}</p>
-              <h3>{foundProtocol.title ?? foundProtocol.description}</h3>
-              <p>Status: {formatOccurrenceStatus(foundProtocol.status)}</p>
-              <p>Prioridade: {formatPriority(foundProtocol.priority)}</p>
-              <p>{foundProtocol.address}</p>
-            </article>
-          ) : null}
-        </section>
+      <h3 className="form-section-title">Consultar por protocolo</h3>
+      <form className="protocol-search" onSubmit={handleProtocolSearch}>
+        <input
+          value={protocolQuery}
+          onChange={(event) => setProtocolQuery(event.target.value)}
+          placeholder="Ex.: OC-0001"
+        />
+        <button type="submit">Buscar</button>
+      </form>
+      {foundProtocol ? (
+        <article className="order-card" style={{ marginTop: 12 }}>
+          <p className="eyebrow">{foundProtocol.protocol}</p>
+          <h3>{foundProtocol.title ?? foundProtocol.description}</h3>
+          <div className="occurrence-status-row">
+            <span className={`pill pill-status pill-status--${foundProtocol.status.toLowerCase()}`}>
+              {formatOccurrenceStatus(foundProtocol.status)}
+            </span>
+            <span className="pill">{formatPriority(foundProtocol.priority)}</span>
+          </div>
+          <p>{foundProtocol.address}</p>
+        </article>
+      ) : null}
 
-        <div className="cards">
+      <h3 className="form-section-title">Resumo</h3>
+      <div className="cards">
           <article className="card">
             <span>Total de solicitações</span>
             <strong>{items.length}</strong>
@@ -121,7 +124,8 @@ export default function MyRequestsPage() {
           </article>
         </div>
 
-        <div className="orders-grid">
+      <h3 className="form-section-title">Chamados</h3>
+      <div className="orders-grid">
           {items.length === 0 ? (
             <article className="panel">
               <h3>Nenhuma solicitação encontrada</h3>
@@ -129,7 +133,7 @@ export default function MyRequestsPage() {
             </article>
           ) : (
             items.map((item) => (
-              <article key={item.id} className="panel order-card">
+              <article key={item.id} className="order-card">
                 <p className="eyebrow">{item.protocol}</p>
                 <h3>{item.title ?? item.description}</h3>
                 <div className="occurrence-status-row">

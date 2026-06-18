@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { resolveEnvFilePaths } from './config/env-files';
 import { AuthModule } from './modules/auth/auth.module';
 import { CitizensModule } from './modules/citizens/citizens.module';
 import { OccurrencesModule } from './modules/occurrences/occurrences.module';
@@ -21,13 +22,19 @@ import { PushNotificationsModule } from './modules/push-notifications/push-notif
 import { SchedulingRemindersModule } from './modules/scheduling-reminders/scheduling-reminders.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
 import { AccessModule } from './modules/access/access.module';
+import { WebPushModule } from './modules/web-push/web-push.module';
+import { AnnouncementsModule } from './modules/announcements/announcements.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: resolveEnvFilePaths().length ? resolveEnvFilePaths() : '.env'
+    }),
     PrismaModule,
     AccessModule,
     PermissionsModule,
+    WebPushModule,
     AuthModule,
     UsersModule,
     CitizensModule,
@@ -45,7 +52,8 @@ import { AccessModule } from './modules/access/access.module';
     TransparencyModule,
     ServiceAreaModule,
     PushNotificationsModule,
-    SchedulingRemindersModule
+    SchedulingRemindersModule,
+    AnnouncementsModule
   ]
 })
 export class AppModule {}

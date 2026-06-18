@@ -3,10 +3,11 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { BrandLogo } from '../../../components/brand-logo';
+import { CitizenProductLogo } from '../../../components/brand-logo';
 import { login, fetchCurrentUser } from '../../../lib/auth-api';
-import { getSession, setSession } from '../../../lib/auth';
-import { PWA_HOME } from '../../../lib/pwa';
+import { getSession } from '../../../lib/auth';
+import { refreshCitizenSession, resolveCitizenPwaHome } from '../../../lib/citizen-pwa-access';
+import { PWA_LOGIN } from '../../../lib/pwa';
 import { showDemoHints } from '../../../lib/demo-hints';
 
 export default function PwaLoginPage() {
@@ -21,7 +22,7 @@ export default function PwaLoginPage() {
     const session = getSession();
     if (!session) return;
     if (session.user.role === 'CIDADAO') {
-      router.replace(PWA_HOME);
+      router.replace(resolveCitizenPwaHome(session.user.menuKeys));
       return;
     }
     router.replace('/');
@@ -51,8 +52,9 @@ export default function PwaLoginPage() {
         return;
       }
 
-      setSession({ accessToken: result.access_token, user });
-      router.push(PWA_HOME);
+      const session = await refreshCitizenSession(result.access_token, user);
+      const home = resolveCitizenPwaHome(session.user.menuKeys);
+      router.push(home !== PWA_LOGIN ? home : '/app');
       router.refresh();
     } catch {
       setError('Não foi possível entrar. Verifique suas credenciais.');
@@ -66,9 +68,8 @@ export default function PwaLoginPage() {
       <section className="login-form-panel">
         <div className="login-card">
           <div className="login-mobile-brand">
-            <BrandLogo variant="dark" size="md" showTagline={false} />
+            <CitizenProductLogo size="md" />
           </div>
-          <span className="login-product-label">Prefeitura na Mão</span>
           <h1>Entrar</h1>
           <p className="login-copy">Use sua conta de cidadão para acessar solicitações e agendamentos.</p>
           <form onSubmit={onSubmit} className="login-form">
@@ -85,8 +86,11 @@ export default function PwaLoginPage() {
               {loading ? 'Entrando...' : 'Entrar no app'}
             </button>
           </form>
-          <p className="login-copy login-copy--hint">
+          {/* <p className="login-copy login-copy--hint">
             É gestor ou servidor? <Link href="/login">Acessar sistema web</Link>
+          </p> */}
+          <p className="login-credit">
+            Desenvolvido por <strong>i7AI Sistemas inteligentes</strong>
           </p>
         </div>
       </section>

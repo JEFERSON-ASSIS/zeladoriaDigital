@@ -267,7 +267,7 @@ export default function MyAppointmentsPage() {
             {items.map((item) => {
               const cancellable = isCancellableRemoteStatus(item.status);
               return (
-                <article key={item.id} className="panel order-card">
+                <article key={item.id} className="order-card">
                   <p className="eyebrow">#{item.id}</p>
                   <h3>{item.servico ?? 'Consulta'}</h3>
                   <p>Paciente: {item.nome ?? '—'}</p>

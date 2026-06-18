@@ -5,6 +5,7 @@ export const PWA_LOGIN = '/app/login';
 export const PWA_HOME = '/app/nova-ocorrencia';
 
 export const PWA_CITIZEN_ROUTES = [
+  '/inicio',
   '/nova-ocorrencia',
   '/minhas-solicitacoes',
   '/agendamento',

@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   Param,
   Patch,
@@ -23,11 +24,24 @@ import { UpdateOccurrenceDto } from './dto/update-occurrence.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { UserRole } from '@prisma/client';
+import { isCitizenPwaModuleEnabled, type MenuKey } from '@zeladoria/shared';
 import { extensionForMime, isAllowedAttachment } from './attachment.utils';
+import { PermissionsService } from '../permissions/permissions.service';
 @UseGuards(JwtAuthGuard)
 @Controller('occurrences')
 export class OccurrencesController {
-  constructor(private readonly occurrencesService: OccurrencesService) {}
+  constructor(
+    private readonly occurrencesService: OccurrencesService,
+    private readonly permissionsService: PermissionsService
+  ) {}
+
+  private async assertCitizenPwaModule(menuKey: MenuKey, role: UserRole) {
+    if (role !== UserRole.CIDADAO) return;
+    const menuKeys = await this.permissionsService.getMenuKeysForRole(UserRole.CIDADAO);
+    if (!isCitizenPwaModuleEnabled(menuKey, menuKeys)) {
+      throw new ForbiddenException('Este módulo não está disponível no app do cidadão.');
+    }
+  }
 
   @Get()
   @Roles('ADMIN', 'PREFEITURA', 'SECRETARIA', 'TRIAGEM', 'EQUIPE_CAMPO')
@@ -37,20 +51,26 @@ export class OccurrencesController {
 
   @Get('mine')
   @Roles('CIDADAO')
-  findMine(@Req() req: { user: { sub: string } }) {
+  async findMine(@Req() req: { user: { sub: string; role: UserRole } }) {
+    await this.assertCitizenPwaModule('minhas-solicitacoes', req.user.role);
     return this.occurrencesService.findByCitizen(req.user.sub);
   }
 
   @Get('protocol/:protocol')
   @Roles('ADMIN', 'PREFEITURA', 'SECRETARIA', 'TRIAGEM', 'EQUIPE_CAMPO', 'CIDADAO')
-  findByProtocol(@Param('protocol') protocol: string) {
+  async findByProtocol(
+    @Param('protocol') protocol: string,
+    @Req() req: { user: { role: UserRole } }
+  ) {
+    await this.assertCitizenPwaModule('minhas-solicitacoes', req.user.role);
     return this.occurrencesService.findByProtocol(protocol);
   }
 
   @Post()
   @Roles('ADMIN', 'PREFEITURA', 'SECRETARIA', 'TRIAGEM', 'CIDADAO')
-  create(@Body() body: CreateOccurrenceDto, @Req() req: { user: { sub: string; role: UserRole } }) {
+  async create(@Body() body: CreateOccurrenceDto, @Req() req: { user: { sub: string; role: UserRole } }) {
     if (req.user.role === UserRole.CIDADAO) {
+      await this.assertCitizenPwaModule('nova-ocorrencia', req.user.role);
       body.citizenId = req.user.sub;
     }
     return this.occurrencesService.create(body);
@@ -84,11 +104,14 @@ export class OccurrencesController {
       })
     })
   )
-  addAttachment(
+  async addAttachment(
     @Param('id') id: string,
     @UploadedFile() file: Express.Multer.File,
     @Req() req: { user: { sub: string; role: UserRole } }
   ) {
+    if (req.user.role === UserRole.CIDADAO) {
+      await this.assertCitizenPwaModule('nova-ocorrencia', req.user.role);
+    }
     return this.occurrencesService.addAttachment(id, file, req.user);
   }
 

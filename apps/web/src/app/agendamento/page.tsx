@@ -256,9 +256,9 @@ export default function SchedulingPage() {
       title="Agendar consulta"
       subtitle={psf ? `${psf.label} — ${psf.subtitle}` : 'Carregando unidade...'}
     >
-      <form className="occurrence-form scheduling-form" onSubmit={handleSubmit}>
-        <section className="panel scheduling-panel scheduling-panel--flat">
-          <p className="eyebrow">Seus dados</p>
+      <form onSubmit={handleSubmit} style={{ display: 'block' }}>
+        <h3 className="form-section-title">Seus Dados</h3>
+        <div className="form-group-card">
           <label>
             Nome completo *
             <input
@@ -309,7 +309,9 @@ export default function SchedulingPage() {
               ))}
             </select>
           </label>
+        </div>
 
+        <div style={{ margin: '8px 0 16px' }}>
           <button
             type="button"
             className="scheduling-load-btn"
@@ -318,13 +320,14 @@ export default function SchedulingPage() {
           >
             {loadingDays ? 'Buscando datas...' : 'Buscar datas disponíveis'}
           </button>
-        </section>
+        </div>
 
         {days.length > 0 ? (
-          <section className="panel scheduling-panel scheduling-panel--flat">
-            <p className="eyebrow">Data</p>
-            <h3>Escolha o dia</h3>
-            <div className="scheduling-slot-grid">
+          <section className="panel scheduling-panel scheduling-panel--flat" style={{ margin: '16px 0' }}>
+            <div style={{ padding: '14px 16px 8px' }}>
+              <h3 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--i7-text-secondary)' }}>Escolha o dia</h3>
+            </div>
+            <div className="scheduling-slot-grid" style={{ padding: '0 16px 16px' }}>
               {days.map((day) => (
                 <button
                   key={day.label}
@@ -341,14 +344,15 @@ export default function SchedulingPage() {
         ) : null}
 
         {needsTime && selectedDay ? (
-          <section className="panel scheduling-panel scheduling-panel--flat">
-            <p className="eyebrow">Horário</p>
-            <h3>Escolha o horário — {selectedDay.date}</h3>
-            {loadingTimes ? <p className="scheduling-copy">Carregando horários...</p> : null}
+          <section className="panel scheduling-panel scheduling-panel--flat" style={{ margin: '16px 0' }}>
+            <div style={{ padding: '14px 16px 8px' }}>
+              <h3 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--i7-text-secondary)' }}>Escolha o horário — {selectedDay.date}</h3>
+            </div>
+            {loadingTimes ? <p className="scheduling-copy" style={{ padding: '0 16px 12px' }}>Carregando horários...</p> : null}
             {!loadingTimes && times.length === 0 ? (
-              <p className="scheduling-copy">Nenhum horário disponível nesta data.</p>
+              <p className="scheduling-copy" style={{ padding: '0 16px 12px' }}>Nenhum horário disponível nesta data.</p>
             ) : null}
-            <div className="scheduling-slot-grid scheduling-slot-grid--times">
+            <div className="scheduling-slot-grid scheduling-slot-grid--times" style={{ padding: '0 16px 16px' }}>
               {times.map((time) => (
                 <button
                   key={time}
@@ -364,20 +368,20 @@ export default function SchedulingPage() {
         ) : null}
 
         {selectedDay && (!needsTime || selectedTime) ? (
-          <section className="panel scheduling-panel scheduling-panel--flat scheduling-summary">
-            <p className="eyebrow">Resumo</p>
-            <p>
+          <section className="panel scheduling-panel scheduling-panel--flat scheduling-summary" style={{ padding: 16, margin: '16px 0' }}>
+            <p className="eyebrow" style={{ margin: '0 0 6px', fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--i7-text-secondary)', fontWeight: 600 }}>Resumo do agendamento</p>
+            <p style={{ margin: '4px 0', fontSize: '1.05rem', color: 'var(--i7-text)' }}>
               <strong>{selectedService?.label}</strong> em {selectedDay.date}
               {selectedTime ? ` às ${selectedTime}` : ''}
             </p>
-            <p>{form.nome}</p>
-            <p>{form.telefone} · CPF {form.cpf}</p>
+            <p style={{ margin: '4px 0', color: 'var(--i7-text-secondary)' }}>{form.nome}</p>
+            <p style={{ margin: '4px 0', color: 'var(--i7-text-secondary)', fontSize: '0.9rem' }}>{form.telefone} · CPF {form.cpf}</p>
           </section>
         ) : null}
 
-        {error ? <p className="login-error">{error}</p> : null}
+        {error ? <p className="login-error" style={{ margin: '12px 0' }}>{error}</p> : null}
 
-        <div className="form-actions">
+        <div className="form-actions" style={{ padding: '16px 0' }}>
           <button
             type="submit"
             disabled={submitting || !selectedDay || (needsTime && !selectedTime)}

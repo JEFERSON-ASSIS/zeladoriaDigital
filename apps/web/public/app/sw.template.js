@@ -88,14 +88,14 @@ self.addEventListener('push', (event) => {
     body: payload.body ?? 'Você tem uma nova atualização.',
     icon: '/icons/icon-192.png',
     badge: '/icons/icon-192.png',
-    data: { url: payload.url ?? '/app/meus-agendamentos' }
+    data: { url: payload.url ?? '/app/inicio' }
   };
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const target = event.notification.data?.url ?? '/app/meus-agendamentos';
+  const target = event.notification.data?.url ?? '/app/inicio';
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
       for (const client of clients) {

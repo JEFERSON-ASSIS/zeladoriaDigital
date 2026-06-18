@@ -33,6 +33,7 @@ export const config = {
   matcher: [
     '/',
     '/login',
+    '/inicio/:path*',
     '/nova-ocorrencia/:path*',
     '/minhas-solicitacoes/:path*',
     '/agendamento/:path*',
