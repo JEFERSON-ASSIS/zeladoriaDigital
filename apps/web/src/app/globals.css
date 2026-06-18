@@ -3921,6 +3921,40 @@ html.pwa-standalone body {
   background: var(--native-bg);
 }
 
+.citizen-pwa-root .pwa-splash-screen,
+.pwa-splash-screen {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  background: #f2f2f7;
+  text-align: center;
+}
+
+.pwa-splash-screen__logo {
+  width: 120px;
+  height: 120px;
+  border-radius: 28px;
+  box-shadow: 0 16px 40px rgba(37, 99, 235, 0.18);
+}
+
+.pwa-splash-screen__title {
+  margin: 8px 0 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #1e293b;
+}
+
+.pwa-splash-screen__tagline {
+  margin: 0;
+  font-size: 1rem;
+  color: #64748b;
+}
+
 .citizen-pwa-root .offline-card {
   width: 100%;
   max-width: 360px;

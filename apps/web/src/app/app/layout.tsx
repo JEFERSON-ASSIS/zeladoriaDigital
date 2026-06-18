@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { CitizenPwaRouteGuard } from '../../components/citizen-pwa-route-guard';
 import { PwaShell } from '../../components/pwa-shell';
-import { PWA_IOS_SPLASH_LINKS } from '../../lib/pwa-splash';
 
 export const metadata: Metadata = {
   title: 'Prefeitura na Mão | App do Cidadão',
@@ -29,18 +28,14 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: 'cover',
-  themeColor: '#ffffff'
+  themeColor: '#2563eb'
 };
 
 export default function AppPwaLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="citizen-pwa-root">
-      {/* Sem crossorigin — Next metadata.manifest quebra instalação no Chrome Android */}
       <link rel="manifest" href="/app/manifest.json" />
-      <meta name="theme-color" content="#ffffff" />
-      {PWA_IOS_SPLASH_LINKS.map((splash) => (
-        <link key={splash.href} rel="apple-touch-startup-image" href={splash.href} media={splash.media} />
-      ))}
+      <meta name="theme-color" content="#2563eb" />
       <PwaShell>
         <CitizenPwaRouteGuard>{children}</CitizenPwaRouteGuard>
       </PwaShell>

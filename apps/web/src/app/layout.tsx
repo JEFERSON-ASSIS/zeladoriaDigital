@@ -4,6 +4,7 @@ export const revalidate = 0;
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
+import { PWA_IOS_SPLASH_LINKS } from '../lib/pwa-splash';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -28,6 +29,11 @@ export const viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" className={inter.variable}>
+      <head>
+        {PWA_IOS_SPLASH_LINKS.map((splash) => (
+          <link key={splash.href} rel="apple-touch-startup-image" href={splash.href} media={splash.media} />
+        ))}
+      </head>
       <body>
         <Providers>{children}</Providers>
       </body>

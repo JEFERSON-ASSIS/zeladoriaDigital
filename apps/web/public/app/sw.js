@@ -1,12 +1,19 @@
 /* Gerado em build — não edite sw.js diretamente; use sw.template.js */
-const CACHE_VERSION = 'prefeitura-pwa-4jZT8SCf-ZQzEPBzcpEkw';
+const CACHE_VERSION = 'prefeitura-pwa-cSBrWm3iakqoqsiqSw9SC';
 const OFFLINE_URL = '/app/offline';
 
 const PRECACHE = [
   "/app/manifest.json",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
+  "/icons/icon-512-maskable.png",
   "/icons/apple-touch-icon.png",
+  "/icons/notification-icon.png",
+  "/icons/notification-badge.png",
+  "/app/splash/iphone-se.png",
+  "/app/splash/iphone-xr.png",
+  "/app/splash/iphone-12.png",
+  "/app/splash/iphone-14-pro-max.png",
   "/app/login",
   "/app",
   "/app/nova-ocorrencia",
@@ -18,7 +25,7 @@ const PRECACHE = [
   "/_next/static/chunks/1dd3208c-8ac6d030563cdc22.js",
   "/_next/static/chunks/1528-07016564a7999de4.js",
   "/_next/static/chunks/main-app-8dd60d56dadc17db.js",
-  "/_next/static/css/418a347a3117bdbd.css",
+  "/_next/static/css/f06b1a1fef4df7c1.css",
   "/_next/static/chunks/9569-d0c0301a611c4be8.js",
   "/_next/static/chunks/app/layout-63ade7159f7f0591.js",
   "/_next/static/chunks/2738-5ca37ba278de3305.js",
@@ -26,20 +33,20 @@ const PRECACHE = [
   "/_next/static/chunks/1590-e6f5b815b0663982.js",
   "/_next/static/chunks/244-36f8fe96d247ee49.js",
   "/_next/static/chunks/app/app/agendamento/page-75774c98812bb010.js",
-  "/_next/static/chunks/app/app/layout-ef5ecb3365a3a04c.js",
+  "/_next/static/chunks/app/app/layout-41bae3c585bf1ba4.js",
   "/_next/static/chunks/app/app/inicio/page-904804c0344b1b77.js",
   "/_next/static/chunks/app/app/login/page-d60ae4314abb10f2.js",
+  "/_next/static/chunks/9837-48ec3e257566610d.js",
+  "/_next/static/chunks/app/app/minhas-solicitacoes/page-c8cfa6616ee6696d.js",
   "/_next/static/chunks/465-e94801917468f4d7.js",
   "/_next/static/chunks/app/app/meus-agendamentos/page-da385f44b14721a5.js",
   "/_next/static/chunks/306-7d13a46b7dcc6c74.js",
   "/_next/static/chunks/app/app/nova-ocorrencia/page-dacb8cff98c6be40.js",
   "/_next/static/chunks/app/app/offline/page-386fc33fb4479871.js",
-  "/_next/static/chunks/9837-48ec3e257566610d.js",
-  "/_next/static/chunks/app/app/minhas-solicitacoes/page-c8cfa6616ee6696d.js",
   "/_next/static/chunks/app/app/page-84ce0e5da223d955.js",
   "/_next/static/chunks/polyfills-42372ed130431b0a.js",
-  "/_next/static/4jZT8SCf-ZQzEPBzcpEkw/_buildManifest.js",
-  "/_next/static/4jZT8SCf-ZQzEPBzcpEkw/_ssgManifest.js"
+  "/_next/static/cSBrWm3iakqoqsiqSw9SC/_buildManifest.js",
+  "/_next/static/cSBrWm3iakqoqsiqSw9SC/_ssgManifest.js"
 ];
 
 self.addEventListener('install', (event) => {
@@ -73,7 +80,11 @@ function isAppRequest(url) {
 }
 
 function isStaticAsset(pathname) {
-  return pathname.startsWith('/_next/static/') || pathname.startsWith('/icons/');
+  return (
+    pathname.startsWith('/_next/static/') ||
+    pathname.startsWith('/icons/') ||
+    pathname.startsWith('/app/splash/')
+  );
 }
 
 self.addEventListener('fetch', (event) => {
@@ -122,10 +133,11 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('push', (event) => {
   const payload = event.data?.json?.() ?? {};
   const title = payload.title ?? 'Prefeitura na Mão';
+  const origin = self.location.origin;
   const options = {
     body: payload.body ?? 'Você tem uma nova atualização.',
-    icon: '/icons/icon-192.png',
-    badge: '/icons/icon-192.png',
+    icon: payload.icon ?? `${origin}/icons/notification-icon.png`,
+    badge: payload.badge ?? `${origin}/icons/notification-badge.png`,
     data: { url: payload.url ?? '/app/inicio' }
   };
   event.waitUntil(self.registration.showNotification(title, options));

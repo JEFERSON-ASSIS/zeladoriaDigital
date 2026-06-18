@@ -19,7 +19,14 @@ const STATIC_ROUTES = [
   '/app/manifest.json',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
-  '/icons/apple-touch-icon.png'
+  '/icons/icon-512-maskable.png',
+  '/icons/apple-touch-icon.png',
+  '/icons/notification-icon.png',
+  '/icons/notification-badge.png',
+  '/app/splash/iphone-se.png',
+  '/app/splash/iphone-xr.png',
+  '/app/splash/iphone-12.png',
+  '/app/splash/iphone-14-pro-max.png'
 ];
 
 function toPublicUrl(assetPath) {

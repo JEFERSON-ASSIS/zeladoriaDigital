@@ -10,7 +10,7 @@
   "display_override": ["standalone", "fullscreen"],
   "orientation": "portrait",
   "background_color": "#f2f2f7",
-  "theme_color": "#ffffff",
+  "theme_color": "#2563eb",
   "prefer_related_applications": false,
   "categories": ["government", "utilities", "health"],
   "icons": [
@@ -27,10 +27,16 @@
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-512.png",
+      "src": "/icons/icon-512-maskable.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    },
+    {
+      "src": "/icons/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
     }
   ],
   "shortcuts": [

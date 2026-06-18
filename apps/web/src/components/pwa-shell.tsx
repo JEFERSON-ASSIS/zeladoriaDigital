@@ -30,11 +30,10 @@ export function PwaShell({ children }: { children: React.ReactNode }) {
 
   if (mode === 'loading') {
     return (
-      <main className="offline-screen">
-        <section className="offline-card">
-          <p className="eyebrow">Prefeitura na Mão</p>
-          <h1>Carregando...</h1>
-        </section>
+      <main className="pwa-splash-screen" aria-busy="true" aria-label="Carregando Prefeitura na Mão">
+        <img src="/icons/icon-192.png" alt="" className="pwa-splash-screen__logo" width={120} height={120} />
+        <h1 className="pwa-splash-screen__title">Prefeitura na Mão</h1>
+        <p className="pwa-splash-screen__tagline">Serviços ao cidadão</p>
       </main>
     );
   }

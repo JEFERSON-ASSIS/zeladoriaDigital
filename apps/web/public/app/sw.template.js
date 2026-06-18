@@ -35,7 +35,11 @@ function isAppRequest(url) {
 }
 
 function isStaticAsset(pathname) {
-  return pathname.startsWith('/_next/static/') || pathname.startsWith('/icons/');
+  return (
+    pathname.startsWith('/_next/static/') ||
+    pathname.startsWith('/icons/') ||
+    pathname.startsWith('/app/splash/')
+  );
 }
 
 self.addEventListener('fetch', (event) => {
@@ -84,10 +88,11 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('push', (event) => {
   const payload = event.data?.json?.() ?? {};
   const title = payload.title ?? 'Prefeitura na Mão';
+  const origin = self.location.origin;
   const options = {
     body: payload.body ?? 'Você tem uma nova atualização.',
-    icon: '/icons/icon-192.png',
-    badge: '/icons/icon-192.png',
+    icon: payload.icon ?? `${origin}/icons/notification-icon.png`,
+    badge: payload.badge ?? `${origin}/icons/notification-badge.png`,
     data: { url: payload.url ?? '/app/inicio' }
   };
   event.waitUntil(self.registration.showNotification(title, options));
