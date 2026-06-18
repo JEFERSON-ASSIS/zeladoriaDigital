@@ -37,6 +37,8 @@ O Zeladoria Digital é uma plataforma municipal para registro, triagem, encaminh
   - ocorrências
 - Validação com DTOs
 - Testes iniciais da API implementados e passando
+- WhatsApp com histórico persistido e envio opcional via API externa quando configurado
+- PWA do cidadão com manifest, service worker, offline e instalação
 
 ### Autenticação
 
@@ -55,6 +57,8 @@ O Zeladoria Digital é uma plataforma municipal para registro, triagem, encaminh
 - Página de ordens de serviço
 - Menu lateral adaptado ao perfil
 - Fallback para quando a API não responder
+- Páginas administrativas de indicadores, ranking, relatórios, alertas e transparência
+- Telas do cidadão para ocorrências, minhas solicitações e agendamento PSF
 
 ### Fluxo operacional
 
@@ -108,14 +112,12 @@ O sistema já está em um estado funcional, com:
 - login operacional
 - cadastro mínimo funcional
 - fluxos principais de ocorrência caminhando para o uso real
+- PWA entregue na base atual
+- comunicação operacional com histórico de mensagens já estruturada
 
 ## O que ainda falta
 
-### Última etapa principal
-
-- Comunicação operacional com WhatsApp e histórico de mensagens
-
-### Itens complementares
+### Itens principais em aberto
 
 - Melhor tratamento de erros na API
 - Mais testes de controller e integração
@@ -123,7 +125,13 @@ O sistema já está em um estado funcional, com:
 - Proteção de rotas por perfil mais refinada
 - Revisão final de UX
 - Fluxos de mapa, relatórios e uploads
-- Evolução da integração de notificações e mensagens
+- Evolução das notificações push e integrações externas
+
+### Itens de documentação em aberto
+
+- Consolidar o que está entregue em um único quadro de status
+- Marcar claramente dependências de ambiente, como Postgres, MinIO e variáveis de ambiente
+- Atualizar os guias de deploy e uso local para os comandos atuais
 
 ## Ordem de prioridade restante
 
@@ -131,6 +139,7 @@ O sistema já está em um estado funcional, com:
 2. Ampliar testes
 3. Refinar experiência visual e navegação
 4. Evoluir notificações e integrações externas
+5. Fechar documentação e alinhar status entre os arquivos do projeto
 
 ## Como executar localmente
 
@@ -168,5 +177,5 @@ npm run dev
 ## Observações
 
 - O sistema foi construído para evoluir de forma incremental.
-- O WhatsApp é a última etapa da criação principal do sistema.
+- O WhatsApp e o PWA já fazem parte da base funcional atual.
 - O documento de acompanhamento de progresso continua em `STATUS_ATIVIDADE.md`.
