@@ -45,7 +45,7 @@ export function resolveAnnouncementAssetUrl(path?: string | null) {
   return `${API_URL}${path.startsWith('/') ? path : `/${path}`}`;
 }
 
-function authHeaders(accessToken?: string) {
+function authHeaders(accessToken?: string): Record<string, string> {
   return accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
 }
 
