@@ -51,12 +51,12 @@ Entregar uma base funcional da plataforma de zeladoria municipal com backend, fr
 - Proteção de rotas por perfil no backend nas entidades principais
 - PWA básico entregue com manifest, service worker, offline e ícones
 - WhatsApp com histórico persistido e envio opcional via API externa quando configurada
+- Documentação base existente para instalação, deploy e status do projeto
 
 ## Parcial
 
-- WhatsApp registra histórico persistido e pode enviar via API externa quando houver credenciais
-- README existe, mas ainda pode evoluir para refletir com mais precisão o estado final do produto
 - Base de dados já existe, mas ainda pode evoluir com mais dados de demo e cenários de teste
+- README e documentos de status ainda precisam de revisão fina para evitar duplicidade de informação
 
 ## Pendente
 
@@ -66,6 +66,7 @@ Entregar uma base funcional da plataforma de zeladoria municipal com backend, fr
 - Fluxos de mapa, relatórios e uploads
 - Revisão final de UX da tela principal
 - PWA avançado com estratégia mais refinada de cache e testes automatizados de offline
+- Consolidação da documentação final e do roteiro de entrega
 
 ## Problemas já encontrados e corrigidos
 
@@ -80,7 +81,8 @@ Entregar uma base funcional da plataforma de zeladoria municipal com backend, fr
 1. Evoluir relatórios, mapa e indicadores executivos
 2. Integrar upload real no MinIO
 3. Melhorar testes e tratamento de erros
-4. Refinar a camada de comunicação com WhatsApp e notificações operacionais
+4. Refinar a camada de comunicação com notificações operacionais
+5. Organizar a documentação final para não deixar pendências duplicadas
 
 ## Critério de conclusão
 
@@ -92,5 +94,6 @@ A atividade só deve ser considerada finalizada quando:
 - os fluxos principais estiverem navegáveis
 - os testes principais estiverem cobrindo os casos centrais
 - a consulta por protocolo e o fluxo de OS estiverem completos no produto
+- a documentação final estiver alinhada com o estado real da entrega
 
 

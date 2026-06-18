@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { OccurrenceStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ExportService } from '../export/export.service';
@@ -7,14 +7,7 @@ import { ExportService } from '../export/export.service';
 export class ReportsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly exportService: Pick<ExportService, 'exportGrid'> = {
-      exportGrid: async (format: 'pdf' | 'csv' | 'xlsx') => ({
-        format,
-        contentType: 'text/plain',
-        filename: `export.${format}`,
-        body: ''
-      })
-    } as unknown as Pick<ExportService, 'exportGrid'>
+    @Optional() private readonly exportService?: ExportService
   ) {}
 
   async generate(input: { periodStart?: string; periodEnd?: string }) {
@@ -50,7 +43,16 @@ export class ReportsService {
   }
 
   download(format: 'pdf' | 'csv' | 'xlsx') {
-    return this.exportService.exportGrid(format, {});
+    if (this.exportService) {
+      return this.exportService.exportGrid(format, {});
+    }
+
+    return {
+      format,
+      contentType: 'text/plain',
+      filename: `export.${format}`,
+      body: ''
+    };
   }
 
   private rank(values: string[]) {

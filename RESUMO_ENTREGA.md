@@ -18,6 +18,7 @@ O sistema já possui uma base funcional e navegável com:
 - priorização automática
 - testes da API passando
 - WhatsApp com histórico persistido e envio opcional via API externa
+- PWA do cidadão com instalação, offline e base de notificações push
 
 ## O que foi entregue
 
@@ -43,6 +44,7 @@ O sistema já possui uma base funcional e navegável com:
 - dashboard
 - página de ordens de serviço
 - PWA do cidadão com instalação e offline
+- telas de ocorrências, minhas solicitações e agendamento PSF
 
 ### Regras de negócio
 
@@ -53,6 +55,7 @@ O sistema já possui uma base funcional e navegável com:
 - sugestão de departamento
 - detecção simples de duplicidade
 - histórico de mensagens do WhatsApp no backend
+- menus e permissões por perfil em base compartilhada
 
 ### Banco
 
@@ -68,4 +71,4 @@ O WhatsApp agora foi integrado com histórico persistido e modo de envio opciona
 1. Refinos de erro e tipagem
 2. Ajustes finais de UX e cobertura de testes
 3. Evolução de notificações e integrações externas
-
+4. Fechamento e revisão da documentação final

@@ -13,8 +13,13 @@ export class PermissionsService implements OnModuleInit {
   constructor(private readonly prisma: PrismaService) {}
 
   async onModuleInit() {
-    await this.purgeDeprecatedRoles();
-    await this.ensureDefaults();
+    try {
+      await this.purgeDeprecatedRoles();
+      await this.ensureDefaults();
+    } catch (error) {
+      console.warn('Permissions bootstrap skipped because Prisma is unavailable.');
+      console.warn(error);
+    }
   }
 
   private async purgeDeprecatedRoles() {
