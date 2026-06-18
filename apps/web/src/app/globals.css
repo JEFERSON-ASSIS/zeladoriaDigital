@@ -1340,18 +1340,33 @@ h3 { font-size: 1.125rem; font-weight: 600; }
 
 /* ─── App cidadão (PWA) ─── */
 .citizen-app {
-  min-height: 100vh;
-  display: grid;
-  grid-template-rows: auto auto 1fr auto;
+  --citizen-nav-height: 64px;
+  height: 100dvh;
+  max-width: 100vw;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   background: var(--i7-bg);
+  color: var(--i7-text);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body:has(.citizen-app) {
+  overflow: hidden;
+  height: 100dvh;
 }
 
 .citizen-app__header {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 16px 20px;
+  padding: 12px 16px;
+  padding-top: max(12px, env(safe-area-inset-top));
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
   background: var(--i7-bg-dark);
   color: var(--i7-white);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -1361,6 +1376,7 @@ h3 { font-size: 1.125rem; font-weight: 600; }
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
 }
 
 .citizen-app__mark {
@@ -1370,6 +1386,7 @@ h3 { font-size: 1.125rem; font-weight: 600; }
 .citizen-app__brand strong {
   display: block;
   font-size: 0.95rem;
+  line-height: 1.2;
 }
 
 .citizen-app__brand span {
@@ -1378,32 +1395,95 @@ h3 { font-size: 1.125rem; font-weight: 600; }
 }
 
 .citizen-app__logout {
+  flex-shrink: 0;
   border: 1px solid rgba(255, 255, 255, 0.15);
   background: transparent;
   color: white;
   border-radius: var(--i7-radius-md);
-  padding: 8px 12px;
+  padding: 10px 14px;
+  min-height: 44px;
   font-size: 0.8rem;
   cursor: pointer;
 }
 
 .citizen-app__intro {
-  padding: 20px;
+  flex-shrink: 0;
+  padding: 0 0 12px;
 }
 
 .citizen-app__intro h1 {
-  font-size: 1.35rem;
-  margin: 0 0 6px;
+  font-size: 1.25rem;
+  margin: 0 0 4px;
 }
 
 .citizen-app__intro p {
   margin: 0;
   color: var(--i7-text-secondary);
-  line-height: 1.5;
+  line-height: 1.45;
+  font-size: 0.9rem;
 }
 
 .citizen-app__content {
-  padding: 0 20px 20px;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  padding: 12px 16px;
+  padding-bottom: calc(var(--citizen-nav-height) + 24px + env(safe-area-inset-bottom));
+}
+
+.citizen-app__content > * {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.citizen-app__content .panel,
+.citizen-app__content .citizen-form-panel {
+  margin-bottom: 12px;
+  padding: 16px;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.citizen-app__content .occurrence-form,
+.citizen-app__content .scheduling-form {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.citizen-app__content .occurrence-form label,
+.citizen-app__content .scheduling-form label {
+  min-width: 0;
+}
+
+.citizen-app__content .occurrence-form input,
+.citizen-app__content .occurrence-form textarea,
+.citizen-app__content .occurrence-form select,
+.citizen-app__content .scheduling-form input,
+.citizen-app__content .scheduling-form textarea,
+.citizen-app__content .scheduling-form select {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.citizen-app__content .form-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.citizen-app__content .form-actions button,
+.citizen-app__content .scheduling-load-btn,
+.citizen-app__content .btn-primary {
+  width: 100%;
+  min-height: 48px;
+  font-size: 1rem;
 }
 
 .citizen-form-panel {
@@ -1614,8 +1694,68 @@ h3 { font-size: 1.125rem; font-weight: 600; }
   width: 100%;
 }
 
-.citizen-app__nav--four {
-  grid-template-columns: 1fr 1fr;
+.citizen-app__nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+  padding-left: max(4px, env(safe-area-inset-left));
+  padding-right: max(4px, env(safe-area-inset-right));
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--i7-border);
+  box-shadow: 0 -8px 32px rgba(15, 23, 42, 0.08);
+}
+
+.citizen-app__nav-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 52px;
+  padding: 6px 4px;
+  border-radius: var(--i7-radius-md);
+  background: transparent;
+  color: var(--i7-text-secondary);
+  font-size: 0.62rem;
+  font-weight: 600;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.citizen-app__nav-icon {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+}
+
+.citizen-app__nav-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.citizen-app__nav-label {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.citizen-app__nav-link.is-active {
+  color: var(--i7-blue);
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.citizen-app__nav-link.is-active .citizen-app__nav-icon {
+  transform: translateY(-1px);
 }
 
 .scheduling-panel {
@@ -2034,32 +2174,6 @@ h3 { font-size: 1.125rem; font-weight: 600; }
   cursor: wait;
 }
 
-.citizen-app__nav {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  padding: 12px 16px 16px;
-  background: var(--i7-white);
-  border-top: 1px solid var(--i7-border);
-  position: sticky;
-  bottom: 0;
-}
-
-.citizen-app__nav-link {
-  text-align: center;
-  padding: 12px 10px;
-  border-radius: var(--i7-radius-md);
-  background: var(--i7-bg-secondary);
-  color: var(--i7-text);
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.citizen-app__nav-link:hover {
-  background: rgba(37, 99, 235, 0.1);
-  color: var(--i7-blue);
-}
-
 /* ─── Responsive ─── */
 @media (max-width: 900px) {
   .shell,
@@ -2090,4 +2204,273 @@ h3 { font-size: 1.125rem; font-weight: 600; }
   .kanban { grid-template-columns: 1fr; }
   .content,
   .admin-shell { padding: 20px; }
+}
+
+/* ─── PWA install ─── */
+.pwa-install-toast {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(var(--citizen-nav-height, 64px) + 12px + env(safe-area-inset-bottom));
+  z-index: 200;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--i7-radius-lg);
+  background: var(--i7-bg-dark);
+  color: #fff;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.28);
+  animation: pwa-toast-in 0.35s ease-out;
+}
+
+.login-shell--pwa .pwa-install-toast {
+  bottom: calc(12px + env(safe-area-inset-bottom));
+}
+
+@keyframes pwa-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pwa-install-toast__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.pwa-install-toast__body strong {
+  display: block;
+  font-size: 0.92rem;
+  margin-bottom: 2px;
+}
+
+.pwa-install-toast__body p {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.pwa-install-toast__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.pwa-install-toast__install {
+  border: none;
+  border-radius: var(--i7-radius-md);
+  padding: 8px 12px;
+  background: var(--i7-blue);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.pwa-install-toast__close {
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--i7-radius-full);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.pwa-install-card {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 16px;
+  border: 1px solid var(--i7-border);
+  border-radius: var(--i7-radius-lg);
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.06), rgba(124, 58, 237, 0.04));
+}
+
+.pwa-install-card h3 {
+  margin: 4px 0;
+  font-size: 1rem;
+}
+
+.pwa-install-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.pwa-install-button {
+  border: none;
+  border-radius: var(--i7-radius-md);
+  padding: 12px 16px;
+  min-height: 44px;
+  background: var(--i7-blue);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pwa-install-help {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--i7-text-secondary);
+  line-height: 1.45;
+}
+
+/* ─── Mobile PWA ─── */
+@media (max-width: 767px) {
+  html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  .citizen-app__content {
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
+
+  .citizen-app__content .panel,
+  .citizen-app__content .citizen-form-panel,
+  .citizen-app__content .scheduling-panel {
+    padding: 14px;
+  }
+
+  .citizen-location-block,
+  .citizen-media-block {
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .login-shell--pwa {
+    grid-template-columns: 1fr;
+  }
+
+  .login-shell--pwa .login-brand-panel {
+    display: none;
+  }
+
+  .login-shell--pwa .login-form-panel {
+    min-height: 100dvh;
+    align-content: start;
+    padding: 20px 16px;
+    padding-top: max(20px, env(safe-area-inset-top));
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+    background: var(--i7-bg);
+  }
+
+  .login-shell--pwa .login-card {
+    width: 100%;
+    padding: 20px 16px;
+    border: none;
+    box-shadow: none;
+    background: transparent;
+  }
+
+  .login-mobile-brand {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+
+  .login-demo-details {
+    margin-top: 12px;
+    font-size: 0.82rem;
+  }
+
+  .login-demo-details summary {
+    cursor: pointer;
+    color: var(--i7-blue);
+    font-weight: 600;
+  }
+
+  .login-form .btn-primary {
+    width: 100%;
+    min-height: 48px;
+    font-size: 1rem;
+  }
+
+  .occurrence-form input,
+  .occurrence-form textarea,
+  .occurrence-form select,
+  .protocol-search input,
+  .login-form input {
+    font-size: 16px;
+    min-height: 48px;
+  }
+
+  .protocol-search {
+    display: grid;
+    gap: 10px;
+  }
+
+  .protocol-search input {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .protocol-search button {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .scheduling-slot-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .scheduling-slot-grid--times {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .citizen-dialog {
+    margin: auto 0 0;
+    width: 100%;
+    max-width: none;
+    border-radius: var(--i7-radius-xl) var(--i7-radius-xl) 0 0;
+    max-height: 90dvh;
+    overflow-y: auto;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  }
+
+  .citizen-dialog-backdrop {
+    align-items: flex-end;
+  }
+}
+
+@media (min-width: 768px) {
+  .login-mobile-brand {
+    display: none;
+  }
+
+  .citizen-app {
+    max-width: 480px;
+    margin: 0 auto;
+    border-left: 1px solid var(--i7-border);
+    border-right: 1px solid var(--i7-border);
+    box-shadow: var(--i7-shadow-lg);
+  }
+
+  .citizen-app__nav {
+    max-width: 480px;
+    margin: 0 auto;
+  }
+}
+
+@media (display-mode: standalone) {
+  .citizen-app__header {
+    padding-top: max(14px, env(safe-area-inset-top));
+  }
+
+  .pwa-install-toast,
+  .pwa-install-card {
+    display: none;
+  }
 }

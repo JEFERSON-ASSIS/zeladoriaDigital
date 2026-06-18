@@ -30,7 +30,7 @@ export default function LoginPage() {
         accessToken: result.access_token,
         user
       });
-      router.push('/');
+      router.push(user.role === 'CIDADAO' ? '/nova-ocorrencia' : '/');
       router.refresh();
     } catch {
       setError('Não foi possível entrar. Verifique as credenciais.');
@@ -40,8 +40,8 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="login-shell">
-      <aside className="login-brand-panel">
+    <main className="login-shell login-shell--pwa">
+      <aside className="login-brand-panel" aria-hidden="true">
         <div className="login-brand-content">
           <BrandLogo variant="light" size="lg" showTagline />
           <h2>Tecnologia, IA e gestão pública em uma única plataforma.</h2>
@@ -58,14 +58,19 @@ export default function LoginPage() {
       </aside>
       <section className="login-form-panel">
         <div className="login-card">
-          <span className="login-product-label">Zeladoria Digital</span>
+          <div className="login-mobile-brand">
+            <BrandLogo variant="dark" size="md" showTagline={false} />
+          </div>
+          <span className="login-product-label">Prefeitura na Mão</span>
           <p className="eyebrow">Acesso à plataforma</p>
           <h1>Entrar no sistema</h1>
-          <p className="login-copy">Use um usuário cadastrado para acessar o painel operacional.</p>
-          <p className="login-copy">No celular, o app pode ser instalado na tela inicial.</p>
-          <p className="login-copy login-copy--hint">
-            Cidadão: <strong>cidadao@zeladoria.local</strong> · Admin secretaria: <strong>secretaria@zeladoria.local</strong> · Usuário secretaria: <strong>equipe@zeladoria.local</strong> · Admin: <strong>admin@zeladoria.local</strong> · Senha: <strong>secret123</strong>
-          </p>
+          <p className="login-copy">No celular, instale o app na tela inicial para usar como aplicativo nativo.</p>
+          <details className="login-demo-details">
+            <summary>Usuários de teste</summary>
+            <p className="login-copy login-copy--hint">
+              Cidadão: <strong>cidadao@zeladoria.local</strong> · Secretaria: <strong>secretaria@zeladoria.local</strong> · Equipe: <strong>equipe@zeladoria.local</strong> · Admin: <strong>admin@zeladoria.local</strong> · Senha: <strong>secret123</strong>
+            </p>
+          </details>
           <form onSubmit={onSubmit} className="login-form">
             <label>
               E-mail

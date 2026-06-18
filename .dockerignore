@@ -1,0 +1,12 @@
+node_modules
+.next
+apps/api/dist
+.git
+.env
+.env.*
+!.env.example
+docker/.env.portainer.example
+**/*.md
+api_agendamentos
+terminals
+.cursor

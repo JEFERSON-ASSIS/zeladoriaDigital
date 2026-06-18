@@ -1,14 +1,15 @@
-const CACHE_NAME = 'zeladoria-digital-pwa-v3';
-const OFFLINE_URL = '/offline.html';
+const CACHE_NAME = 'prefeitura-na-mao-pwa-v6';
+const OFFLINE_URL = '/offline';
 const PRECACHE_URLS = [
-  '/',
   '/login',
-  '/manifest.json',
-  '/offline.html',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
-  '/icons/maskable-icon-192.png',
-  '/icons/maskable-icon-512.png'
+  '/nova-ocorrencia',
+  '/minhas-solicitacoes',
+  '/agendamento',
+  '/meus-agendamentos',
+  '/offline',
+  '/manifest.webmanifest',
+  '/icon-192.svg',
+  '/icon-512.svg'
 ];
 
 function isStaticAsset(request) {
@@ -22,9 +23,7 @@ function isStaticAsset(request) {
 }
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS))
-  );
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS)));
   self.skipWaiting();
 });
 
@@ -48,7 +47,14 @@ self.addEventListener('fetch', (event) => {
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
-        .catch(async () => (await caches.match(OFFLINE_URL)) || Response.error())
+        .then((response) => {
+          if (response.ok) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+          }
+          return response;
+        })
+        .catch(async () => (await caches.match(OFFLINE_URL)) || (await caches.match('/offline.html')) || Response.error())
     );
     return;
   }
@@ -70,17 +76,47 @@ self.addEventListener('fetch', (event) => {
 });
 
 self.addEventListener('push', (event) => {
-  const data = event.data?.json?.() ?? {};
+  let payload = {
+    title: 'Prefeitura na Mão',
+    body: 'Você tem uma atualização.',
+    url: '/meus-agendamentos'
+  };
+
+  if (event.data) {
+    try {
+      payload = { ...payload, ...event.data.json() };
+    } catch {
+      payload.body = event.data.text();
+    }
+  }
+
   event.waitUntil(
-    self.registration.showNotification(data.title ?? 'Zeladoria Digital', {
-      body: data.body ?? 'Você recebeu uma atualização.',
-      icon: '/icons/icon-192.png',
-      badge: '/icons/icon-192.png'
+    self.registration.showNotification(payload.title, {
+      body: payload.body,
+      icon: '/icon-192.svg',
+      badge: '/icon-192.svg',
+      tag: 'scheduling-reminder',
+      data: { url: payload.url }
     })
   );
 });
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  event.waitUntil(self.clients.openWindow('/'));
+  const targetUrl = event.notification.data?.url ?? '/meus-agendamentos';
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      for (const client of clients) {
+        if ('focus' in client && 'navigate' in client) {
+          client.navigate(targetUrl);
+          return client.focus();
+        }
+      }
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(targetUrl);
+      }
+      return undefined;
+    })
+  );
 });

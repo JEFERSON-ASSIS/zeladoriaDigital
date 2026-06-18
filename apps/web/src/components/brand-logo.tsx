@@ -45,7 +45,7 @@ type ProductBadgeProps = {
 };
 
 export function ProductBadge({
-  name = 'Zeladoria Digital',
+  name = 'Prefeitura na Mão',
   description,
   className = ''
 }: ProductBadgeProps) {

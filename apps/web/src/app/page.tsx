@@ -109,7 +109,7 @@ export default function HomePage() {
           <p className="eyebrow">i7AI Sistemas</p>
           <h2>Base executiva para operação, triagem e atendimento.</h2>
           <p>Visão executiva com indicadores de operação, mapa e status em tempo real a partir da base atual.</p>
-          {session?.user.role === 'CIDADAO' ? <InstallPWAButton /> : null}
+          {session?.user.role === 'CIDADAO' ? <InstallPWAButton variant="card" /> : null}
         </header>
         <div className="cards">
           {[

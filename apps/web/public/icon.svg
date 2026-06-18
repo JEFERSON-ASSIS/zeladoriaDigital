@@ -1,6 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" fill="none">
-  <rect width="192" height="192" rx="42" fill="#0F172A"/>
-  <rect x="28" y="28" width="136" height="136" rx="28" fill="#2563EB"/>
-  <path d="M58 104C58 79.6995 77.6995 60 102 60H134V88C134 112.301 114.301 132 90 132H58V104Z" fill="white" fill-opacity="0.95"/>
-  <circle cx="78" cy="84" r="12" fill="#7C3AED"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="i7">
+  <defs>
+    <linearGradient id="i7-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563eb" />
+      <stop offset="100%" stop-color="#7c3aed" />
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="8" fill="url(#i7-gradient)" />
+  <text
+    x="16"
+    y="21.5"
+    text-anchor="middle"
+    fill="#ffffff"
+    font-family="Inter, Segoe UI, system-ui, sans-serif"
+    font-size="13"
+    font-weight="800"
+    letter-spacing="-0.6"
+  >
+    i7
+  </text>
 </svg>

@@ -19,7 +19,7 @@ export async function registerSchedulingServiceWorker() {
   if (!('serviceWorker' in navigator)) return null;
 
   try {
-    return await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+    return await navigator.serviceWorker.register('/service-worker.js', { scope: '/' });
   } catch {
     return null;
   }

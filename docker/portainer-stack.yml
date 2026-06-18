@@ -1,0 +1,140 @@
+version: "3.7"
+
+# Stack Swarm para Portainer + Traefik
+# Domínios (homolog):
+#   Web: https://homolog.prefeituranamao.com.br
+#   API: https://api-homolog.prefeituranamao.com.br
+#
+# Antes do deploy:
+#   1. Criar rede overlay (ou reutilizar a do Traefik, ex.: SGDMNET)
+#   2. Build + push das imagens (ver docker/README.md)
+#   3. Preencher variáveis no Portainer (docker/.env.portainer.example)
+
+services:
+
+  zeladoria-postgres:
+    image: postgres:16-alpine
+    networks:
+      - SGDMNET
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - zeladoria_postgres_data:/var/lib/postgresql/data
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1024M
+
+  zeladoria-minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    networks:
+      - SGDMNET
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - zeladoria_minio_data:/data
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+
+  zeladoria-api:
+    image: ${ZELADORIA_API_IMAGE}
+    networks:
+      - SGDMNET
+    environment:
+      NODE_ENV: production
+      API_PORT: "3333"
+      APP_URL: ${APP_URL}
+      API_URL: ${API_URL}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@zeladoria-postgres:5432/${POSTGRES_DB}?schema=public
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      MINIO_ENDPOINT: zeladoria-minio
+      MINIO_PORT: "9000"
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      MINIO_BUCKET: ${MINIO_BUCKET}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}
+      VAPID_SUBJECT: ${VAPID_SUBJECT}
+      WHATSAPP_API_URL: ${WHATSAPP_API_URL}
+      WHATSAPP_TOKEN: ${WHATSAPP_TOKEN}
+      WHATSAPP_FROM_NUMBER: ${WHATSAPP_FROM_NUMBER}
+    volumes:
+      - zeladoria_uploads:/app/uploads
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1024M
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=SGDMNET
+        - traefik.http.routers.zeladoria_api.rule=Host(`api-homolog.prefeituranamao.com.br`)
+        - traefik.http.routers.zeladoria_api.entrypoints=websecure
+        - traefik.http.routers.zeladoria_api.tls=true
+        - traefik.http.routers.zeladoria_api.tls.certresolver=letsencryptresolver
+        - traefik.http.services.zeladoria_api.loadbalancer.server.port=3333
+        - traefik.http.services.zeladoria_api.loadbalancer.passHostHeader=true
+        - traefik.http.routers.zeladoria_api.service=zeladoria_api
+
+  zeladoria-web:
+    image: ${ZELADORIA_WEB_IMAGE}
+    networks:
+      - SGDMNET
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: 0.0.0.0
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1024M
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=SGDMNET
+        - traefik.http.routers.zeladoria_web.rule=Host(`homolog.prefeituranamao.com.br`)
+        - traefik.http.routers.zeladoria_web.entrypoints=websecure
+        - traefik.http.routers.zeladoria_web.tls=true
+        - traefik.http.routers.zeladoria_web.tls.certresolver=letsencryptresolver
+        - traefik.http.services.zeladoria_web.loadbalancer.server.port=3000
+        - traefik.http.services.zeladoria_web.loadbalancer.passHostHeader=true
+        - traefik.http.routers.zeladoria_web.service=zeladoria_web
+
+networks:
+  SGDMNET:
+    external: true
+    name: SGDMNET
+
+volumes:
+  zeladoria_postgres_data:
+  zeladoria_minio_data:
+  zeladoria_uploads:

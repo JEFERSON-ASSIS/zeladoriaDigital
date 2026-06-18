@@ -34,7 +34,7 @@ export function AppSidebar({ items, userName, userRole, departmentName, onLogout
             <p className="app-sidebar__brand-name">
               <strong>i7AI</strong> Sistemas
             </p>
-            <p className="app-sidebar__product">Zeladoria Digital</p>
+            <p className="app-sidebar__product">Prefeitura na Mão</p>
           </div>
         </div>
       </div>
