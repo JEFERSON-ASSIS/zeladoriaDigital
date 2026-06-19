@@ -66,27 +66,30 @@ export class OccurrencesService {
     });
   }
 
-  findByProtocol(protocol: string) {
-    return this.prisma.occurrence.findUnique({
-      where: { protocol },
-      include: {
-        category: true,
-        citizen: true,
-        neighborhood: true,
-        serviceOrders: {
-          include: {
-            department: true,
-            fieldTeam: true
-          }
-        },
-        movements: {
-          orderBy: { createdAt: 'desc' }
-        },
-        attachments: {
-          orderBy: { createdAt: 'asc' }
-        }
-      }
+  private normalizeProtocol(protocol: string) {
+    return protocol.trim().toUpperCase();
+  }
+
+  async findByProtocol(protocol: string, user?: { sub: string; role: UserRole }) {
+    const normalized = this.normalizeProtocol(protocol);
+    if (!normalized) {
+      throw new BadRequestException('Informe um protocolo válido.');
+    }
+
+    const occurrence = await this.prisma.occurrence.findUnique({
+      where: { protocol: normalized },
+      include: this.occurrenceInclude
     });
+
+    if (!occurrence) {
+      throw new NotFoundException('Protocolo não encontrado.');
+    }
+
+    if (user?.role === UserRole.CIDADAO && occurrence.citizenId !== user.sub) {
+      throw new NotFoundException('Protocolo não encontrado.');
+    }
+
+    return occurrence;
   }
 
   async addAttachment(

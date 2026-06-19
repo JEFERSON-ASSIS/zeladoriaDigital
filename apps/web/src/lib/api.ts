@@ -269,16 +269,21 @@ export async function uploadOccurrenceAttachment(occurrenceId: string, file: Fil
 
 export async function fetchMyOccurrences(accessToken?: string) {
   const response = await fetch(`${API_URL}/occurrences/mine`, { cache: 'no-store', headers: authHeaders(accessToken) });
-  const occurrences = await safeJson<any[]>(response);
-  return occurrences ?? [];
+  if (!response.ok) {
+    throw new Error(await readApiError(response, 'Não foi possível carregar suas solicitações.'));
+  }
+  return (await response.json()) as any[];
 }
 
 export async function fetchOccurrenceByProtocol(protocol: string, accessToken?: string) {
-  const response = await fetch(`${API_URL}/occurrences/protocol/${encodeURIComponent(protocol)}`, {
+  const response = await fetch(`${API_URL}/occurrences/protocol/${encodeURIComponent(protocol.trim())}`, {
     cache: 'no-store',
     headers: authHeaders(accessToken)
   });
-  return safeJson<any>(response);
+  if (!response.ok) {
+    throw new Error(await readApiError(response, 'Não foi possível buscar o protocolo.'));
+  }
+  return response.json();
 }
 
 export async function updateOccurrenceStatus(id: string, status: string, accessToken?: string) {

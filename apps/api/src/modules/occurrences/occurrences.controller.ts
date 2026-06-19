@@ -60,10 +60,10 @@ export class OccurrencesController {
   @Roles('ADMIN', 'PREFEITURA', 'SECRETARIA', 'TRIAGEM', 'EQUIPE_CAMPO', 'CIDADAO')
   async findByProtocol(
     @Param('protocol') protocol: string,
-    @Req() req: { user: { role: UserRole } }
+    @Req() req: { user: { sub: string; role: UserRole } }
   ) {
     await this.assertCitizenPwaModule('minhas-solicitacoes', req.user.role);
-    return this.occurrencesService.findByProtocol(protocol);
+    return this.occurrencesService.findByProtocol(protocol, req.user);
   }
 
   @Post()

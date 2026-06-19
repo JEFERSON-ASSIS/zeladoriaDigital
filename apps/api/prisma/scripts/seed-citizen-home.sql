@@ -1,9 +1,9 @@
--- Permissões PWA: Início + Agendar + Consultas (Solicitar/Chamados off)
+-- Permissões PWA do cidadão (todos os módulos ativos)
 INSERT INTO "RoleMenuPermission" ("id", "role", "menuKey", "allowed", "createdAt", "updatedAt")
 VALUES
   (gen_random_uuid()::text, 'CIDADAO', 'inicio', true, NOW(), NOW()),
-  (gen_random_uuid()::text, 'CIDADAO', 'nova-ocorrencia', false, NOW(), NOW()),
-  (gen_random_uuid()::text, 'CIDADAO', 'minhas-solicitacoes', false, NOW(), NOW()),
+  (gen_random_uuid()::text, 'CIDADAO', 'nova-ocorrencia', true, NOW(), NOW()),
+  (gen_random_uuid()::text, 'CIDADAO', 'minhas-solicitacoes', true, NOW(), NOW()),
   (gen_random_uuid()::text, 'CIDADAO', 'agendamento', true, NOW(), NOW()),
   (gen_random_uuid()::text, 'CIDADAO', 'meus-agendamentos', true, NOW(), NOW())
 ON CONFLICT ("role", "menuKey") DO UPDATE SET

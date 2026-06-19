@@ -41,6 +41,9 @@ export default function MyRequestsPage() {
   const [loading, setLoading] = useState(true);
   const [protocolQuery, setProtocolQuery] = useState('');
   const [foundProtocol, setFoundProtocol] = useState<CitizenOccurrence | null>(null);
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [listError, setListError] = useState<string | null>(null);
 
   useEffect(() => {
     const currentSession = getSession();
@@ -57,8 +60,16 @@ export default function MyRequestsPage() {
       })
       .finally(() => {
         fetchMyOccurrences(currentSession.accessToken)
-          .then(setItems)
-          .catch(() => setItems([]))
+          .then((occurrences) => {
+            setItems(occurrences);
+            setListError(null);
+          })
+          .catch((loadError) => {
+            setItems([]);
+            setListError(
+              loadError instanceof Error ? loadError.message : 'Não foi possível carregar suas solicitações.'
+            );
+          })
           .finally(() => setLoading(false));
       });
   }, [router]);
@@ -66,9 +77,26 @@ export default function MyRequestsPage() {
   async function handleProtocolSearch(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const currentSession = getSession();
-    if (!currentSession || !protocolQuery.trim()) return;
-    const result = await fetchOccurrenceByProtocol(protocolQuery.trim(), currentSession.accessToken);
-    setFoundProtocol(result);
+    const query = protocolQuery.trim();
+    if (!currentSession || !query) {
+      setSearchError('Informe o número do protocolo.');
+      return;
+    }
+
+    setSearching(true);
+    setSearchError(null);
+    setFoundProtocol(null);
+
+    try {
+      const result = (await fetchOccurrenceByProtocol(query, currentSession.accessToken)) as CitizenOccurrence;
+      setFoundProtocol(result);
+    } catch (searchError) {
+      setSearchError(
+        searchError instanceof Error ? searchError.message : 'Não foi possível buscar o protocolo.'
+      );
+    } finally {
+      setSearching(false);
+    }
   }
 
   if (loading) {
@@ -89,11 +117,19 @@ export default function MyRequestsPage() {
       <form className="protocol-search" onSubmit={handleProtocolSearch}>
         <input
           value={protocolQuery}
-          onChange={(event) => setProtocolQuery(event.target.value)}
+          onChange={(event) => {
+            setProtocolQuery(event.target.value);
+            if (searchError) setSearchError(null);
+          }}
           placeholder="Ex.: OC-0001"
+          autoComplete="off"
         />
-        <button type="submit">Buscar</button>
+        <button type="submit" disabled={searching}>
+          {searching ? 'Buscando...' : 'Buscar'}
+        </button>
       </form>
+      {searchError ? <p className="login-error">{searchError}</p> : null}
+      {listError ? <p className="login-error">{listError}</p> : null}
       {foundProtocol ? (
         <article className="order-card" style={{ marginTop: 12 }}>
           <p className="eyebrow">{foundProtocol.protocol}</p>
@@ -111,7 +147,7 @@ export default function MyRequestsPage() {
       <h3 className="form-section-title">Resumo</h3>
       <div className="cards">
           <article className="card">
-            <span>Total de solicitações</span>
+            <span>Total</span>
             <strong>{items.length}</strong>
           </article>
           <article className="card">

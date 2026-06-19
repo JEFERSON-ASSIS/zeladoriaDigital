@@ -100,11 +100,7 @@ export function PwaInstallGate({ onInstalled }: { onInstalled: () => void }) {
             <li>Remova atalhos antigos da tela inicial</li>
             <li>Abra pelo ícone novo instalado</li>
           </ol>
-        )}
-
-        <p className="pwa-install-gate__hint">
-          Se a barra de endereço do Chrome ainda aparecer, o app não foi instalado corretamente.
-        </p>
+        )}       
         <p className="login-credit">
           Desenvolvido por <strong>i7AI Sistemas inteligentes</strong>
         </p>
