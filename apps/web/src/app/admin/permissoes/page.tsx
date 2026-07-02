@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchMenuPermissionsMatrix, saveMenuPermissionsMatrix } from '../../../lib/permissions-api';
 import { getStoredAccessToken } from '../../../lib/api';
@@ -13,10 +13,10 @@ function cloneMatrix(source: PermissionMatrix): PermissionMatrix {
   return JSON.parse(JSON.stringify(source)) as PermissionMatrix;
 }
 
-function toggleMatrixCell(source: PermissionMatrix, role: string, menuKey: string): PermissionMatrix {
+function setMatrixCell(source: PermissionMatrix, role: string, menuKey: string, allowed: boolean): PermissionMatrix {
   const next = cloneMatrix(source);
   next[role] ??= {};
-  next[role][menuKey] = !Boolean(next[role][menuKey]);
+  next[role][menuKey] = allowed;
   return next;
 }
 
@@ -38,6 +38,7 @@ export default function AdminPermissionsPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [draft, setDraft] = useState<PermissionMatrix | null>(null);
+  const serverMatrixRef = useRef<PermissionMatrix>({});
 
   const permissions = useQuery({
     queryKey: ['menu-permissions'],
@@ -46,6 +47,7 @@ export default function AdminPermissionsPage() {
   });
 
   const serverMatrix = permissions.data?.matrix ?? {};
+  serverMatrixRef.current = serverMatrix;
   const matrix = draft ?? serverMatrix;
   const catalog = permissions.data?.catalog ?? [];
   const roles = PERMISSION_MATRIX_ROLES;
@@ -61,7 +63,7 @@ export default function AdminPermissionsPage() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const working = draft ?? serverMatrix;
+      const working = draft ?? serverMatrixRef.current;
       const payload = buildSavePayload(catalog, working);
       return saveMenuPermissionsMatrix(payload, getStoredAccessToken());
     },
@@ -71,13 +73,13 @@ export default function AdminPermissionsPage() {
       setError(null);
       await queryClient.invalidateQueries({ queryKey: ['menu-permissions'] });
     },
-    onError: async (err) => {
+    onError: (err) => {
       setSuccess(null);
       setError(err instanceof Error ? err.message : 'Não foi possível salvar as permissões.');
     }
   });
 
-  function toggle(role: string, menuKey: string) {
+  function setPermission(role: string, menuKey: string, allowed: boolean) {
     if (!PERMISSION_MATRIX_ROLES.includes(role as (typeof PERMISSION_MATRIX_ROLES)[number])) return;
 
     setError(null);
@@ -88,9 +90,9 @@ export default function AdminPermissionsPage() {
         current ??
         queryClient.getQueryData<Awaited<ReturnType<typeof fetchMenuPermissionsMatrix>>>(['menu-permissions'])
           ?.matrix ??
-        serverMatrix;
+        serverMatrixRef.current;
 
-      return toggleMatrixCell(baseline, role, menuKey);
+      return setMatrixCell(baseline, role, menuKey, allowed);
     });
   }
 
@@ -156,18 +158,15 @@ export default function AdminPermissionsPage() {
                     {roles.map((role) => {
                       const checked = Boolean(matrix[role]?.[item.key]);
                       return (
-                        <td
-                          key={`${role}-${item.key}`}
-                          className="permissions-table__cell-toggle"
-                          onClick={() => toggle(role, item.key)}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            readOnly
-                            tabIndex={-1}
-                            aria-label={`${item.label} — ${getRoleLabel(role)}`}
-                          />
+                        <td key={`${role}-${item.key}`} className="permissions-table__cell-toggle">
+                          <label className="permissions-table__toggle-label">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={(event) => setPermission(role, item.key, event.target.checked)}
+                              aria-label={`${item.label} — ${getRoleLabel(role)}`}
+                            />
+                          </label>
                         </td>
                       );
                     })}

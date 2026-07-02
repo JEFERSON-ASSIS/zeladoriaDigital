@@ -2100,8 +2100,16 @@ body:has(.citizen-pwa-root) {
   user-select: none;
 }
 
+.permissions-table__toggle-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 28px;
+  cursor: pointer;
+}
+
 .permissions-table__cell-toggle input {
-  pointer-events: none;
   width: 18px;
   height: 18px;
   cursor: pointer;
