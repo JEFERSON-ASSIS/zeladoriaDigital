@@ -9,7 +9,7 @@ import { fetchMyMenuPermissions } from './permissions-api';
 import type { AuthSession, AuthUser } from './auth';
 import { setSession } from './auth';
 import { isCitizenHealthPath } from './citizen-nav';
-import { parsePsfIdFromPath } from './psf-unit';
+import { parsePsfIdFromPath, unitPath } from './psf-unit';
 import { PWA_LOGIN, pwaPath } from './pwa';
 
 export function resolveCitizenPwaHome(menuKeys?: MenuKey[] | null) {
@@ -32,9 +32,16 @@ export function getMenuKeyForPwaPath(pathname: string): MenuKey | null {
 }
 
 export function canAccessCitizenPwaPath(pathname: string, menuKeys?: MenuKey[] | null) {
-  if (parsePsfIdFromPath(pathname)) {
+  const unitId = parsePsfIdFromPath(pathname);
+  if (unitId) {
     if (menuKeys == null) return false;
-    return menuKeys.includes('agendamento') || menuKeys.includes('meus-agendamentos');
+    const allowed = new Set(menuKeys);
+    if (pathname === unitPath(unitId) || pathname === `${unitPath(unitId)}/`) {
+      return allowed.has('inicio') || allowed.has('agendamento') || allowed.has('meus-agendamentos');
+    }
+    if (pathname.includes('/agendamento')) return allowed.has('agendamento');
+    if (pathname.includes('/meus-agendamentos')) return allowed.has('meus-agendamentos');
+    return false;
   }
 
   if (isCitizenHealthPath(pathname)) {

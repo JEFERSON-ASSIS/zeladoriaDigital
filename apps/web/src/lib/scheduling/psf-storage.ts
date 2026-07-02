@@ -2,8 +2,6 @@ import type { PsfId } from './psf-config';
 import { getPsfById } from './psf-config';
 import { getSession } from '../auth';
 
-const PATIENT_PROFILE_KEY = 'zeladoria.psf.patient';
-
 export type PatientProfile = {
   nome: string;
   telefone: string;
@@ -24,7 +22,7 @@ export function getSavedPsfConfig() {
 }
 
 export function savePsfChoice(_id: PsfId) {
-  // Unidade de saúde fica no cadastro do cidadão (banco), não no localStorage.
+  // Unidade de saúde fica no cadastro do cidadão (banco).
 }
 
 export function clearPsfChoice() {
@@ -32,18 +30,22 @@ export function clearPsfChoice() {
 }
 
 export function getPatientProfile(): PatientProfile | null {
-  if (typeof window === 'undefined') return null;
-  const raw = window.localStorage.getItem(PATIENT_PROFILE_KEY);
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw) as PatientProfile;
-  } catch {
-    return null;
-  }
+  const session = getSession();
+  if (!session || session.user.role !== 'CIDADAO') return null;
+
+  const phone = session.user.phone ?? '';
+  const cpf = session.user.cpf ?? '';
+  if (!phone && !cpf) return null;
+
+  return {
+    nome: session.user.name || 'Cidadão',
+    telefone: phone ? formatPhone(phone) : '',
+    cpf: cpf ? formatCpf(cpf) : ''
+  };
 }
 
-export function savePatientProfile(profile: PatientProfile) {
-  window.localStorage.setItem(PATIENT_PROFILE_KEY, JSON.stringify(profile));
+export function savePatientProfile(_profile: PatientProfile) {
+  // Dados do paciente vêm da sessão/API, não do localStorage.
 }
 
 export function onlyDigits(value: string) {

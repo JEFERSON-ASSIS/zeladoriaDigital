@@ -1,5 +1,4 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3333';
-const LAST_PHONE_KEY = 'zeladoria.citizen.lastPhone';
 
 export function onlyDigits(value: string) {
   return value.replace(/\D/g, '');
@@ -18,16 +17,6 @@ export function formatPhone(value: string) {
   if (digits.length <= 2) return digits;
   if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
-}
-
-export function getLastCitizenPhone() {
-  if (typeof window === 'undefined') return '';
-  const raw = window.localStorage.getItem(LAST_PHONE_KEY);
-  return raw ? formatPhone(raw) : '';
-}
-
-export function saveLastCitizenPhone(phone: string) {
-  window.localStorage.setItem(LAST_PHONE_KEY, onlyDigits(phone));
 }
 
 export async function lookupCitizenPhone(phone: string) {
@@ -87,8 +76,6 @@ export async function citizenAccess(
     }
     throw new Error(message);
   }
-
-  saveLastCitizenPhone(phone);
 
   return response.json() as Promise<{
     access_token: string;

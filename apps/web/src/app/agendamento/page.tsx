@@ -14,7 +14,6 @@ import {
   getPatientProfile,
   getSavedPsfConfig,
   onlyDigits,
-  savePatientProfile,
   type PatientProfile
 } from '../../lib/scheduling/psf-storage';
 import {
@@ -172,12 +171,6 @@ export default function SchedulingPage() {
         serviceKind: selectedService.kind,
         data: selectedDay.date,
         hora: needsTime ? selectedTime : undefined
-      });
-
-      savePatientProfile({
-        ...profile,
-        telefone: form.telefone,
-        cpf: form.cpf
       });
 
       if (result.id && psf) {

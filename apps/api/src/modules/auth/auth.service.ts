@@ -104,6 +104,9 @@ export class AuthService {
       ) {
         throw new UnauthorizedException('Este cadastro pertence a outra unidade de saúde.');
       }
+      if (!citizen.healthUnitPsfId && requestedUnit) {
+        citizen = await this.citizensService.assignHealthUnit(citizen.id, requestedUnit);
+      }
       return this.issueToken({ ...citizen, role: 'CIDADAO' as const });
     }
 

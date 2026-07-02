@@ -40,7 +40,7 @@ export default function PsfUnitLandingPage() {
         </div>
 
         <p className="citizen-unit-landing__hint">
-          Use o menu abaixo para navegar entre Início, Agendar e Consultas.
+          O menu abaixo segue as permissões liberadas no painel administrativo.
         </p>
       </section>
     </CitizenUnitShell>

@@ -4,12 +4,11 @@ import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CitizenProductLogo } from '../../../components/brand-logo';
 import { fetchCurrentUser } from '../../../lib/auth-api';
-import { getSession } from '../../../lib/auth';
+import { clearSession, getSession } from '../../../lib/auth';
 import {
   citizenAccess,
   formatCpf,
   formatPhone,
-  getLastCitizenPhone,
   lookupCitizenPhone,
   onlyDigits
 } from '../../../lib/citizen-access-api';
@@ -55,21 +54,40 @@ function PwaLoginForm() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (registrationUnitId) return;
+
     const session = getSession();
     if (!session) return;
-    if (session.user.role === 'CIDADAO') {
-      const destination =
-        returnPath && returnPath.startsWith('/app') ? returnPath : resolveCitizenPwaHome(session.user.menuKeys);
-      router.replace(destination);
+    if (session.user.role !== 'CIDADAO') {
+      router.replace('/');
       return;
     }
-    router.replace('/');
-  }, [router, returnPath]);
+
+    let cancelled = false;
+
+    fetchCurrentUser(session.accessToken)
+      .then((user) => {
+        if (cancelled) return;
+        const destination =
+          returnPath && returnPath.startsWith('/app') ? returnPath : resolveCitizenPwaHome(user.menuKeys);
+        router.replace(destination);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        clearSession();
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [router, returnPath, registrationUnitId]);
 
   useEffect(() => {
-    const lastPhone = getLastCitizenPhone();
-    if (lastPhone) setPhone(lastPhone);
-  }, []);
+    const session = getSession();
+    if (session?.user.phone && registrationUnitId) {
+      setPhone(formatPhone(session.user.phone));
+    }
+  }, [registrationUnitId]);
 
   async function completeAccess(accessPhone: string, accessCpf?: string, accessLgpd = false) {
     const result = await citizenAccess(
