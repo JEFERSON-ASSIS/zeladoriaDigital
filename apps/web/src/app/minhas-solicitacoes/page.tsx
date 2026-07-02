@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { clearSession, getSession, type AuthSession } from '../../lib/auth';
+import { CitizenEmptyState } from '../../components/citizen-empty-state';
+import { CitizenShell } from '../../components/citizen-shell';
+import { OccurrenceAttachments } from '../../components/occurrence-attachments';
+import { clearSession, getSession } from '../../lib/auth';
 import { fetchCurrentUser } from '../../lib/auth-api';
 import { fetchMyOccurrences, fetchOccurrenceByProtocol } from '../../lib/api';
 import { formatOccurrenceStatus, formatPriority } from '../../lib/occurrence-map';
-import { CitizenShell } from '../../components/citizen-shell';
 import { PWA_LOGIN, pwaPath } from '../../lib/pwa';
-import { OccurrenceAttachments } from '../../components/occurrence-attachments';
 
 type Movement = {
   id: string;
@@ -36,7 +37,6 @@ type CitizenOccurrence = {
 
 export default function MyRequestsPage() {
   const router = useRouter();
-  const [session, setSession] = useState<AuthSession | null>(null);
   const [items, setItems] = useState<CitizenOccurrence[]>([]);
   const [loading, setLoading] = useState(true);
   const [protocolQuery, setProtocolQuery] = useState('');
@@ -44,6 +44,7 @@ export default function MyRequestsPage() {
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [listError, setListError] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
     const currentSession = getSession();
@@ -53,7 +54,6 @@ export default function MyRequestsPage() {
     }
 
     fetchCurrentUser(currentSession.accessToken)
-      .then((user) => setSession({ ...currentSession, user }))
       .catch(() => {
         clearSession();
         router.replace(PWA_LOGIN);
@@ -99,101 +99,127 @@ export default function MyRequestsPage() {
     }
   }
 
-  if (loading) {
-    return (
-      <main className="login-shell">
-        <section className="login-card">
-          <p className="eyebrow">Carregando</p>
-          <h1>Minhas solicitações...</h1>
-          <p className="login-copy">Consultando o histórico do cidadão.</p>
-        </section>
-      </main>
-    );
-  }
-
   return (
-    <CitizenShell title="Minhas solicitações" subtitle="Acompanhe protocolos, secretaria responsável e histórico.">
-      <h3 className="form-section-title">Consultar por protocolo</h3>
-      <form className="protocol-search" onSubmit={handleProtocolSearch}>
-        <input
-          value={protocolQuery}
-          onChange={(event) => {
-            setProtocolQuery(event.target.value);
-            if (searchError) setSearchError(null);
-          }}
-          placeholder="Ex.: OC-0001"
-          autoComplete="off"
-        />
-        <button type="submit" disabled={searching}>
-          {searching ? 'Buscando...' : 'Buscar'}
-        </button>
-      </form>
-      {searchError ? <p className="login-error">{searchError}</p> : null}
-      {listError ? <p className="login-error">{listError}</p> : null}
-      {foundProtocol ? (
-        <article className="order-card" style={{ marginTop: 12 }}>
-          <p className="eyebrow">{foundProtocol.protocol}</p>
-          <h3>{foundProtocol.title ?? foundProtocol.description}</h3>
-          <div className="occurrence-status-row">
-            <span className={`pill pill-status pill-status--${foundProtocol.status.toLowerCase()}`}>
-              {formatOccurrenceStatus(foundProtocol.status)}
-            </span>
-            <span className="pill">{formatPriority(foundProtocol.priority)}</span>
-          </div>
-          <p>{foundProtocol.address}</p>
-        </article>
-      ) : null}
-
-      <h3 className="form-section-title">Resumo</h3>
-      <div className="cards">
-          <article className="card">
-            <span>Total</span>
-            <strong>{items.length}</strong>
-          </article>
-          <article className="card">
-            <span>Em andamento</span>
-            <strong>{items.filter((item) => !['CONCLUIDO', 'CANCELADO'].includes(item.status)).length}</strong>
-          </article>
-          <article className="card">
-            <span>Concluídas</span>
-            <strong>{items.filter((item) => item.status === 'CONCLUIDO').length}</strong>
-          </article>
-        </div>
-
-      <h3 className="form-section-title">Chamados</h3>
-      <div className="orders-grid">
-          {items.length === 0 ? (
-            <article className="panel">
-              <h3>Nenhuma solicitação encontrada</h3>
-              <p>Abra uma nova ocorrência para começar a acompanhar seu protocolo.</p>
+    <CitizenShell
+      title="Minhas solicitações"
+      subtitle="Acompanhe protocolos, secretaria responsável e histórico."
+      loading={loading}
+      loadingVariant="list"
+    >
+      {!loading ? (
+        <>
+          <h3 className="form-section-title">Consultar por protocolo</h3>
+          <form className="protocol-search" onSubmit={handleProtocolSearch}>
+            <input
+              value={protocolQuery}
+              onChange={(event) => {
+                setProtocolQuery(event.target.value);
+                if (searchError) setSearchError(null);
+              }}
+              placeholder="Ex.: OC-0001"
+              autoComplete="off"
+            />
+            <button type="submit" disabled={searching}>
+              {searching ? 'Buscando...' : 'Buscar'}
+            </button>
+          </form>
+          {searchError ? (
+            <p className="login-error" role="alert">
+              {searchError}
+            </p>
+          ) : null}
+          {listError ? (
+            <p className="login-error" role="alert">
+              {listError}
+            </p>
+          ) : null}
+          {foundProtocol ? (
+            <article className="order-card" style={{ marginTop: 12 }}>
+              <p className="eyebrow citizen-copyable">{foundProtocol.protocol}</p>
+              <h3>{foundProtocol.title ?? foundProtocol.description}</h3>
+              <div className="occurrence-status-row">
+                <span className={`pill pill-status pill-status--${foundProtocol.status.toLowerCase()}`}>
+                  {formatOccurrenceStatus(foundProtocol.status)}
+                </span>
+                <span className="pill">{formatPriority(foundProtocol.priority)}</span>
+              </div>
+              <p>{foundProtocol.address}</p>
             </article>
-          ) : (
-            items.map((item) => (
-              <article key={item.id} className="order-card">
-                <p className="eyebrow">{item.protocol}</p>
-                <h3>{item.title ?? item.description}</h3>
-                <div className="occurrence-status-row">
-                  <span className={`pill pill-status pill-status--${item.status.toLowerCase()}`}>
-                    {formatOccurrenceStatus(item.status)}
-                  </span>
-                  <span className="pill">{formatPriority(item.priority)}</span>
-                </div>
-                <p>Secretaria: {item.suggestedDepartment?.name ?? item.serviceOrders?.[0]?.department?.name ?? 'Em análise'}</p>
-                <p>Bairro: {item.neighborhood?.name ?? 'Sem bairro'}</p>
-                <p>Endereço: {item.address}</p>
-                <OccurrenceAttachments attachments={item.attachments} />
-                <div className="timeline">
-                  {(item.movements ?? []).map((movement) => (
-                    <article key={movement.id}>
-                      <strong>{formatOccurrenceStatus(movement.toStatus)}</strong>
-                      <p>{movement.note ?? 'Movimentação registrada.'}</p>
-                    </article>
-                  ))}
-                </div>
-              </article>
-            ))
-          )}
-        </div>
+          ) : null}
+
+          <h3 className="form-section-title">Resumo</h3>
+          <div className="cards">
+            <article className="card">
+              <span>Total</span>
+              <strong>{items.length}</strong>
+            </article>
+            <article className="card">
+              <span>Em andamento</span>
+              <strong>{items.filter((item) => !['CONCLUIDO', 'CANCELADO'].includes(item.status)).length}</strong>
+            </article>
+            <article className="card">
+              <span>Concluídas</span>
+              <strong>{items.filter((item) => item.status === 'CONCLUIDO').length}</strong>
+            </article>
+          </div>
+
+          <h3 className="form-section-title">Chamados</h3>
+          <div className="orders-grid">
+            {items.length === 0 ? (
+              <CitizenEmptyState
+                title="Nenhuma solicitação ainda"
+                description="Registre um problema urbano e acompanhe o andamento pelo protocolo."
+                actionLabel="Nova solicitação"
+                actionHref={pwaPath('/nova-ocorrencia')}
+              />
+            ) : (
+              items.map((item) => {
+                const expanded = expandedId === item.id;
+                return (
+                  <article key={item.id} className={`order-card citizen-occurrence-card${expanded ? ' is-expanded' : ''}`}>
+                    <button
+                      type="button"
+                      className="citizen-occurrence-card__toggle"
+                      onClick={() => setExpandedId(expanded ? null : item.id)}
+                      aria-expanded={expanded}
+                    >
+                      <div>
+                        <p className="eyebrow citizen-copyable">{item.protocol}</p>
+                        <h3>{item.title ?? item.description}</h3>
+                        <div className="occurrence-status-row">
+                          <span className={`pill pill-status pill-status--${item.status.toLowerCase()}`}>
+                            {formatOccurrenceStatus(item.status)}
+                          </span>
+                          <span className="pill">{formatPriority(item.priority)}</span>
+                        </div>
+                      </div>
+                      <span className="citizen-occurrence-card__chevron" aria-hidden>
+                        {expanded ? '▲' : '▼'}
+                      </span>
+                    </button>
+                    {expanded ? (
+                      <div className="citizen-occurrence-card__details">
+                        <p>Secretaria: {item.suggestedDepartment?.name ?? item.serviceOrders?.[0]?.department?.name ?? 'Em análise'}</p>
+                        <p>Bairro: {item.neighborhood?.name ?? 'Sem bairro'}</p>
+                        <p>Endereço: {item.address}</p>
+                        <OccurrenceAttachments attachments={item.attachments} />
+                        <div className="timeline">
+                          {(item.movements ?? []).map((movement) => (
+                            <article key={movement.id}>
+                              <strong>{formatOccurrenceStatus(movement.toStatus)}</strong>
+                              <p>{movement.note ?? 'Movimentação registrada.'}</p>
+                            </article>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                  </article>
+                );
+              })
+            )}
+          </div>
+        </>
+      ) : null}
     </CitizenShell>
   );
 }

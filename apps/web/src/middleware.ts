@@ -36,7 +36,9 @@ export const config = {
     '/inicio/:path*',
     '/nova-ocorrencia/:path*',
     '/minhas-solicitacoes/:path*',
+    '/saude/:path*',
     '/agendamento/:path*',
-    '/meus-agendamentos/:path*'
+    '/meus-agendamentos/:path*',
+    '/unidade/:path*'
   ]
 };

@@ -4,7 +4,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSession } from '../../lib/auth';
 import { CitizenShell } from '../../components/citizen-shell';
-import { PWA_LOGIN, pwaPath } from '../../lib/pwa';
+import { CitizenUnitShell } from '../../components/citizen-unit-shell';
+import { usePsfUnit } from '../../components/psf-unit-provider';
+import { buildPwaLoginUrl, pwaPath } from '../../lib/pwa';
 import { CitizenConfirmDialog } from '../../components/citizen-confirm-dialog';
 import { PsfSelectionFlow } from '../../components/psf-selection-flow';
 import {
@@ -39,6 +41,8 @@ const AUTO_REFRESH_MS = 60_000;
 
 export default function MyAppointmentsPage() {
   const router = useRouter();
+  const unit = usePsfUnit();
+  const Shell = unit ? CitizenUnitShell : CitizenShell;
   const [ready, setReady] = useState(false);
   const [needsPsf, setNeedsPsf] = useState(false);
   const [cpf, setCpf] = useState('');
@@ -58,7 +62,7 @@ export default function MyAppointmentsPage() {
   }, []);
 
   const search = useCallback(async (value?: string, options?: { silent?: boolean }) => {
-    const psf = getSavedPsfConfig();
+    const psf = unit?.psf ?? getSavedPsfConfig();
     const document = onlyDigits(value ?? cpfRef.current);
 
     if (!psf) {
@@ -98,19 +102,22 @@ export default function MyAppointmentsPage() {
         setSearching(false);
       }
     }
-  }, [loadHistory]);
+  }, [loadHistory, unit]);
 
   useEffect(() => {
     cpfRef.current = cpf;
   }, [cpf]);
 
   useEffect(() => {
+    const loginUrl = buildPwaLoginUrl(unit?.path('/meus-agendamentos'));
     if (!getSession()) {
-      router.replace(PWA_LOGIN);
+      router.replace(loginUrl);
       return;
     }
 
-    if (!getSavedPsfId()) {
+    if (unit) {
+      setNeedsPsf(false);
+    } else if (!getSavedPsfId()) {
       setNeedsPsf(true);
       setReady(true);
       return;
@@ -124,7 +131,7 @@ export default function MyAppointmentsPage() {
     }
 
     setReady(true);
-  }, [router, loadHistory, search]);
+  }, [router, loadHistory, search, unit]);
 
   useEffect(() => {
     if (!ready) return;
@@ -192,26 +199,26 @@ export default function MyAppointmentsPage() {
 
   if (!ready) {
     return (
-      <CitizenShell title="Meus agendamentos" subtitle="Carregando...">
+      <Shell title="Meus agendamentos" subtitle="Carregando...">
         <section className="panel scheduling-panel">
           <p className="scheduling-copy">Carregando...</p>
         </section>
-      </CitizenShell>
+      </Shell>
     );
   }
 
   if (needsPsf) {
     return (
-      <CitizenShell title="Meus agendamentos" subtitle="Primeiro, informe em qual PSF você se consulta.">
+      <Shell title="Meus agendamentos" subtitle="Primeiro, informe em qual PSF você se consulta.">
         <PsfSelectionFlow onConfirmed={handlePsfConfirmed} />
-      </CitizenShell>
+      </Shell>
     );
   }
 
-  const psf = getSavedPsfConfig();
+  const psf = unit?.psf ?? getSavedPsfConfig();
 
   return (
-    <CitizenShell
+    <Shell
       title="Meus agendamentos"
       subtitle={psf ? `Consultas em ${psf.label}` : 'Consulte seus agendamentos pelo CPF.'}
     >
@@ -298,7 +305,10 @@ export default function MyAppointmentsPage() {
         ) : null}
 
         <div className="form-actions" style={{ marginTop: 16 }}>
-          <button type="button" onClick={() => router.push(pwaPath('/agendamento'))}>
+          <button
+            type="button"
+            onClick={() => router.push(unit ? unit.path('/agendamento') : pwaPath('/agendamento'))}
+          >
             Novo agendamento
           </button>
         </div>
@@ -377,6 +387,6 @@ export default function MyAppointmentsPage() {
           if (cancelTarget) void handleCancel(cancelTarget);
         }}
       />
-    </CitizenShell>
+    </Shell>
   );
 }

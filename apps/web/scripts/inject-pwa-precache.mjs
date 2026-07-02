@@ -8,10 +8,18 @@ const nextDir = join(webRoot, '.next');
 const PWA_HTML_ROUTES = [
   '/app/login',
   '/app',
+  '/app/inicio',
   '/app/nova-ocorrencia',
   '/app/minhas-solicitacoes',
+  '/app/saude',
   '/app/agendamento',
   '/app/meus-agendamentos',
+  '/app/unidade/psf1',
+  '/app/unidade/psf2',
+  '/app/unidade/psf3',
+  '/app/unidade/psf1/agendamento',
+  '/app/unidade/psf2/agendamento',
+  '/app/unidade/psf3/agendamento',
   '/app/offline'
 ];
 

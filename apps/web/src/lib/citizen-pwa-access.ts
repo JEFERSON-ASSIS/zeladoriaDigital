@@ -8,6 +8,8 @@ import { fetchCurrentUser } from './auth-api';
 import { fetchMyMenuPermissions } from './permissions-api';
 import type { AuthSession, AuthUser } from './auth';
 import { setSession } from './auth';
+import { isCitizenHealthPath } from './citizen-nav';
+import { parsePsfIdFromPath } from './psf-unit';
 import { PWA_LOGIN, pwaPath } from './pwa';
 
 export function resolveCitizenPwaHome(menuKeys?: MenuKey[] | null) {
@@ -16,6 +18,10 @@ export function resolveCitizenPwaHome(menuKeys?: MenuKey[] | null) {
 }
 
 export function getMenuKeyForPwaPath(pathname: string): MenuKey | null {
+  if (pathname === pwaPath('/saude') || pathname.startsWith(`${pwaPath('/saude')}/`)) {
+    return 'agendamento';
+  }
+
   for (const module of CITIZEN_PWA_MODULES) {
     const fullPath = pwaPath(module.route);
     if (pathname === fullPath || pathname.startsWith(`${fullPath}/`)) {
@@ -26,6 +32,16 @@ export function getMenuKeyForPwaPath(pathname: string): MenuKey | null {
 }
 
 export function canAccessCitizenPwaPath(pathname: string, menuKeys?: MenuKey[] | null) {
+  if (parsePsfIdFromPath(pathname)) {
+    if (menuKeys == null) return false;
+    return menuKeys.includes('agendamento') || menuKeys.includes('meus-agendamentos');
+  }
+
+  if (isCitizenHealthPath(pathname)) {
+    if (menuKeys == null) return false;
+    return menuKeys.includes('agendamento') || menuKeys.includes('meus-agendamentos');
+  }
+
   const menuKey = getMenuKeyForPwaPath(pathname);
   if (!menuKey) return true;
   if (menuKeys == null) return false;

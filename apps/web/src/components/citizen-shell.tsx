@@ -5,17 +5,22 @@ import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import type { MenuKey } from '@zeladoria/shared';
 import { clearSession, getSession } from '../lib/auth';
-import { refreshCitizenSession, resolveCitizenPwaModules } from '../lib/citizen-pwa-access';
-import { PWA_LOGIN, pwaPath } from '../lib/pwa';
+import { refreshCitizenSession } from '../lib/citizen-pwa-access';
+import { resolveCitizenNavItems } from '../lib/citizen-nav';
+import { PWA_LOGIN } from '../lib/pwa';
 import { BrandMark } from './brand-logo';
+import { CitizenConfirmDialog } from './citizen-confirm-dialog';
+import { CitizenPageSkeleton } from './citizen-page-skeleton';
 
 type CitizenShellProps = {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   title?: string;
   subtitle?: string;
+  loading?: boolean;
+  loadingVariant?: 'feed' | 'form' | 'list';
 };
 
-const NAV_ICONS: Record<MenuKey, React.ReactNode> = {
+const NAV_ICONS: Record<MenuKey | 'saude', React.ReactNode> = {
   painel: null,
   ocorrencias: null,
   'ordens-servico': null,
@@ -31,6 +36,11 @@ const NAV_ICONS: Record<MenuKey, React.ReactNode> = {
   permissoes: null,
   transparencia: null,
   'avisos-app': null,
+  saude: (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+    </svg>
+  ),
   inicio: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
       <path d="M3 10.5L12 4l9 6.5V20a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1v-9.5z" strokeLinejoin="round" />
@@ -62,10 +72,17 @@ const NAV_ICONS: Record<MenuKey, React.ReactNode> = {
   )
 };
 
-export function CitizenShell({ children, title, subtitle }: CitizenShellProps) {
+export function CitizenShell({
+  children,
+  title,
+  subtitle,
+  loading = false,
+  loadingVariant = 'list'
+}: CitizenShellProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [menuKeys, setMenuKeys] = useState<MenuKey[] | null>(null);
+  const [logoutOpen, setLogoutOpen] = useState(false);
 
   useEffect(() => {
     const session = getSession();
@@ -90,26 +107,29 @@ export function CitizenShell({ children, title, subtitle }: CitizenShellProps) {
 
   const navItems = useMemo(() => {
     if (menuKeys == null) return [];
-    return resolveCitizenPwaModules(menuKeys).map((module) => ({
-      href: pwaPath(module.route),
-      label: module.label,
-      icon: NAV_ICONS[module.key]
-    }));
+    return resolveCitizenNavItems(menuKeys);
   }, [menuKeys]);
 
-  function logout() {
+  function confirmLogout() {
     clearSession();
+    setLogoutOpen(false);
     router.push(PWA_LOGIN);
   }
 
   if (menuKeys == null) {
     return (
-      <main className="offline-screen">
-        <section className="offline-card">
-          <p className="eyebrow">Prefeitura na Mão</p>
-          <h1>Carregando...</h1>
-        </section>
-      </main>
+      <div className="citizen-app citizen-app--native">
+        <header className="citizen-app__header">
+          <div className="citizen-app__header-left">
+            <BrandMark size="sm" className="citizen-app__mark" />
+          </div>
+          <h2 className="citizen-app__header-title">Prefeitura na Mão</h2>
+          <span className="citizen-app__logout" aria-hidden />
+        </header>
+        <main className="citizen-app__content">
+          <CitizenPageSkeleton variant={loadingVariant} />
+        </main>
+      </div>
     );
   }
 
@@ -120,7 +140,7 @@ export function CitizenShell({ children, title, subtitle }: CitizenShellProps) {
           <BrandMark size="sm" className="citizen-app__mark" />
         </div>
         <h2 className="citizen-app__header-title">{title || 'Prefeitura na Mão'}</h2>
-        <button type="button" className="citizen-app__logout" onClick={logout} aria-label="Sair">
+        <button type="button" className="citizen-app__logout" onClick={() => setLogoutOpen(true)} aria-label="Sair">
           Sair
         </button>
       </header>
@@ -138,6 +158,8 @@ export function CitizenShell({ children, title, subtitle }: CitizenShellProps) {
               Os módulos do aplicativo estão temporariamente indisponíveis. Tente novamente mais tarde.
             </p>
           </section>
+        ) : loading ? (
+          <CitizenPageSkeleton variant={loadingVariant} />
         ) : (
           children
         )}
@@ -151,17 +173,19 @@ export function CitizenShell({ children, title, subtitle }: CitizenShellProps) {
           style={{ '--citizen-nav-count': navItems.length } as React.CSSProperties}
         >
           {navItems.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const isActive = item.matchPaths.some(
+              (path) => pathname === path || pathname.startsWith(`${path}/`)
+            );
             return (
               <Link
-                key={item.href}
+                key={item.key}
                 href={item.href}
                 className={`citizen-app__nav-link${isActive ? ' is-active' : ''}`}
                 aria-current={isActive ? 'page' : undefined}
               >
                 <span className="citizen-app__nav-icon-wrapper">
                   <span className="citizen-app__nav-pill" />
-                  <span className="citizen-app__nav-icon">{item.icon}</span>
+                  <span className="citizen-app__nav-icon">{NAV_ICONS[item.iconKey]}</span>
                 </span>
                 <span className="citizen-app__nav-label">{item.label}</span>
               </Link>
@@ -169,6 +193,17 @@ export function CitizenShell({ children, title, subtitle }: CitizenShellProps) {
           })}
         </nav>
       ) : null}
+
+      <CitizenConfirmDialog
+        open={logoutOpen}
+        title="Sair do aplicativo?"
+        description="Você precisará informar seu celular novamente para entrar."
+        confirmLabel="Sair"
+        cancelLabel="Cancelar"
+        destructive
+        onConfirm={confirmLogout}
+        onClose={() => setLogoutOpen(false)}
+      />
     </div>
   );
 }

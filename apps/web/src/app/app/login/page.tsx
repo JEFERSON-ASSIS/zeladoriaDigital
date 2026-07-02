@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { CitizenProductLogo } from '../../../components/brand-logo';
 import { fetchCurrentUser } from '../../../lib/auth-api';
 import { getSession } from '../../../lib/auth';
@@ -14,7 +14,7 @@ import {
   onlyDigits
 } from '../../../lib/citizen-access-api';
 import { refreshCitizenSession, resolveCitizenPwaHome } from '../../../lib/citizen-pwa-access';
-import { PWA_LOGIN } from '../../../lib/pwa';
+import { buildPwaLoginUrl } from '../../../lib/pwa';
 
 const LGPD_TEXT = `A Prefeitura na Mão trata seus dados pessoais (CPF e celular) para identificar você no aplicativo, registrar solicitações urbanas, agendamentos de saúde e comunicações relacionadas aos serviços públicos.
 
@@ -25,7 +25,26 @@ Você pode solicitar informações ou atualização dos seus dados pelos canais 
 type Step = 'phone' | 'cpf';
 
 export default function PwaLoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="login-shell login-shell--pwa">
+          <section className="login-card">
+            <p className="eyebrow">Prefeitura na Mão</p>
+            <h1>Carregando...</h1>
+          </section>
+        </main>
+      }
+    >
+      <PwaLoginForm />
+    </Suspense>
+  );
+}
+
+function PwaLoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnPath = searchParams.get('return');
   const [step, setStep] = useState<Step>('phone');
   const [phone, setPhone] = useState('');
   const [cpf, setCpf] = useState('');
@@ -37,11 +56,13 @@ export default function PwaLoginPage() {
     const session = getSession();
     if (!session) return;
     if (session.user.role === 'CIDADAO') {
-      router.replace(resolveCitizenPwaHome(session.user.menuKeys));
+      const destination =
+        returnPath && returnPath.startsWith('/app') ? returnPath : resolveCitizenPwaHome(session.user.menuKeys);
+      router.replace(destination);
       return;
     }
     router.replace('/');
-  }, [router]);
+  }, [router, returnPath]);
 
   useEffect(() => {
     const lastPhone = getLastCitizenPhone();
@@ -63,8 +84,9 @@ export default function PwaLoginPage() {
     }
 
     const session = await refreshCitizenSession(result.access_token, user);
-    const home = resolveCitizenPwaHome(session.user.menuKeys);
-    router.push(home !== PWA_LOGIN ? home : '/app');
+    const destination =
+      returnPath && returnPath.startsWith('/app') ? returnPath : resolveCitizenPwaHome(session.user.menuKeys);
+    router.push(destination);
     router.refresh();
   }
 

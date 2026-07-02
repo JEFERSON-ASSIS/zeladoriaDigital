@@ -5,7 +5,7 @@ import { PwaInstallGate, usePwaDisplayMode } from './pwa-install-gate';
 import { registerPwaServiceWorker } from '../lib/pwa';
 
 export function PwaShell({ children }: { children: React.ReactNode }) {
-  const { mode, markInstalled } = usePwaDisplayMode();
+  const { mode, markInstalled, enterBrowserMode } = usePwaDisplayMode();
 
   useEffect(() => {
     void registerPwaServiceWorker();
@@ -34,20 +34,21 @@ export function PwaShell({ children }: { children: React.ReactNode }) {
         <img src="/icons/icon-192.png" alt="" className="pwa-splash-screen__logo" width={120} height={120} />
         <h1 className="pwa-splash-screen__title">Prefeitura na Mão</h1>
         <p className="pwa-splash-screen__tagline">Serviços ao cidadão</p>
+        <div className="pwa-splash-screen__spinner" aria-hidden />
       </main>
     );
   }
 
   if (mode === 'gate') {
-    return <PwaInstallGate onInstalled={markInstalled} />;
+    return <PwaInstallGate onInstalled={markInstalled} onSkip={enterBrowserMode} />;
   }
 
   if (mode === 'preview') {
     return (
       <>
         <div className="pwa-preview-banner" role="status">
-          Modo preview ({typeof window !== 'undefined' ? window.location.host : 'rede local'}). Para instalar o
-          app de verdade, use <strong>homolog.prefeituranamao.com.br/app</strong>
+          Modo preview ({typeof window !== 'undefined' ? window.location.host : 'rede local'}). Para instalar o app de
+          verdade, use <strong>homolog.prefeituranamao.com.br/app</strong>
         </div>
         {children}
       </>

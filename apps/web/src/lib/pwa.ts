@@ -7,7 +7,8 @@ export {
   PWA_LOGIN,
   PWA_HOME,
   PWA_CITIZEN_ROUTES,
-  pwaPath
+  pwaPath,
+  buildPwaLoginUrl
 } from './pwa-constants';
 
 export function isStandaloneDisplayMode() {

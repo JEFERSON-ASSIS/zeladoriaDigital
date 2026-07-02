@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { CitizenProductLogo } from './brand-logo';
+import { PWA_BROWSER_MODE_KEY } from '../lib/pwa-constants';
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void> | void;
@@ -35,7 +36,22 @@ function isLocalPreviewHost(hostname: string) {
   );
 }
 
-export function PwaInstallGate({ onInstalled }: { onInstalled: () => void }) {
+export function hasSkippedInstallGate() {
+  if (typeof window === 'undefined') return false;
+  return window.localStorage.getItem(PWA_BROWSER_MODE_KEY) === '1';
+}
+
+export function skipInstallGate() {
+  window.localStorage.setItem(PWA_BROWSER_MODE_KEY, '1');
+}
+
+export function PwaInstallGate({
+  onInstalled,
+  onSkip
+}: {
+  onInstalled: () => void;
+  onSkip: () => void;
+}) {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const ios = isIOSDevice();
   const android = isAndroidChrome();
@@ -66,12 +82,20 @@ export function PwaInstallGate({ onInstalled }: { onInstalled: () => void }) {
     if (choice.outcome === 'accepted') onInstalled();
   }, [deferredPrompt, onInstalled]);
 
+  function handleSkip() {
+    skipInstallGate();
+    onSkip();
+  }
+
   return (
     <div className="pwa-install-gate">
       <div className="pwa-install-gate__card">
         <CitizenProductLogo size="md" />
         <p className="eyebrow">App do cidadão</p>
         <h1>Instale o aplicativo</h1>
+        <p className="pwa-install-gate__copy">
+          Para a melhor experiência, instale na tela inicial. Você também pode continuar pelo navegador.
+        </p>
 
         {android ? (
           <div className="pwa-install-gate__warn">
@@ -87,12 +111,9 @@ export function PwaInstallGate({ onInstalled }: { onInstalled: () => void }) {
             <li>Feche o Safari e abra pelo ícone na tela inicial</li>
           </ol>
         ) : deferredPrompt ? (
-          <>
-            <p className="pwa-install-gate__copy">Toque abaixo para instalar. Depois abra pelo ícone na tela inicial.</p>
-            <button type="button" className="btn-primary pwa-install-gate__btn" onClick={() => void handleInstall()}>
-              Instalar aplicativo
-            </button>
-          </>
+          <button type="button" className="btn-primary pwa-install-gate__btn" onClick={() => void handleInstall()}>
+            Instalar aplicativo
+          </button>
         ) : (
           <ol className="pwa-install-gate__steps">
             <li>Toque no menu <strong>⋮</strong> do Chrome</li>
@@ -100,25 +121,32 @@ export function PwaInstallGate({ onInstalled }: { onInstalled: () => void }) {
             <li>Remova atalhos antigos da tela inicial</li>
             <li>Abra pelo ícone novo instalado</li>
           </ol>
-        )}       
-        <p className="login-credit">
-          Desenvolvido por <strong>i7AI Sistemas inteligentes</strong>
-        </p>
+        )}
+
+        <button type="button" className="pwa-install-gate__skip" onClick={handleSkip}>
+          Continuar no navegador
+        </button>
       </div>
     </div>
   );
 }
 
 export function usePwaDisplayMode() {
-  const [mode, setMode] = useState<'loading' | 'standalone' | 'gate' | 'preview'>('loading');
+  const [mode, setMode] = useState<'loading' | 'standalone' | 'gate' | 'preview' | 'browser'>('loading');
 
   useEffect(() => {
     if (isStandaloneMode()) {
       setMode('standalone');
       return;
     }
+
     const host = window.location.hostname;
-    setMode(isLocalPreviewHost(host) ? 'preview' : 'gate');
+    if (isLocalPreviewHost(host) || hasSkippedInstallGate()) {
+      setMode(isLocalPreviewHost(host) ? 'preview' : 'browser');
+      return;
+    }
+
+    setMode('gate');
   }, []);
 
   const markInstalled = useCallback(() => {
@@ -127,5 +155,9 @@ export function usePwaDisplayMode() {
     }
   }, []);
 
-  return { mode, markInstalled };
+  const enterBrowserMode = useCallback(() => {
+    setMode(isLocalPreviewHost(window.location.hostname) ? 'preview' : 'browser');
+  }, []);
+
+  return { mode, markInstalled, enterBrowserMode };
 }

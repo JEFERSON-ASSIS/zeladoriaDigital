@@ -25,17 +25,15 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
   viewportFit: 'cover',
-  themeColor: '#2563eb'
+  themeColor: '#f2f2f7'
 };
 
 export default function AppPwaLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="citizen-pwa-root">
       <link rel="manifest" href="/app/manifest.json" />
-      <meta name="theme-color" content="#2563eb" />
+      <meta name="theme-color" content="#f2f2f7" />
       <PwaShell>
         <CitizenPwaRouteGuard>{children}</CitizenPwaRouteGuard>
       </PwaShell>

@@ -4,7 +4,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSession } from '../../lib/auth';
 import { CitizenShell } from '../../components/citizen-shell';
-import { PWA_LOGIN, pwaPath } from '../../lib/pwa';
+import { CitizenUnitShell } from '../../components/citizen-unit-shell';
+import { usePsfUnit } from '../../components/psf-unit-provider';
+import { buildPwaLoginUrl, pwaPath } from '../../lib/pwa';
 import { PsfSelectionFlow } from '../../components/psf-selection-flow';
 import { getAvailableServices, type PsfConfig, type ServiceKind } from '../../lib/scheduling/psf-config';
 import {
@@ -32,6 +34,8 @@ type Step = 'psf' | 'booking' | 'success';
 
 export default function SchedulingPage() {
   const router = useRouter();
+  const unit = usePsfUnit();
+  const Shell = unit ? CitizenUnitShell : CitizenShell;
   const [step, setStep] = useState<Step>('psf');
   const [psf, setPsf] = useState<PsfConfig | null>(null);
   const [loadingDays, setLoadingDays] = useState(false);
@@ -56,20 +60,28 @@ export default function SchedulingPage() {
   const needsTime = form.serviceKind === 'medico' || form.serviceKind === 'dentista';
 
   useEffect(() => {
+    const loginUrl = buildPwaLoginUrl(unit?.path('/agendamento'));
     if (!getSession()) {
-      router.replace(PWA_LOGIN);
+      router.replace(loginUrl);
       return;
     }
 
-    const savedId = getSavedPsfId();
-    const savedPsf = getSavedPsfConfig();
-    const profile = getPatientProfile();
-
-    if (savedPsf) {
-      setPsf(savedPsf);
+    if (unit) {
+      setPsf(unit.psf);
       setStep('booking');
+    } else {
+      const savedId = getSavedPsfId();
+      const savedPsf = getSavedPsfConfig();
+      if (savedPsf) {
+        setPsf(savedPsf);
+        setStep('booking');
+      }
+      if (!savedId) {
+        setStep('psf');
+      }
     }
 
+    const profile = getPatientProfile();
     if (profile) {
       setForm((current) => ({
         ...current,
@@ -79,11 +91,7 @@ export default function SchedulingPage() {
         serviceKind: current.serviceKind
       }));
     }
-
-    if (!savedId) {
-      setStep('psf');
-    }
-  }, [router]);
+  }, [router, unit]);
 
   function handlePsfConfirmed(psfId: PsfId) {
     savePsfChoice(psfId);
@@ -216,19 +224,20 @@ export default function SchedulingPage() {
 
   if (step === 'psf') {
     return (
-      <CitizenShell title="Agendamento" subtitle="Escolha sua unidade de saúde para continuar.">
+      <Shell title="Agendamento" subtitle="Escolha sua unidade de saúde para continuar.">
         <PsfSelectionFlow onConfirmed={handlePsfConfirmed} />
-      </CitizenShell>
+      </Shell>
     );
   }
 
   if (step === 'success') {
+    const appointmentsPath = unit ? unit.path('/meus-agendamentos') : pwaPath('/meus-agendamentos');
     return (
-      <CitizenShell title="Agendamento confirmado" subtitle={successMessage ?? 'Sua consulta foi registrada.'}>
+      <Shell title="Agendamento confirmado" subtitle={successMessage ?? 'Sua consulta foi registrada.'}>
         <section className="panel scheduling-panel">
           <p className="success-message">{successMessage}</p>
           <div className="form-actions">
-            <button type="button" onClick={() => router.push(pwaPath('/meus-agendamentos'))}>
+            <button type="button" onClick={() => router.push(appointmentsPath)}>
               Ver meus agendamentos
             </button>
             <button
@@ -247,12 +256,12 @@ export default function SchedulingPage() {
             </button>
           </div>
         </section>
-      </CitizenShell>
+      </Shell>
     );
   }
 
   return (
-    <CitizenShell
+    <Shell
       title="Agendar consulta"
       subtitle={psf ? `${psf.label} — ${psf.subtitle}` : 'Carregando unidade...'}
     >
@@ -390,6 +399,6 @@ export default function SchedulingPage() {
           </button>
         </div>
       </form>
-    </CitizenShell>
+    </Shell>
   );
 }
