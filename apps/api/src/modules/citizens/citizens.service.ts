@@ -73,16 +73,33 @@ export class CitizensService {
   }
 
   async update(id: string, data: UpdateCitizenDto) {
-    const payload = {
+    const payload: Record<string, unknown> = {
       ...data,
       phone: data.phone ? normalizeCitizenPhone(data.phone) : data.phone,
       cpf: data.cpf ? normalizeCitizenCpf(data.cpf) : data.cpf,
       password: data.password ? await bcrypt.hash(data.password, 10) : undefined
     };
+
+    if (data.blocked !== undefined) {
+      payload.blockedAt = data.blocked ? new Date() : null;
+      if (!data.blocked) {
+        payload.blockedReason = null;
+      }
+      delete payload.blocked;
+    }
+
+    if (data.blockedReason !== undefined && data.blocked !== false) {
+      payload.blockedReason = data.blockedReason;
+    }
+
     return this.prisma.citizen.update({ where: { id }, data: payload as any });
   }
 
-  remove(id: string) {
-    return this.prisma.citizen.delete({ where: { id } });
+  async remove(id: string) {
+    return this.prisma.$transaction(async (tx) => {
+      await tx.citizenPushSubscription.deleteMany({ where: { citizenId: id } });
+      await tx.occurrence.updateMany({ where: { citizenId: id }, data: { citizenId: null } });
+      return tx.citizen.delete({ where: { id } });
+    });
   }
 }

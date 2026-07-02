@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3333';
+import { getPublicApiUrl } from './api-base-url';
 
 export function onlyDigits(value: string) {
   return value.replace(/\D/g, '');
@@ -20,7 +20,7 @@ export function formatPhone(value: string) {
 }
 
 export async function lookupCitizenPhone(phone: string) {
-  const response = await fetch(`${API_URL}/auth/citizen/lookup`, {
+  const response = await fetch(`${getPublicApiUrl()}/auth/citizen/lookup`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ phone: onlyDigits(phone) })
@@ -57,7 +57,7 @@ export async function citizenAccess(
     payload.healthUnitPsfId = healthUnitPsfId;
   }
 
-  const response = await fetch(`${API_URL}/auth/citizen/access`, {
+  const response = await fetch(`${getPublicApiUrl()}/auth/citizen/access`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)

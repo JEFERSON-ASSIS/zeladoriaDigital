@@ -1,4 +1,4 @@
-import type { PsfConfig, ServiceKind } from './psf-config';
+import { getMedicoBookingFlow, type PsfConfig, type ServiceKind } from './psf-config';
 import { onlyDigits } from './psf-storage';
 
 const API_KEY = process.env.NEXT_PUBLIC_PSF_API_KEY ?? '';
@@ -13,6 +13,14 @@ export type AvailableDay = {
   label: string;
   date: string;
   vagas?: number;
+};
+
+export type MedicoTurno = 'manha' | 'tarde';
+
+export type AvailableTurno = {
+  id: MedicoTurno;
+  label: string;
+  vagas: number;
 };
 
 export type SchedulingAppointment = {
@@ -33,16 +41,25 @@ export class SchedulingApiError extends Error {
   }
 }
 
-function buildUrl(baseUrl: string, path: string, params?: Record<string, string | number | undefined>) {
-  const normalizedBase = baseUrl.replace(/\/$/, '');
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  const url = new URL(`${normalizedBase}${normalizedPath}`);
+function resolveSchedulingBaseUrl(psf: PsfConfig) {
+  if (typeof window !== 'undefined') {
+    return `${window.location.origin}/app/api/psf/${psf.id}`;
+  }
+  return psf.baseUrl.replace(/\/$/, '');
+}
+
+function buildUrl(psf: PsfConfig, path: string, params?: Record<string, string | number | undefined>) {
+  const normalizedBase = resolveSchedulingBaseUrl(psf);
+  const normalizedPath = path.startsWith('/') ? path.slice(1) : path;
+  const url = new URL(`${normalizedBase}/${normalizedPath}`);
   if (params) {
     for (const [key, value] of Object.entries(params)) {
       if (value !== undefined && value !== '') url.searchParams.set(key, String(value));
     }
   }
-  if (API_KEY) url.searchParams.set('api_key', API_KEY);
+  if (API_KEY && typeof window === 'undefined') {
+    url.searchParams.set('api_key', API_KEY);
+  }
   return url.toString();
 }
 
@@ -101,9 +118,8 @@ async function schedulingRequest<T>(
 
   let response: Response;
   try {
-    response = await fetchWithTimeout(buildUrl(psf.baseUrl, path, params), {
+    response = await fetchWithTimeout(buildUrl(psf, path, params), {
       ...init,
-      mode: 'cors',
       headers: {
         ...headers,
         ...(init?.headers as Record<string, string> | undefined)
@@ -135,13 +151,16 @@ export function extractDateFromDayLabel(label: string) {
 }
 
 export async function fetchAvailableDays(psf: PsfConfig, serviceKind: ServiceKind, servicoId: number) {
+  const medicoFlow = serviceKind === 'medico' ? getMedicoBookingFlow(psf) : null;
   const path =
-    serviceKind === 'medico'
+    medicoFlow === 'hora'
       ? '/endpoints/disponibilidade/dias_medico.php'
       : '/endpoints/disponibilidade/dias.php';
 
   const params: Record<string, string | number> = { empresa: psf.empresaId };
-  if (serviceKind !== 'medico') params.servico = servicoId;
+  if (serviceKind !== 'medico' || medicoFlow === 'hora_servico' || medicoFlow === 'turno') {
+    params.servico = servicoId;
+  }
 
   const data = await schedulingRequest<{
     dias?: string[];
@@ -157,8 +176,9 @@ export async function fetchAvailableDays(psf: PsfConfig, serviceKind: ServiceKin
 }
 
 export async function fetchAvailableTimes(psf: PsfConfig, serviceKind: ServiceKind, servicoId: number, date: string) {
+  const medicoFlow = serviceKind === 'medico' ? getMedicoBookingFlow(psf) : null;
   const path =
-    serviceKind === 'medico'
+    medicoFlow === 'hora'
       ? '/endpoints/disponibilidade/horarios_medico.php'
       : '/endpoints/disponibilidade/horarios.php';
 
@@ -166,10 +186,45 @@ export async function fetchAvailableTimes(psf: PsfConfig, serviceKind: ServiceKi
     empresa: psf.empresaId,
     data: date
   };
-  if (serviceKind !== 'medico') params.servico = servicoId;
+  if (serviceKind !== 'medico' || medicoFlow !== 'hora') params.servico = servicoId;
 
   const data = await schedulingRequest<{ horarios?: string[] }>(psf, path, { method: 'GET' }, params);
   return data.horarios ?? [];
+}
+
+export async function fetchAvailableTurnos(psf: PsfConfig, servicoId: number, date: string) {
+  const data = await schedulingRequest<{
+    turnos?: {
+      manha?: { disponivel?: boolean; vagas?: number; label?: string };
+      tarde?: { disponivel?: boolean; vagas?: number; label?: string };
+    };
+    turno_sugerido?: MedicoTurno | null;
+  }>(
+    psf,
+    '/endpoints/disponibilidade/turnos.php',
+    { method: 'GET' },
+    {
+      servico: servicoId,
+      empresa: psf.empresaId,
+      data
+    }
+  );
+
+  const turnos: AvailableTurno[] = [];
+  const manha = data.turnos?.manha;
+  const tarde = data.turnos?.tarde;
+
+  if (manha?.disponivel) {
+    turnos.push({ id: 'manha', label: manha.label ?? 'Manhã', vagas: manha.vagas ?? 0 });
+  }
+  if (tarde?.disponivel) {
+    turnos.push({ id: 'tarde', label: tarde.label ?? 'Tarde', vagas: tarde.vagas ?? 0 });
+  }
+
+  return {
+    turnos,
+    suggested: data.turno_sugerido ?? null
+  };
 }
 
 export type CreateBookingInput = {
@@ -180,6 +235,7 @@ export type CreateBookingInput = {
   serviceKind: ServiceKind;
   data: string;
   hora?: string;
+  turno?: MedicoTurno;
 };
 
 export async function createBooking(psf: PsfConfig, input: CreateBookingInput) {
@@ -196,21 +252,29 @@ export async function createBooking(psf: PsfConfig, input: CreateBookingInput) {
   let path = '/endpoints/agendamentos/criar.php';
 
   if (input.serviceKind === 'medico') {
-    if (!input.hora) throw new SchedulingApiError('Selecione um horário para a consulta médica.');
-    path = '/endpoints/agendamentos/criar_medico_hora.php';
-    body.hora = input.hora;
-    delete body.servico;
+    const medicoFlow = getMedicoBookingFlow(psf);
+    if (medicoFlow === 'hora') {
+      if (!input.hora) throw new SchedulingApiError('Selecione um horário para a consulta médica.');
+      path = '/endpoints/agendamentos/criar_medico_hora.php';
+      body.hora = input.hora;
+      delete body.servico;
+    } else if (medicoFlow === 'hora_servico') {
+      if (!input.hora) throw new SchedulingApiError('Selecione um horário para a consulta médica.');
+      body.hora = input.hora;
+    } else {
+      if (!input.turno) throw new SchedulingApiError('Selecione o turno (manhã ou tarde).');
+      body.turno = input.turno;
+    }
   } else if (input.serviceKind === 'dentista') {
     if (!input.hora) throw new SchedulingApiError('Selecione um horário para a consulta dentista.');
     body.hora = input.hora;
   }
 
-  const url = buildUrl(psf.baseUrl, path);
+  const url = buildUrl(psf, path);
   let response: Response;
   try {
     response = await fetch(url, {
       method: 'POST',
-      mode: 'cors',
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
@@ -248,7 +312,7 @@ export async function createBooking(psf: PsfConfig, input: CreateBookingInput) {
 }
 
 export async function listAppointmentsByCpf(psf: PsfConfig, cpf: string) {
-  const url = buildUrl(psf.baseUrl, '/endpoints/agendamentos/listar.php', {
+  const url = buildUrl(psf, '/endpoints/agendamentos/listar.php', {
     cpf: onlyDigits(cpf),
     empresa: psf.empresaId
   });
@@ -294,7 +358,7 @@ export async function listAppointmentsByCpf(psf: PsfConfig, cpf: string) {
 }
 
 export async function listAllAppointmentsForPwa(psf: PsfConfig, cpf: string, limit = 50) {
-  const url = buildUrl(psf.baseUrl, '/endpoints/agendamentos/listar_pwa.php', {
+  const url = buildUrl(psf, '/endpoints/agendamentos/listar_pwa.php', {
     cpf: onlyDigits(cpf),
     empresa: psf.empresaId,
     limite: limit
@@ -344,7 +408,7 @@ export async function listAllAppointmentsForPwa(psf: PsfConfig, cpf: string, lim
 }
 
 export async function cancelAppointment(psf: PsfConfig, appointmentId: number) {
-  const url = buildUrl(psf.baseUrl, '/endpoints/agendamentos/cancelar.php', {
+  const url = buildUrl(psf, '/endpoints/agendamentos/cancelar.php', {
     id: appointmentId,
     empresa: psf.empresaId
   });
@@ -353,7 +417,6 @@ export async function cancelAppointment(psf: PsfConfig, appointmentId: number) {
   try {
     response = await fetch(url, {
       method: 'POST',
-      mode: 'cors',
       headers: {
         Accept: 'application/json',
         ...(API_KEY ? { 'X-Api-Key': API_KEY } : {})

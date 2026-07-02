@@ -3,9 +3,9 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { CitizenShell } from '../../components/citizen-shell';
+import { CitizenAppShell } from '../../components/citizen-app-shell';
 import { getSession } from '../../lib/auth';
-import { canAccessCitizenPwaPath, resolveCitizenPwaHome } from '../../lib/citizen-pwa-access';
+import { canAccessCitizenPwaPath, resolveCitizenPwaHome, shouldRedirectBoundCitizen } from '../../lib/citizen-pwa-access';
 import { listPsfUnits, unitPath } from '../../lib/psf-unit';
 import { PWA_LOGIN, pwaPath } from '../../lib/pwa';
 import type { MenuKey } from '@zeladoria/shared';
@@ -23,8 +23,14 @@ export default function CitizenHealthHubPage() {
     }
 
     const keys = session.user.menuKeys ?? [];
+    const unitRedirect = shouldRedirectBoundCitizen(pwaPath('/saude'), session.user.healthUnitPsfId);
+    if (unitRedirect) {
+      router.replace(unitRedirect);
+      return;
+    }
+
     if (!canAccessCitizenPwaPath(pwaPath('/saude'), keys)) {
-      router.replace(resolveCitizenPwaHome(keys));
+      router.replace(resolveCitizenPwaHome(keys, session.user.healthUnitPsfId));
       return;
     }
 
@@ -37,12 +43,12 @@ export default function CitizenHealthHubPage() {
 
   if (!ready) {
     return (
-      <CitizenShell title="Saúde" subtitle="Carregando serviços de saúde..." loading loadingVariant="list" />
+      <CitizenAppShell title="Saúde" subtitle="Carregando serviços de saúde..." loading loadingVariant="list" />
     );
   }
 
   return (
-    <CitizenShell title="Saúde" subtitle="Agende consultas e acompanhe seus atendimentos.">
+    <CitizenAppShell title="Saúde" subtitle="Agende consultas e acompanhe seus atendimentos.">
       <div className="citizen-hub-grid">
         {canAgendar ? (
           <Link href={pwaPath('/agendamento')} className="citizen-hub-card">
@@ -95,6 +101,6 @@ export default function CitizenHealthHubPage() {
           </Link>
         ))}
       </div>
-    </CitizenShell>
+    </CitizenAppShell>
   );
 }

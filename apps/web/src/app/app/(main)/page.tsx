@@ -17,7 +17,7 @@ export default function PwaLauncherPage() {
     }
 
     if (session.user.role === 'CIDADAO') {
-      const home = resolveCitizenPwaHome(session.user.menuKeys);
+      const home = resolveCitizenPwaHome(session.user.menuKeys, session.user.healthUnitPsfId);
       if (home !== PWA_LOGIN) {
         router.replace(home);
       }
@@ -29,7 +29,8 @@ export default function PwaLauncherPage() {
 
   const session = getSession();
   const noModules =
-    session?.user.role === 'CIDADAO' && resolveCitizenPwaHome(session.user.menuKeys) === PWA_LOGIN;
+    session?.user.role === 'CIDADAO' &&
+    resolveCitizenPwaHome(session.user.menuKeys, session.user.healthUnitPsfId) === PWA_LOGIN;
 
   return (
     <main className="offline-screen">

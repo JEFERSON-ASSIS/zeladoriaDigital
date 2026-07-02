@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CitizenAnnouncementPrompt } from '../../components/citizen-announcement-prompt';
 import { CitizenEmptyState } from '../../components/citizen-empty-state';
-import { CitizenShell } from '../../components/citizen-shell';
+import { CitizenAppShell } from '../../components/citizen-app-shell';
 import { getSession } from '../../lib/auth';
 import { fetchCurrentUser } from '../../lib/auth-api';
 import { fetchAnnouncementFeed, resolveAnnouncementAssetUrl, type CitizenAnnouncement } from '../../lib/announcements-api';
@@ -34,7 +34,7 @@ export default function CitizenHomePage() {
   }, [router]);
 
   return (
-    <CitizenShell title="Início" subtitle="Avisos e comunicados da prefeitura." loading={loading} loadingVariant="feed">
+    <CitizenAppShell title="Início" subtitle="Avisos e comunicados da prefeitura." loading={loading} loadingVariant="feed">
       {!loading ? (
         <>
           <CitizenAnnouncementPrompt />
@@ -80,6 +80,6 @@ export default function CitizenHomePage() {
           </div>
         </>
       ) : null}
-    </CitizenShell>
+    </CitizenAppShell>
   );
 }

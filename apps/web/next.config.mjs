@@ -1,8 +1,17 @@
 /** @type {import('next').NextConfig} */
+const lanHost = process.env.LAN_DEV_HOST ?? '192.168.1.12';
+
 const nextConfig = {
   reactStrictMode: true,
-  // Permite acessar o dev server pelo IP da rede local (celular na mesma Wi‑Fi)
-  allowedDevOrigins: ['192.168.1.5'],
+  // Celular na mesma Wi‑Fi: libera HMR/WebSocket do next dev (evita ws://IP:3000/_next/webpack-hmr failed)
+  allowedDevOrigins: [
+    lanHost,
+    `http://${lanHost}:3000`,
+    '192.168.1.5',
+    'http://192.168.1.5:3000',
+    'localhost',
+    '127.0.0.1'
+  ],
   async headers() {
     return [
       {

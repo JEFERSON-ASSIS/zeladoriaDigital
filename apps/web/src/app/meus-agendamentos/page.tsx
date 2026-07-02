@@ -3,9 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSession } from '../../lib/auth';
-import { CitizenShell } from '../../components/citizen-shell';
-import { CitizenUnitShell } from '../../components/citizen-unit-shell';
-import { usePsfUnit } from '../../components/psf-unit-provider';
+import { CitizenAppShell } from '../../components/citizen-app-shell';
+import { useResolvedPsfUnit } from '../../hooks/use-resolved-psf-unit';
 import { buildPwaLoginUrl, pwaPath } from '../../lib/pwa';
 import { CitizenConfirmDialog } from '../../components/citizen-confirm-dialog';
 import {
@@ -37,8 +36,7 @@ const AUTO_REFRESH_MS = 60_000;
 
 export default function MyAppointmentsPage() {
   const router = useRouter();
-  const unit = usePsfUnit();
-  const Shell = unit ? CitizenUnitShell : CitizenShell;
+  const unit = useResolvedPsfUnit();
   const [ready, setReady] = useState(false);
   const [needsPsf, setNeedsPsf] = useState(false);
   const [cpf, setCpf] = useState('');
@@ -152,7 +150,7 @@ export default function MyAppointmentsPage() {
   }, [ready, search]);
 
   async function handleCancel(item: SchedulingAppointment) {
-    const psf = getSavedPsfConfig();
+    const psf = unit?.psf ?? getSavedPsfConfig();
     if (!psf) return;
 
     setCancellingId(item.id);
@@ -184,31 +182,31 @@ export default function MyAppointmentsPage() {
 
   if (!ready) {
     return (
-      <Shell title="Meus agendamentos" subtitle="Carregando...">
+      <CitizenAppShell title="Meus agendamentos" subtitle="Carregando...">
         <section className="panel scheduling-panel">
           <p className="scheduling-copy">Carregando...</p>
         </section>
-      </Shell>
+      </CitizenAppShell>
     );
   }
 
   if (needsPsf) {
     return (
-      <Shell title="Meus agendamentos" subtitle="Use o link da sua unidade de saúde.">
+      <CitizenAppShell title="Meus agendamentos" subtitle="Use o link da sua unidade de saúde.">
         <section className="panel scheduling-panel">
           <p className="scheduling-copy">
             Seu cadastro ainda não está vinculado a uma unidade. Acesse o link oficial do PSF para consultar
             agendamentos.
           </p>
         </section>
-      </Shell>
+      </CitizenAppShell>
     );
   }
 
   const psf = unit?.psf ?? getSavedPsfConfig();
 
   return (
-    <Shell
+    <CitizenAppShell
       title="Meus agendamentos"
       subtitle={psf ? `Consultas em ${psf.label}` : 'Consulte seus agendamentos pelo CPF.'}
     >
@@ -377,6 +375,6 @@ export default function MyAppointmentsPage() {
           if (cancelTarget) void handleCancel(cancelTarget);
         }}
       />
-    </Shell>
+    </CitizenAppShell>
   );
 }

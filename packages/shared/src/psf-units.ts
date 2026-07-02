@@ -3,8 +3,8 @@ export const HEALTH_UNIT_PSF_IDS = ['psf1', 'psf2', 'psf3'] as const;
 export type HealthUnitPsfId = (typeof HEALTH_UNIT_PSF_IDS)[number];
 
 export const HEALTH_UNIT_LABELS: Record<HealthUnitPsfId, string> = {
-  psf1: 'PSF 1',
-  psf2: 'PSF 2',
+  psf1: 'PSF 1 — Sol Nascente',
+  psf2: 'PSF 2 — Centro',
   psf3: 'UBS Rural'
 };
 

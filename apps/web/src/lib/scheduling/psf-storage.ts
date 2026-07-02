@@ -1,3 +1,4 @@
+import { isPsfId } from '../psf-unit';
 import type { PsfId } from './psf-config';
 import { getPsfById } from './psf-config';
 import { getSession } from '../auth';
@@ -10,7 +11,7 @@ export type PatientProfile = {
 
 export function getSavedPsfId(): PsfId | null {
   const fromSession = getSession()?.user?.healthUnitPsfId;
-  if (fromSession === 'psf1' || fromSession === 'psf2' || fromSession === 'psf3') {
+  if (fromSession && isPsfId(fromSession)) {
     return fromSession;
   }
   return null;

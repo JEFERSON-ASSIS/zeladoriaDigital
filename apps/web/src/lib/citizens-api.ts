@@ -1,7 +1,6 @@
 import type { HealthUnitPsfId } from '@zeladoria/shared';
+import { getPublicApiUrl } from './api-base-url';
 import { getStoredAccessToken } from './api';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3333';
 
 export type AdminCitizenRecord = {
   id: string;
@@ -10,10 +9,29 @@ export type AdminCitizenRecord = {
   phone: string | null;
   cpf: string | null;
   healthUnitPsfId: string | null;
+  blockedAt: string | null;
+  blockedReason: string | null;
   lgpdAcceptedAt: string | null;
   createdAt: string;
   updatedAt: string;
 };
+
+export type UpdateCitizenPayload = {
+  healthUnitPsfId?: HealthUnitPsfId | null;
+  blocked?: boolean;
+  blockedReason?: string | null;
+};
+
+async function readCitizenError(response: Response, fallback: string) {
+  try {
+    const body = (await response.json()) as { message?: string | string[] };
+    if (Array.isArray(body.message)) return body.message.join(', ');
+    if (body.message) return body.message;
+  } catch {
+    // ignore
+  }
+  return fallback;
+}
 
 export async function fetchCitizens(accessToken?: string, healthUnitPsfId?: HealthUnitPsfId | 'all') {
   const params = new URLSearchParams();
@@ -22,7 +40,7 @@ export async function fetchCitizens(accessToken?: string, healthUnitPsfId?: Heal
   }
 
   const query = params.toString();
-  const response = await fetch(`${API_URL}/citizens${query ? `?${query}` : ''}`, {
+  const response = await fetch(`${getPublicApiUrl()}/citizens${query ? `?${query}` : ''}`, {
     headers: {
       Authorization: `Bearer ${accessToken ?? getStoredAccessToken()}`
     },
@@ -36,23 +54,62 @@ export async function fetchCitizens(accessToken?: string, healthUnitPsfId?: Heal
   return response.json() as Promise<AdminCitizenRecord[]>;
 }
 
-export async function updateCitizenHealthUnit(
-  id: string,
-  healthUnitPsfId: HealthUnitPsfId | null,
-  accessToken?: string
-) {
-  const response = await fetch(`${API_URL}/citizens/${id}`, {
+export async function updateCitizen(id: string, payload: UpdateCitizenPayload, accessToken?: string) {
+  const response = await fetch(`${getPublicApiUrl()}/citizens/${id}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${accessToken ?? getStoredAccessToken()}`
     },
-    body: JSON.stringify({ healthUnitPsfId })
+    body: JSON.stringify(payload)
   });
 
   if (!response.ok) {
-    throw new Error('Não foi possível atualizar a unidade do cidadão.');
+    throw new Error(await readCitizenError(response, 'Não foi possível atualizar o cidadão.'));
   }
 
   return response.json() as Promise<AdminCitizenRecord>;
+}
+
+export async function updateCitizenHealthUnit(
+  id: string,
+  healthUnitPsfId: HealthUnitPsfId | null,
+  accessToken?: string
+) {
+  return updateCitizen(id, { healthUnitPsfId }, accessToken);
+}
+
+export async function setCitizenBlocked(
+  id: string,
+  blocked: boolean,
+  blockedReason?: string | null,
+  accessToken?: string
+) {
+  return updateCitizen(
+    id,
+    {
+      blocked,
+      blockedReason: blocked ? blockedReason ?? null : null
+    },
+    accessToken
+  );
+}
+
+export async function deleteCitizen(id: string, accessToken?: string) {
+  const response = await fetch(`${getPublicApiUrl()}/citizens/${id}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${accessToken ?? getStoredAccessToken()}`
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(await readCitizenError(response, 'Não foi possível excluir o cidadão.'));
+  }
+
+  return response.json() as Promise<AdminCitizenRecord>;
+}
+
+export function isCitizenBlocked(citizen: Pick<AdminCitizenRecord, 'blockedAt'>) {
+  return Boolean(citizen.blockedAt);
 }

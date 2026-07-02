@@ -79,8 +79,17 @@ export class AuthService {
   async citizenPhoneLookup(phone: string) {
     const citizen = await this.citizensService.findByPhone(normalizeCitizenPhone(phone));
     return {
-      registered: Boolean(citizen?.cpf && citizen.lgpdAcceptedAt)
+      registered: Boolean(citizen?.cpf && citizen.lgpdAcceptedAt),
+      blocked: Boolean(citizen?.blockedAt)
     };
+  }
+
+  private assertCitizenNotBlocked(citizen: { blockedAt?: Date | null }) {
+    if (citizen.blockedAt) {
+      throw new UnauthorizedException(
+        'Seu cadastro está bloqueado. Procure sua unidade de saúde para regularizar.'
+      );
+    }
   }
 
   async citizenAccess(phone: string, cpf?: string, lgpdAccepted = false, healthUnitPsfId?: string) {
@@ -97,6 +106,7 @@ export class AuthService {
       if (!citizen?.cpf || !citizen.lgpdAcceptedAt) {
         throw new BadRequestException('Complete seu cadastro informando CPF e aceite LGPD.');
       }
+      this.assertCitizenNotBlocked(citizen);
       if (
         requestedUnit &&
         citizen.healthUnitPsfId &&
@@ -107,6 +117,7 @@ export class AuthService {
       if (!citizen.healthUnitPsfId && requestedUnit) {
         citizen = await this.citizensService.assignHealthUnit(citizen.id, requestedUnit);
       }
+      this.assertCitizenNotBlocked(citizen);
       return this.issueToken({ ...citizen, role: 'CIDADAO' as const });
     }
 
@@ -119,9 +130,12 @@ export class AuthService {
     let citizen = await this.citizensService.findByCpf(normalizedCpf);
 
     if (citizen) {
+      this.assertCitizenNotBlocked(citizen);
       const storedPhone = citizen.phone ? normalizeCitizenPhone(citizen.phone) : '';
       if (storedPhone !== normalizedPhone) {
-        throw new UnauthorizedException('CPF ou celular incorretos');
+        throw new UnauthorizedException(
+          'Este CPF já está cadastrado com outro celular. Use o celular original ou peça atualização no posto de saúde.'
+        );
       }
       if (citizen.healthUnitPsfId && requestedUnit && citizen.healthUnitPsfId !== requestedUnit) {
         throw new UnauthorizedException('Este cadastro pertence a outra unidade de saúde.');
@@ -146,6 +160,7 @@ export class AuthService {
       citizen = await this.citizensService.acceptLgpd(citizen.id);
     }
 
+    this.assertCitizenNotBlocked(citizen);
     return this.issueToken({ ...citizen, role: 'CIDADAO' as const });
   }
 
@@ -174,6 +189,7 @@ export class AuthService {
       try {
         const citizen = await this.citizensService.findById(userId);
         if (!citizen) throw new UnauthorizedException('Sessão inválida');
+        this.assertCitizenNotBlocked(citizen);
         return {
           id: citizen.id,
           name: citizen.name,

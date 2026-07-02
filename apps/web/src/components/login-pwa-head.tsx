@@ -5,6 +5,8 @@ import { useSearchParams } from 'next/navigation';
 import { PWA_MANIFEST_URL } from '../lib/pwa-constants';
 import { parsePsfIdFromPath, unitManifestPath } from '../lib/psf-unit';
 
+const LOGIN_MANIFEST_ID = 'zeladoria-login-manifest';
+
 function LoginPwaHeadInner() {
   const searchParams = useSearchParams();
   const returnPath = searchParams.get('return');
@@ -12,12 +14,14 @@ function LoginPwaHeadInner() {
   const manifestHref = psfId ? unitManifestPath(psfId) : PWA_MANIFEST_URL;
 
   useLayoutEffect(() => {
-    document.querySelectorAll('link[rel="manifest"]').forEach((node) => node.remove());
-
-    const manifest = document.createElement('link');
-    manifest.rel = 'manifest';
-    manifest.href = manifestHref;
-    document.head.appendChild(manifest);
+    let link = document.getElementById(LOGIN_MANIFEST_ID) as HTMLLinkElement | null;
+    if (!link) {
+      link = document.createElement('link');
+      link.id = LOGIN_MANIFEST_ID;
+      link.rel = 'manifest';
+      document.head.appendChild(link);
+    }
+    link.href = manifestHref;
   }, [manifestHref]);
 
   return null;

@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3333';
+import { getPublicApiUrl } from './api-base-url';
 
 export type PushNotificationRecipient = {
   id: string;
@@ -29,7 +29,7 @@ function authHeaders(accessToken?: string): Record<string, string> {
 }
 
 export async function fetchPushLogs(accessToken?: string, limit = 50) {
-  const response = await fetch(`${API_URL}/push-logs?limit=${limit}`, {
+  const response = await fetch(`${getPublicApiUrl()}/push-logs?limit=${limit}`, {
     headers: authHeaders(accessToken),
     cache: 'no-store'
   });

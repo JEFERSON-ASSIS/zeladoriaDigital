@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3333';
+import { getPublicApiUrl } from './api-base-url';
 
 export type CitizenAnnouncement = {
   id: string;
@@ -42,7 +42,7 @@ export function formatAnnouncementPushMessage(wantedPush: boolean, push?: Announ
 export function resolveAnnouncementAssetUrl(path?: string | null) {
   if (!path) return null;
   if (path.startsWith('http://') || path.startsWith('https://')) return path;
-  return `${API_URL}${path.startsWith('/') ? path : `/${path}`}`;
+  return `${getPublicApiUrl()}${path.startsWith('/') ? path : `/${path}`}`;
 }
 
 function authHeaders(accessToken?: string): Record<string, string> {
@@ -61,7 +61,7 @@ async function readApiError(response: Response, fallback: string) {
 }
 
 export async function fetchAnnouncementPushStatus(accessToken?: string) {
-  const response = await fetch(`${API_URL}/announcements/push-status`, {
+  const response = await fetch(`${getPublicApiUrl()}/announcements/push-status`, {
     headers: authHeaders(accessToken),
     cache: 'no-store'
   });
@@ -70,7 +70,7 @@ export async function fetchAnnouncementPushStatus(accessToken?: string) {
 }
 
 export async function fetchAnnouncementFeed(accessToken?: string) {
-  const response = await fetch(`${API_URL}/announcements/feed`, {
+  const response = await fetch(`${getPublicApiUrl()}/announcements/feed`, {
     headers: authHeaders(accessToken),
     cache: 'no-store'
   });
@@ -79,7 +79,7 @@ export async function fetchAnnouncementFeed(accessToken?: string) {
 }
 
 export async function fetchAdminAnnouncements(accessToken?: string) {
-  const response = await fetch(`${API_URL}/announcements`, {
+  const response = await fetch(`${getPublicApiUrl()}/announcements`, {
     headers: authHeaders(accessToken),
     cache: 'no-store'
   });
@@ -99,7 +99,7 @@ export async function createAnnouncement(
   },
   accessToken?: string
 ) {
-  const response = await fetch(`${API_URL}/announcements`, {
+  const response = await fetch(`${getPublicApiUrl()}/announcements`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -123,7 +123,7 @@ export async function updateAnnouncement(
   }>,
   accessToken?: string
 ) {
-  const response = await fetch(`${API_URL}/announcements/${id}`, {
+  const response = await fetch(`${getPublicApiUrl()}/announcements/${id}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
@@ -136,7 +136,7 @@ export async function updateAnnouncement(
 }
 
 export async function publishAnnouncement(id: string, sendPush: boolean, accessToken?: string) {
-  const response = await fetch(`${API_URL}/announcements/${id}/publish`, {
+  const response = await fetch(`${getPublicApiUrl()}/announcements/${id}/publish`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -149,7 +149,7 @@ export async function publishAnnouncement(id: string, sendPush: boolean, accessT
 }
 
 export async function deleteAnnouncement(id: string, accessToken?: string) {
-  const response = await fetch(`${API_URL}/announcements/${id}`, {
+  const response = await fetch(`${getPublicApiUrl()}/announcements/${id}`, {
     method: 'DELETE',
     headers: authHeaders(accessToken)
   });
@@ -161,7 +161,7 @@ export async function uploadAnnouncementImage(file: File, accessToken?: string) 
   const formData = new FormData();
   formData.append('file', file);
 
-  const response = await fetch(`${API_URL}/announcements/upload-image`, {
+  const response = await fetch(`${getPublicApiUrl()}/announcements/upload-image`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: formData
@@ -175,7 +175,7 @@ export async function subscribeCitizenPush(
   payload: { endpoint: string; p256dh: string; auth: string },
   accessToken: string
 ) {
-  const response = await fetch(`${API_URL}/announcements/push/subscribe`, {
+  const response = await fetch(`${getPublicApiUrl()}/announcements/push/subscribe`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

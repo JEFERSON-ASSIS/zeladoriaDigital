@@ -1,13 +1,13 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { getSession } from '../../lib/auth';
-import { CitizenShell } from '../../components/citizen-shell';
-import { CitizenUnitShell } from '../../components/citizen-unit-shell';
-import { usePsfUnit } from '../../components/psf-unit-provider';
+import { CitizenAppShell } from '../../components/citizen-app-shell';
+import { useResolvedPsfUnit } from '../../hooks/use-resolved-psf-unit';
 import { buildPwaLoginUrl, pwaPath } from '../../lib/pwa';
-import { getAvailableServices, type PsfConfig, type ServiceKind } from '../../lib/scheduling/psf-config';
+import { parsePsfIdFromPath } from '../../lib/psf-unit';
+import { getAvailableServices, getMedicoBookingFlow, type PsfConfig, type ServiceKind } from '../../lib/scheduling/psf-config';
 import {
   formatCpf,
   formatPhone,
@@ -20,8 +20,11 @@ import {
   createBooking,
   fetchAvailableDays,
   fetchAvailableTimes,
+  fetchAvailableTurnos,
   SchedulingApiError,
-  type AvailableDay
+  type AvailableDay,
+  type AvailableTurno,
+  type MedicoTurno
 } from '../../lib/scheduling/scheduling-api';
 import { recordBookingHistory } from '../../lib/scheduling/scheduling-history';
 
@@ -29,9 +32,10 @@ type Step = 'psf' | 'booking' | 'success';
 
 export default function SchedulingPage() {
   const router = useRouter();
-  const unit = usePsfUnit();
-  const Shell = unit ? CitizenUnitShell : CitizenShell;
-  const [step, setStep] = useState<Step>('psf');
+  const pathname = usePathname();
+  const unit = useResolvedPsfUnit();
+  const hasKnownUnit = Boolean(unit || parsePsfIdFromPath(pathname) || getSavedPsfConfig());
+  const [step, setStep] = useState<Step>(() => (hasKnownUnit ? 'booking' : 'psf'));
   const [psf, setPsf] = useState<PsfConfig | null>(null);
   const [loadingDays, setLoadingDays] = useState(false);
   const [loadingTimes, setLoadingTimes] = useState(false);
@@ -39,8 +43,10 @@ export default function SchedulingPage() {
   const [error, setError] = useState<string | null>(null);
   const [days, setDays] = useState<AvailableDay[]>([]);
   const [times, setTimes] = useState<string[]>([]);
+  const [turnos, setTurnos] = useState<AvailableTurno[]>([]);
   const [selectedDay, setSelectedDay] = useState<AvailableDay | null>(null);
   const [selectedTime, setSelectedTime] = useState('');
+  const [selectedTurno, setSelectedTurno] = useState<MedicoTurno | ''>('');
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const [form, setForm] = useState<PatientProfile & { serviceKind: ServiceKind | '' }>({
@@ -52,7 +58,11 @@ export default function SchedulingPage() {
 
   const services = useMemo(() => (psf ? getAvailableServices(psf) : []), [psf]);
   const selectedService = services.find((item) => item.kind === form.serviceKind);
-  const needsTime = form.serviceKind === 'medico' || form.serviceKind === 'dentista';
+  const medicoFlow = form.serviceKind === 'medico' && psf ? getMedicoBookingFlow(psf) : null;
+  const needsTime =
+    form.serviceKind === 'dentista' || medicoFlow === 'hora' || medicoFlow === 'hora_servico';
+  const needsTurno = medicoFlow === 'turno';
+  const selectedTurnoLabel = turnos.find((item) => item.id === selectedTurno)?.label ?? '';
 
   useEffect(() => {
     const loginUrl = buildPwaLoginUrl(unit?.path('/agendamento'));
@@ -98,8 +108,10 @@ export default function SchedulingPage() {
     setError(null);
     setDays([]);
     setTimes([]);
+    setTurnos([]);
     setSelectedDay(null);
     setSelectedTime('');
+    setSelectedTurno('');
 
     try {
       const availableDays = await fetchAvailableDays(psf, selectedService.kind, selectedService.servicoId);
@@ -120,14 +132,35 @@ export default function SchedulingPage() {
 
     setSelectedDay(day);
     setSelectedTime('');
+    setSelectedTurno('');
     setTimes([]);
+    setTurnos([]);
 
-    if (!needsTime) return;
+    if (!needsTime && !needsTurno) return;
 
     setLoadingTimes(true);
     setError(null);
 
     try {
+      if (needsTurno) {
+        const { turnos: availableTurnos, suggested } = await fetchAvailableTurnos(
+          psf,
+          selectedService.servicoId,
+          day.date
+        );
+        if (!availableTurnos.length) {
+          setError('Não há turnos disponíveis nesta data.');
+          return;
+        }
+        setTurnos(availableTurnos);
+        if (availableTurnos.length === 1) {
+          setSelectedTurno(availableTurnos[0].id);
+        } else if (suggested && availableTurnos.some((item) => item.id === suggested)) {
+          setSelectedTurno(suggested);
+        }
+        return;
+      }
+
       const availableTimes = await fetchAvailableTimes(
         psf,
         selectedService.kind,
@@ -155,6 +188,11 @@ export default function SchedulingPage() {
       return;
     }
 
+    if (needsTurno && !selectedTurno) {
+      setError('Selecione o turno (manhã ou tarde).');
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
 
@@ -170,7 +208,8 @@ export default function SchedulingPage() {
         servicoId: selectedService.servicoId,
         serviceKind: selectedService.kind,
         data: selectedDay.date,
-        hora: needsTime ? selectedTime : undefined
+        hora: needsTime ? selectedTime : undefined,
+        turno: needsTurno ? selectedTurno : undefined
       });
 
       if (result.id && psf) {
@@ -187,10 +226,16 @@ export default function SchedulingPage() {
         });
       }
 
+      const scheduleDetail = selectedTime
+        ? ` às ${selectedTime}`
+        : selectedTurnoLabel
+          ? ` (${selectedTurnoLabel.toLowerCase()})`
+          : '';
+
       setSuccessMessage(
         result.id
-          ? `Agendamento confirmado! Protocolo interno #${result.id} em ${selectedDay.date}${selectedTime ? ` às ${selectedTime}` : ''}.`
-          : `Agendamento confirmado para ${selectedDay.date}${selectedTime ? ` às ${selectedTime}` : ''}.`
+          ? `Agendamento confirmado! Protocolo interno #${result.id} em ${selectedDay.date}${scheduleDetail}.`
+          : `Agendamento confirmado para ${selectedDay.date}${scheduleDetail}.`
       );
       setStep('success');
     } catch (submitError) {
@@ -202,21 +247,21 @@ export default function SchedulingPage() {
 
   if (step === 'psf') {
     return (
-      <Shell title="Agendamento" subtitle="Use o link da sua unidade de saúde para agendar.">
+      <CitizenAppShell title="Agendamento" subtitle="Use o link da sua unidade de saúde para agendar.">
         <section className="panel scheduling-panel">
           <p className="scheduling-copy">
             Seu cadastro ainda não está vinculado a uma unidade ou você entrou pelo app geral.
             Acesse o link oficial do PSF (PSF 1, PSF 2 ou UBS Rural) para se cadastrar e agendar.
           </p>
         </section>
-      </Shell>
+      </CitizenAppShell>
     );
   }
 
   if (step === 'success') {
     const appointmentsPath = unit ? unit.path('/meus-agendamentos') : pwaPath('/meus-agendamentos');
     return (
-      <Shell title="Agendamento confirmado" subtitle={successMessage ?? 'Sua consulta foi registrada.'}>
+      <CitizenAppShell title="Agendamento confirmado" subtitle={successMessage ?? 'Sua consulta foi registrada.'}>
         <section className="panel scheduling-panel">
           <p className="success-message">{successMessage}</p>
           <div className="form-actions">
@@ -239,12 +284,12 @@ export default function SchedulingPage() {
             </button>
           </div>
         </section>
-      </Shell>
+      </CitizenAppShell>
     );
   }
 
   return (
-    <Shell
+    <CitizenAppShell
       title="Agendar consulta"
       subtitle={psf ? `${psf.label} — ${psf.subtitle}` : 'Carregando unidade...'}
     >
@@ -289,8 +334,10 @@ export default function SchedulingPage() {
                 setForm((current) => ({ ...current, serviceKind: e.target.value as ServiceKind | '' }));
                 setDays([]);
                 setTimes([]);
+                setTurnos([]);
                 setSelectedDay(null);
                 setSelectedTime('');
+                setSelectedTurno('');
               }}
             >
               <option value="">Selecione o serviço</option>
@@ -335,6 +382,31 @@ export default function SchedulingPage() {
           </section>
         ) : null}
 
+        {needsTurno && selectedDay ? (
+          <section className="panel scheduling-panel scheduling-panel--flat" style={{ margin: '16px 0' }}>
+            <div style={{ padding: '14px 16px 8px' }}>
+              <h3 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--i7-text-secondary)' }}>Escolha o turno — {selectedDay.date}</h3>
+            </div>
+            {loadingTimes ? <p className="scheduling-copy" style={{ padding: '0 16px 12px' }}>Carregando turnos...</p> : null}
+            {!loadingTimes && turnos.length === 0 ? (
+              <p className="scheduling-copy" style={{ padding: '0 16px 12px' }}>Nenhum turno disponível nesta data.</p>
+            ) : null}
+            <div className="scheduling-slot-grid scheduling-slot-grid--times" style={{ padding: '0 16px 16px' }}>
+              {turnos.map((turno) => (
+                <button
+                  key={turno.id}
+                  type="button"
+                  className={`scheduling-slot ${selectedTurno === turno.id ? 'is-selected' : ''}`}
+                  onClick={() => setSelectedTurno(turno.id)}
+                >
+                  <span>{turno.label}</span>
+                  <small>{turno.vagas} vaga(s)</small>
+                </button>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
         {needsTime && selectedDay ? (
           <section className="panel scheduling-panel scheduling-panel--flat" style={{ margin: '16px 0' }}>
             <div style={{ padding: '14px 16px 8px' }}>
@@ -359,12 +431,13 @@ export default function SchedulingPage() {
           </section>
         ) : null}
 
-        {selectedDay && (!needsTime || selectedTime) ? (
+        {selectedDay && ((!needsTime && !needsTurno) || selectedTime || selectedTurno) ? (
           <section className="panel scheduling-panel scheduling-panel--flat scheduling-summary" style={{ padding: 16, margin: '16px 0' }}>
             <p className="eyebrow" style={{ margin: '0 0 6px', fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--i7-text-secondary)', fontWeight: 600 }}>Resumo do agendamento</p>
             <p style={{ margin: '4px 0', fontSize: '1.05rem', color: 'var(--i7-text)' }}>
               <strong>{selectedService?.label}</strong> em {selectedDay.date}
               {selectedTime ? ` às ${selectedTime}` : ''}
+              {!selectedTime && selectedTurnoLabel ? ` — ${selectedTurnoLabel}` : ''}
             </p>
             <p style={{ margin: '4px 0', color: 'var(--i7-text-secondary)' }}>{form.nome}</p>
             <p style={{ margin: '4px 0', color: 'var(--i7-text-secondary)', fontSize: '0.9rem' }}>{form.telefone} · CPF {form.cpf}</p>
@@ -376,12 +449,12 @@ export default function SchedulingPage() {
         <div className="form-actions" style={{ padding: '16px 0' }}>
           <button
             type="submit"
-            disabled={submitting || !selectedDay || (needsTime && !selectedTime)}
+            disabled={submitting || !selectedDay || (needsTime && !selectedTime) || (needsTurno && !selectedTurno)}
           >
             {submitting ? 'Agendando...' : 'Confirmar agendamento'}
           </button>
         </div>
       </form>
-    </Shell>
+    </CitizenAppShell>
   );
 }

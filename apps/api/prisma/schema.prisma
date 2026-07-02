@@ -78,6 +78,8 @@ model Citizen {
   cpf              String?   @unique
   lgpdAcceptedAt   DateTime?
   healthUnitPsfId  String?
+  blockedAt        DateTime?
+  blockedReason    String?
   municipalityId   String?
   municipality     Municipality? @relation(fields: [municipalityId], references: [id])
   occurrences      Occurrence[]

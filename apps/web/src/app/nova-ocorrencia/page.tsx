@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CitizenMediaPicker, type PendingMedia } from '../../components/citizen-media-picker';
-import { CitizenShell } from '../../components/citizen-shell';
+import { CitizenAppShell } from '../../components/citizen-app-shell';
 import { CitizenStepper } from '../../components/citizen-stepper';
 import { CitizenSuccessCard } from '../../components/citizen-success-card';
 import { clearSession, getSession, type AuthSession } from '../../lib/auth';
@@ -253,7 +253,7 @@ export default function NewOccurrencePage() {
 
   if (successProtocol) {
     return (
-      <CitizenShell title="Solicitação enviada" subtitle="Seu pedido foi registrado com sucesso.">
+      <CitizenAppShell title="Solicitação enviada" subtitle="Seu pedido foi registrado com sucesso.">
         <CitizenSuccessCard
           title="Tudo certo!"
           message={`Sua solicitação foi enviada para ${successDepartment ?? 'a secretaria responsável'}. Guarde o protocolo para acompanhar.`}
@@ -263,12 +263,12 @@ export default function NewOccurrencePage() {
           secondaryLabel="Nova solicitação"
           onSecondary={resetWizard}
         />
-      </CitizenShell>
+      </CitizenAppShell>
     );
   }
 
   return (
-    <CitizenShell
+    <CitizenAppShell
       title="Nova solicitação"
       subtitle="Siga os passos para registrar o problema na sua cidade."
       loading={loading}
@@ -471,6 +471,6 @@ export default function NewOccurrencePage() {
           </div>
         </>
       ) : null}
-    </CitizenShell>
+    </CitizenAppShell>
   );
 }

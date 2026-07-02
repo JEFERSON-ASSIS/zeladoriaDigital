@@ -13,7 +13,7 @@ import { BrandMark } from './brand-logo';
 import { CitizenConfirmDialog } from './citizen-confirm-dialog';
 import { CitizenPageSkeleton } from './citizen-page-skeleton';
 
-type CitizenShellProps = {
+export type CitizenShellProps = {
   children?: React.ReactNode;
   title?: string;
   subtitle?: string;

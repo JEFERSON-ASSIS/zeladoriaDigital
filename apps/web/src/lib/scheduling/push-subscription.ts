@@ -1,9 +1,9 @@
 import { getSession } from '../auth';
 import { getSavedPsfConfig, getPatientProfile, onlyDigits } from './psf-storage';
 
+import { getPublicApiUrl } from '../api-base-url';
 import { getPwaServiceWorkerRegistration } from '../pwa';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3333';
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? '';
 
 function urlBase64ToUint8Array(base64String: string) {
@@ -79,7 +79,7 @@ export async function subscribeSchedulingPush() {
     return { ok: false as const, reason: 'invalid-subscription' };
   }
 
-  const response = await fetch(`${API_URL}/scheduling-reminders/subscribe`, {
+  const response = await fetch(`${getPublicApiUrl()}/scheduling-reminders/subscribe`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

@@ -1,10 +1,9 @@
 import type { MenuKey } from '@zeladoria/shared';
+import { getPublicApiUrl } from './api-base-url';
 import type { SessionRole } from './auth';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3333';
-
 export async function login(email: string, password: string) {
-  const response = await fetch(`${API_URL}/auth/login`, {
+  const response = await fetch(`${getPublicApiUrl()}/auth/login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -23,7 +22,7 @@ export async function login(email: string, password: string) {
 }
 
 export async function fetchCurrentUser(accessToken: string) {
-  const response = await fetch(`${API_URL}/auth/me`, {
+  const response = await fetch(`${getPublicApiUrl()}/auth/me`, {
     headers: {
       Authorization: `Bearer ${accessToken}`
     },

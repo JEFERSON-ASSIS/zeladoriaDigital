@@ -1,9 +1,8 @@
 import type { MenuKey } from '@zeladoria/shared';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3333';
+import { getPublicApiUrl } from './api-base-url';
 
 export async function fetchMenuPermissionsMatrix(accessToken?: string) {
-  const response = await fetch(`${API_URL}/permissions/menus`, {
+  const response = await fetch(`${getPublicApiUrl()}/permissions/menus`, {
     headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
     cache: 'no-store'
   });
@@ -16,7 +15,7 @@ export async function fetchMenuPermissionsMatrix(accessToken?: string) {
 }
 
 export async function fetchMyMenuPermissions(accessToken: string) {
-  const response = await fetch(`${API_URL}/permissions/menus/me`, {
+  const response = await fetch(`${getPublicApiUrl()}/permissions/menus/me`, {
     headers: {
       Authorization: `Bearer ${accessToken}`
     },
@@ -34,7 +33,7 @@ export async function saveMenuPermissionsMatrix(
   matrix: Record<string, Record<string, boolean>>,
   accessToken?: string
 ) {
-  const response = await fetch(`${API_URL}/permissions/menus`, {
+  const response = await fetch(`${getPublicApiUrl()}/permissions/menus`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',

@@ -9,12 +9,48 @@ import { fetchMyMenuPermissions } from './permissions-api';
 import type { AuthSession, AuthUser } from './auth';
 import { setSession } from './auth';
 import { isCitizenHealthPath } from './citizen-nav';
-import { parsePsfIdFromPath, unitPath } from './psf-unit';
+import type { PsfId } from './scheduling/psf-config';
+import { isPsfId, parsePsfIdFromPath, unitPath } from './psf-unit';
 import { PWA_LOGIN, pwaPath } from './pwa';
 
-export function resolveCitizenPwaHome(menuKeys?: MenuKey[] | null) {
+export function resolveCitizenPwaHome(menuKeys?: MenuKey[] | null, healthUnitPsfId?: string | null) {
+  if (healthUnitPsfId && isPsfId(healthUnitPsfId)) {
+    return unitPath(healthUnitPsfId);
+  }
   const route = resolveCitizenPwaHomeRoute(menuKeys);
   return route ? pwaPath(route) : PWA_LOGIN;
+}
+
+export function resolveCitizenDestination(
+  user: Pick<AuthUser, 'menuKeys' | 'healthUnitPsfId'>,
+  returnPath?: string | null
+) {
+  if (returnPath && returnPath.startsWith('/app')) {
+    return returnPath;
+  }
+  return resolveCitizenPwaHome(user.menuKeys, user.healthUnitPsfId);
+}
+
+export function mapGeneralPwaPathToUnit(pathname: string, psfId: PsfId): string | null {
+  if (pathname === pwaPath('/saude') || pathname.startsWith(`${pwaPath('/saude')}/`)) {
+    return unitPath(psfId);
+  }
+  if (pathname === pwaPath('/agendamento') || pathname.startsWith(`${pwaPath('/agendamento')}/`)) {
+    return unitPath(psfId, '/agendamento');
+  }
+  if (pathname === pwaPath('/meus-agendamentos') || pathname.startsWith(`${pwaPath('/meus-agendamentos')}/`)) {
+    return unitPath(psfId, '/meus-agendamentos');
+  }
+  if (pathname === pwaPath('/inicio') || pathname === pwaPath('/')) {
+    return unitPath(psfId);
+  }
+  return null;
+}
+
+export function shouldRedirectBoundCitizen(pathname: string, healthUnitPsfId?: string | null) {
+  if (!healthUnitPsfId || !isPsfId(healthUnitPsfId)) return null;
+  if (parsePsfIdFromPath(pathname)) return null;
+  return mapGeneralPwaPathToUnit(pathname, healthUnitPsfId);
 }
 
 export function getMenuKeyForPwaPath(pathname: string): MenuKey | null {

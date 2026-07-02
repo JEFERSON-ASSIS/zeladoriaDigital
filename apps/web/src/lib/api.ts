@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3333';
+import { getPublicApiUrl } from './api-base-url';
 
 async function safeJson<T>(response: Response): Promise<T | null> {
   if (!response.ok) return null;
@@ -11,10 +11,10 @@ function authHeaders(accessToken?: string): Record<string, string> {
 
 export async function fetchDashboardData(accessToken?: string) {
   const [occurrencesRes, citizensRes, usersRes, categoriesRes] = await Promise.allSettled([
-    fetch(`${API_URL}/occurrences`, { cache: 'no-store', headers: authHeaders(accessToken) }),
-    fetch(`${API_URL}/citizens`, { cache: 'no-store', headers: authHeaders(accessToken) }),
-    fetch(`${API_URL}/users`, { cache: 'no-store', headers: authHeaders(accessToken) }),
-    fetch(`${API_URL}/categories`, { cache: 'no-store' })
+    fetch(`${getPublicApiUrl()}/occurrences`, { cache: 'no-store', headers: authHeaders(accessToken) }),
+    fetch(`${getPublicApiUrl()}/citizens`, { cache: 'no-store', headers: authHeaders(accessToken) }),
+    fetch(`${getPublicApiUrl()}/users`, { cache: 'no-store', headers: authHeaders(accessToken) }),
+    fetch(`${getPublicApiUrl()}/categories`, { cache: 'no-store' })
   ]);
 
   const occurrences = occurrencesRes.status === 'fulfilled' ? await safeJson<any[]>(occurrencesRes.value) : null;
@@ -31,13 +31,13 @@ export async function fetchDashboardData(accessToken?: string) {
 }
 
 export async function fetchUsers(accessToken?: string) {
-  const response = await fetch(`${API_URL}/users`, { cache: 'no-store', headers: authHeaders(accessToken) });
+  const response = await fetch(`${getPublicApiUrl()}/users`, { cache: 'no-store', headers: authHeaders(accessToken) });
   const users = await safeJson<any[]>(response);
   return users ?? [];
 }
 
 export async function fetchServiceOrders(accessToken?: string) {
-  const response = await fetch(`${API_URL}/occurrences`, { cache: 'no-store', headers: authHeaders(accessToken) });
+  const response = await fetch(`${getPublicApiUrl()}/occurrences`, { cache: 'no-store', headers: authHeaders(accessToken) });
   const occurrences = await safeJson<any[]>(response);
   return (occurrences ?? [])
     .flatMap((occurrence) =>
@@ -57,7 +57,7 @@ export async function fetchServiceOrders(accessToken?: string) {
 }
 
 export async function startServiceOrder(id: string, accessToken?: string) {
-  const response = await fetch(`${API_URL}/occurrences/service-orders/${id}/start`, {
+  const response = await fetch(`${getPublicApiUrl()}/occurrences/service-orders/${id}/start`, {
     method: 'PATCH',
     headers: authHeaders(accessToken)
   });
@@ -70,7 +70,7 @@ export async function registerServiceOrderExecution(
   payload: Record<string, unknown>,
   accessToken?: string
 ) {
-  const response = await fetch(`${API_URL}/occurrences/service-orders/${id}/execution`, {
+  const response = await fetch(`${getPublicApiUrl()}/occurrences/service-orders/${id}/execution`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
@@ -83,7 +83,7 @@ export async function registerServiceOrderExecution(
 }
 
 export async function finishServiceOrder(id: string, payload: Record<string, unknown>, accessToken?: string) {
-  const response = await fetch(`${API_URL}/occurrences/service-orders/${id}/finish`, {
+  const response = await fetch(`${getPublicApiUrl()}/occurrences/service-orders/${id}/finish`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
@@ -96,19 +96,19 @@ export async function finishServiceOrder(id: string, payload: Record<string, unk
 }
 
 export async function fetchOccurrences(accessToken?: string) {
-  const response = await fetch(`${API_URL}/occurrences`, { cache: 'no-store', headers: authHeaders(accessToken) });
+  const response = await fetch(`${getPublicApiUrl()}/occurrences`, { cache: 'no-store', headers: authHeaders(accessToken) });
   const occurrences = await safeJson<any[]>(response);
   return occurrences ?? [];
 }
 
 export async function fetchDepartments(accessToken?: string) {
-  const response = await fetch(`${API_URL}/departments`, { cache: 'no-store', headers: authHeaders(accessToken) });
+  const response = await fetch(`${getPublicApiUrl()}/departments`, { cache: 'no-store', headers: authHeaders(accessToken) });
   const departments = await safeJson<any[]>(response);
   return departments ?? [];
 }
 
 export async function createDepartment(payload: { name: string }, accessToken?: string) {
-  const response = await fetch(`${API_URL}/departments`, {
+  const response = await fetch(`${getPublicApiUrl()}/departments`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...authHeaders(accessToken) },
     body: JSON.stringify(payload)
@@ -118,7 +118,7 @@ export async function createDepartment(payload: { name: string }, accessToken?: 
 }
 
 export async function deleteDepartment(id: string, accessToken?: string) {
-  const response = await fetch(`${API_URL}/departments/${id}`, {
+  const response = await fetch(`${getPublicApiUrl()}/departments/${id}`, {
     method: 'DELETE',
     headers: authHeaders(accessToken)
   });
@@ -136,7 +136,7 @@ export async function createUser(
   },
   accessToken?: string
 ) {
-  const response = await fetch(`${API_URL}/users`, {
+  const response = await fetch(`${getPublicApiUrl()}/users`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...authHeaders(accessToken) },
     body: JSON.stringify(payload)
@@ -156,7 +156,7 @@ export async function updateUser(
   },
   accessToken?: string
 ) {
-  const response = await fetch(`${API_URL}/users/${id}`, {
+  const response = await fetch(`${getPublicApiUrl()}/users/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', ...authHeaders(accessToken) },
     body: JSON.stringify(payload)
@@ -166,7 +166,7 @@ export async function updateUser(
 }
 
 export async function deleteUser(id: string, accessToken?: string) {
-  const response = await fetch(`${API_URL}/users/${id}`, {
+  const response = await fetch(`${getPublicApiUrl()}/users/${id}`, {
     method: 'DELETE',
     headers: authHeaders(accessToken)
   });
@@ -188,7 +188,7 @@ export type ServiceAreaRecord = {
 };
 
 export async function fetchServiceAreas(accessToken?: string) {
-  const response = await fetch(`${API_URL}/admin/service-area`, {
+  const response = await fetch(`${getPublicApiUrl()}/admin/service-area`, {
     cache: 'no-store',
     headers: authHeaders(accessToken)
   });
@@ -200,7 +200,7 @@ export async function saveServiceArea(payload: Record<string, unknown>, accessTo
   const areas = await fetchServiceAreas(accessToken);
   const existing = areas.find((area) => area.ativo) ?? areas[0];
   const response = await fetch(
-    existing?.id ? `${API_URL}/admin/service-area/${existing.id}` : `${API_URL}/admin/service-area`,
+    existing?.id ? `${getPublicApiUrl()}/admin/service-area/${existing.id}` : `${getPublicApiUrl()}/admin/service-area`,
     {
       method: existing?.id ? 'PUT' : 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders(accessToken) },
@@ -212,19 +212,19 @@ export async function saveServiceArea(payload: Record<string, unknown>, accessTo
 }
 
 export async function fetchCategories(accessToken?: string) {
-  const response = await fetch(`${API_URL}/categories`, { cache: 'no-store', headers: authHeaders(accessToken) });
+  const response = await fetch(`${getPublicApiUrl()}/categories`, { cache: 'no-store', headers: authHeaders(accessToken) });
   const categories = await safeJson<any[]>(response);
   return categories ?? [];
 }
 
 export async function fetchNeighborhoods(accessToken?: string) {
-  const response = await fetch(`${API_URL}/neighborhoods`, { cache: 'no-store', headers: authHeaders(accessToken) });
+  const response = await fetch(`${getPublicApiUrl()}/neighborhoods`, { cache: 'no-store', headers: authHeaders(accessToken) });
   const neighborhoods = await safeJson<any[]>(response);
   return neighborhoods ?? [];
 }
 
 export async function createOccurrence(payload: Record<string, unknown>, accessToken?: string) {
-  const response = await fetch(`${API_URL}/occurrences`, {
+  const response = await fetch(`${getPublicApiUrl()}/occurrences`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -242,7 +242,7 @@ export async function createOccurrence(payload: Record<string, unknown>, accessT
 
 export function resolveAttachmentUrl(fileUrl: string) {
   if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) return fileUrl;
-  return `${API_URL}${fileUrl.startsWith('/') ? fileUrl : `/${fileUrl}`}`;
+  return `${getPublicApiUrl()}${fileUrl.startsWith('/') ? fileUrl : `/${fileUrl}`}`;
 }
 
 export async function uploadOccurrenceAttachment(occurrenceId: string, file: File, accessToken?: string) {
@@ -251,7 +251,7 @@ export async function uploadOccurrenceAttachment(occurrenceId: string, file: Fil
 
   let response: Response;
   try {
-    response = await fetch(`${API_URL}/occurrences/${occurrenceId}/attachments`, {
+    response = await fetch(`${getPublicApiUrl()}/occurrences/${occurrenceId}/attachments`, {
       method: 'POST',
       headers: authHeaders(accessToken),
       body: formData
@@ -268,7 +268,7 @@ export async function uploadOccurrenceAttachment(occurrenceId: string, file: Fil
 }
 
 export async function fetchMyOccurrences(accessToken?: string) {
-  const response = await fetch(`${API_URL}/occurrences/mine`, { cache: 'no-store', headers: authHeaders(accessToken) });
+  const response = await fetch(`${getPublicApiUrl()}/occurrences/mine`, { cache: 'no-store', headers: authHeaders(accessToken) });
   if (!response.ok) {
     throw new Error(await readApiError(response, 'Não foi possível carregar suas solicitações.'));
   }
@@ -276,7 +276,7 @@ export async function fetchMyOccurrences(accessToken?: string) {
 }
 
 export async function fetchOccurrenceByProtocol(protocol: string, accessToken?: string) {
-  const response = await fetch(`${API_URL}/occurrences/protocol/${encodeURIComponent(protocol.trim())}`, {
+  const response = await fetch(`${getPublicApiUrl()}/occurrences/protocol/${encodeURIComponent(protocol.trim())}`, {
     cache: 'no-store',
     headers: authHeaders(accessToken)
   });
@@ -308,7 +308,7 @@ export async function updateOccurrence(
 ) {
   let response: Response;
   try {
-    response = await fetch(`${API_URL}/occurrences/${id}`, {
+    response = await fetch(`${getPublicApiUrl()}/occurrences/${id}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -328,7 +328,7 @@ export async function updateOccurrence(
 }
 
 async function fetchAdmin<T>(path: string, accessToken?: string, init?: RequestInit) {
-  const response = await fetch(`${API_URL}${path}`, {
+  const response = await fetch(`${getPublicApiUrl()}${path}`, {
     cache: 'no-store',
     headers: {
       ...authHeaders(accessToken),
@@ -411,7 +411,7 @@ export async function exportAdminGrid(
   filters: Record<string, unknown>,
   accessToken?: string
 ) {
-  const response = await fetch(`${API_URL}/admin/export`, {
+  const response = await fetch(`${getPublicApiUrl()}/admin/export`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

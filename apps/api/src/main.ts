@@ -15,7 +15,8 @@ async function bootstrap() {
   app.useStaticAssets(uploadsDir, { prefix: '/uploads/' });
   app.enableCors({ origin: true, credentials: true });
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
-  await app.listen(process.env.API_PORT ? Number(process.env.API_PORT) : 3333);
+  const port = process.env.API_PORT ? Number(process.env.API_PORT) : 3333;
+  await app.listen(port, '0.0.0.0');
 }
 
 void bootstrap();

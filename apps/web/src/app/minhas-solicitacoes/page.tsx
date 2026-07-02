@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CitizenEmptyState } from '../../components/citizen-empty-state';
-import { CitizenShell } from '../../components/citizen-shell';
+import { CitizenAppShell } from '../../components/citizen-app-shell';
 import { OccurrenceAttachments } from '../../components/occurrence-attachments';
 import { clearSession, getSession } from '../../lib/auth';
 import { fetchCurrentUser } from '../../lib/auth-api';
@@ -100,7 +100,7 @@ export default function MyRequestsPage() {
   }
 
   return (
-    <CitizenShell
+    <CitizenAppShell
       title="Minhas solicitações"
       subtitle="Acompanhe protocolos, secretaria responsável e histórico."
       loading={loading}
@@ -220,6 +220,6 @@ export default function MyRequestsPage() {
           </div>
         </>
       ) : null}
-    </CitizenShell>
+    </CitizenAppShell>
   );
 }

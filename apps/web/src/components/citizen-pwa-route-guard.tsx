@@ -6,7 +6,8 @@ import { getSession } from '../lib/auth';
 import {
   canAccessCitizenPwaPath,
   refreshCitizenSession,
-  resolveCitizenPwaHome
+  resolveCitizenPwaHome,
+  shouldRedirectBoundCitizen
 } from '../lib/citizen-pwa-access';
 import { PWA_LOGIN } from '../lib/pwa';
 import { isUnitPwaPath } from '../lib/psf-unit';
@@ -34,15 +35,28 @@ export function CitizenPwaRouteGuard({ children }: { children: React.ReactNode }
         const menuKeys = nextSession.user.menuKeys;
         if (menuKeys == null) return;
 
+        const unitRedirect = shouldRedirectBoundCitizen(pathname, nextSession.user.healthUnitPsfId);
+        if (unitRedirect) {
+          router.replace(unitRedirect);
+          return;
+        }
+
         if (!canAccessCitizenPwaPath(pathname, menuKeys)) {
-          router.replace(resolveCitizenPwaHome(menuKeys));
+          router.replace(resolveCitizenPwaHome(menuKeys, nextSession.user.healthUnitPsfId));
         }
       } catch {
         if (cancelled) return;
         const menuKeys = session!.user.menuKeys;
         if (menuKeys == null) return;
+
+        const unitRedirect = shouldRedirectBoundCitizen(pathname, session!.user.healthUnitPsfId);
+        if (unitRedirect) {
+          router.replace(unitRedirect);
+          return;
+        }
+
         if (!canAccessCitizenPwaPath(pathname, menuKeys)) {
-          router.replace(resolveCitizenPwaHome(menuKeys));
+          router.replace(resolveCitizenPwaHome(menuKeys, session!.user.healthUnitPsfId));
         }
       }
     }

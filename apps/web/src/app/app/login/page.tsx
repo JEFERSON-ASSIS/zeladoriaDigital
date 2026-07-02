@@ -12,15 +12,24 @@ import {
   lookupCitizenPhone,
   onlyDigits
 } from '../../../lib/citizen-access-api';
-import { refreshCitizenSession, resolveCitizenPwaHome } from '../../../lib/citizen-pwa-access';
+import { refreshCitizenSession, resolveCitizenDestination } from '../../../lib/citizen-pwa-access';
 import { buildPwaLoginUrl } from '../../../lib/pwa';
-import { parsePsfIdFromPath } from '../../../lib/psf-unit';
+import { getPsfUnitConfig, getPsfUnitDisplayName, parsePsfIdFromPath } from '../../../lib/psf-unit';
 
 const LGPD_TEXT = `A Prefeitura na Mão trata seus dados pessoais (CPF e celular) para identificar você no aplicativo, registrar solicitações urbanas, agendamentos de saúde e comunicações relacionadas aos serviços públicos.
 
 Seus dados são utilizados apenas para finalidades ligadas aos serviços do app, armazenados de forma segura e não compartilhados com terceiros sem base legal.
 
 Você pode solicitar informações ou atualização dos seus dados pelos canais oficiais da prefeitura.`;
+
+function LoginUnitBadge({ label }: { label: string }) {
+  return (
+    <p className="pwa-login-unit" role="status">
+      <span className="pwa-login-unit__label">Unidade de saúde</span>
+      <strong>{label}</strong>
+    </p>
+  );
+}
 
 type Step = 'phone' | 'cpf';
 
@@ -46,6 +55,8 @@ function PwaLoginForm() {
   const searchParams = useSearchParams();
   const returnPath = searchParams.get('return');
   const registrationUnitId = returnPath ? parsePsfIdFromPath(returnPath) : null;
+  const registrationUnit = registrationUnitId ? getPsfUnitConfig(registrationUnitId) : null;
+  const registrationUnitLabel = registrationUnitId ? getPsfUnitDisplayName(registrationUnitId) : null;
   const [step, setStep] = useState<Step>('phone');
   const [phone, setPhone] = useState('');
   const [cpf, setCpf] = useState('');
@@ -68,8 +79,7 @@ function PwaLoginForm() {
     fetchCurrentUser(session.accessToken)
       .then((user) => {
         if (cancelled) return;
-        const destination =
-          returnPath && returnPath.startsWith('/app') ? returnPath : resolveCitizenPwaHome(user.menuKeys);
+        const destination = resolveCitizenDestination(user, returnPath);
         router.replace(destination);
       })
       .catch(() => {
@@ -109,8 +119,7 @@ function PwaLoginForm() {
     }
 
     const session = await refreshCitizenSession(result.access_token, user);
-    const destination =
-      returnPath && returnPath.startsWith('/app') ? returnPath : resolveCitizenPwaHome(session.user.menuKeys);
+    const destination = resolveCitizenDestination(session.user, returnPath);
     router.push(destination);
     router.refresh();
   }
@@ -177,6 +186,7 @@ function PwaLoginForm() {
             <>
               <h1>Seu celular</h1>
               <p className="login-copy">Informe o número com DDD para acessar o aplicativo.</p>
+              {registrationUnitLabel ? <LoginUnitBadge label={registrationUnitLabel} /> : null}
               <div className="login-form">
                 <label>
                   Celular
@@ -216,6 +226,14 @@ function PwaLoginForm() {
                     autoFocus
                   />
                 </label>
+                {registrationUnit ? (
+                  <p className="pwa-login-unit pwa-login-unit--field">
+                    <span className="pwa-login-unit__label">Cadastro vinculado a</span>
+                    <strong>
+                      {registrationUnit.label} {registrationUnit.subtitle}
+                    </strong>
+                  </p>
+                ) : null}
                 <div className="pwa-lgpd-box">
                   <p className="pwa-lgpd-box__title">Privacidade e proteção de dados (LGPD)</p>
                   <p className="pwa-lgpd-box__text">{LGPD_TEXT}</p>

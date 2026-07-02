@@ -34,6 +34,12 @@ export function getPsfUnitConfig(psfId: PsfId): PsfConfig | null {
   return getPsfById(psfId);
 }
 
+export function getPsfUnitDisplayName(psfId: PsfId) {
+  const psf = getPsfById(psfId);
+  if (!psf) return null;
+  return `${psf.label} ${psf.subtitle}`;
+}
+
 export function listPsfUnits() {
   return PSF_OPTIONS.filter((item) => item.bookingEnabled);
 }
@@ -43,7 +49,7 @@ export function buildUnitManifest(psfId: PsfId, origin: string) {
   if (!psf) return null;
 
   const scope = `${unitBasePath(psfId)}/`;
-  const startUrl = unitPath(psfId, '/agendamento');
+  const startUrl = unitPath(psfId);
 
   return {
     id: `${origin}${unitBasePath(psfId)}`,
