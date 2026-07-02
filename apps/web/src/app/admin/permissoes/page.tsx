@@ -7,11 +7,37 @@ import { getStoredAccessToken } from '../../../lib/api';
 
 import { getRoleLabel, PERMISSION_MATRIX_ROLES } from '@zeladoria/shared';
 
+type PermissionMatrix = Record<string, Record<string, boolean>>;
+
+function cloneMatrix(source: PermissionMatrix): PermissionMatrix {
+  return JSON.parse(JSON.stringify(source)) as PermissionMatrix;
+}
+
+function toggleMatrixCell(source: PermissionMatrix, role: string, menuKey: string): PermissionMatrix {
+  const next = cloneMatrix(source);
+  next[role] ??= {};
+  next[role][menuKey] = !Boolean(next[role][menuKey]);
+  return next;
+}
+
+function buildSavePayload(catalog: Array<{ key: string }>, working: PermissionMatrix): PermissionMatrix {
+  const payload: PermissionMatrix = {};
+
+  for (const role of PERMISSION_MATRIX_ROLES) {
+    payload[role] = {};
+    for (const item of catalog) {
+      payload[role][item.key] = Boolean(working[role]?.[item.key]);
+    }
+  }
+
+  return payload;
+}
+
 export default function AdminPermissionsPage() {
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [draft, setDraft] = useState<Record<string, Record<string, boolean>> | null>(null);
+  const [draft, setDraft] = useState<PermissionMatrix | null>(null);
 
   const permissions = useQuery({
     queryKey: ['menu-permissions'],
@@ -19,7 +45,8 @@ export default function AdminPermissionsPage() {
     staleTime: 30_000
   });
 
-  const matrix = draft ?? permissions.data?.matrix ?? {};
+  const serverMatrix = permissions.data?.matrix ?? {};
+  const matrix = draft ?? serverMatrix;
   const catalog = permissions.data?.catalog ?? [];
   const roles = PERMISSION_MATRIX_ROLES;
 
@@ -33,11 +60,9 @@ export default function AdminPermissionsPage() {
   }, [catalog]);
 
   const saveMutation = useMutation({
-    mutationFn: () => {
-      const payload: Record<string, Record<string, boolean>> = {};
-      for (const role of PERMISSION_MATRIX_ROLES) {
-        if (matrix[role]) payload[role] = matrix[role];
-      }
+    mutationFn: async () => {
+      const working = draft ?? serverMatrix;
+      const payload = buildSavePayload(catalog, working);
       return saveMenuPermissionsMatrix(payload, getStoredAccessToken());
     },
     onSuccess: async () => {
@@ -46,20 +71,26 @@ export default function AdminPermissionsPage() {
       setError(null);
       await queryClient.invalidateQueries({ queryKey: ['menu-permissions'] });
     },
-    onError: () => setError('Não foi possível salvar as permissões.')
+    onError: async (err) => {
+      setSuccess(null);
+      setError(err instanceof Error ? err.message : 'Não foi possível salvar as permissões.');
+    }
   });
 
   function toggle(role: string, menuKey: string) {
     if (!PERMISSION_MATRIX_ROLES.includes(role as (typeof PERMISSION_MATRIX_ROLES)[number])) return;
+
+    setError(null);
+    setSuccess(null);
+
     setDraft((current) => {
-      const base = structuredClone(current ?? matrix);
-      return {
-        ...base,
-        [role]: {
-          ...base[role],
-          [menuKey]: !Boolean(base[role]?.[menuKey])
-        }
-      };
+      const baseline =
+        current ??
+        queryClient.getQueryData<Awaited<ReturnType<typeof fetchMenuPermissionsMatrix>>>(['menu-permissions'])
+          ?.matrix ??
+        serverMatrix;
+
+      return toggleMatrixCell(baseline, role, menuKey);
     });
   }
 
@@ -67,6 +98,14 @@ export default function AdminPermissionsPage() {
     return (
       <section className="panel">
         <p>Carregando permissões...</p>
+      </section>
+    );
+  }
+
+  if (permissions.isError) {
+    return (
+      <section className="panel admin-page">
+        <p className="login-error">Não foi possível carregar as permissões. Recarregue a página.</p>
       </section>
     );
   }
@@ -114,15 +153,24 @@ export default function AdminPermissionsPage() {
                 {items.map((item) => (
                   <tr key={item.key}>
                     <td>{item.label}</td>
-                    {roles.map((role) => (
-                      <td key={`${role}-${item.key}`}>
-                        <input
-                          type="checkbox"
-                          checked={Boolean(matrix[role]?.[item.key])}
-                          onChange={() => toggle(role, item.key)}
-                        />
-                      </td>
-                    ))}
+                    {roles.map((role) => {
+                      const checked = Boolean(matrix[role]?.[item.key]);
+                      return (
+                        <td
+                          key={`${role}-${item.key}`}
+                          className="permissions-table__cell-toggle"
+                          onClick={() => toggle(role, item.key)}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            readOnly
+                            tabIndex={-1}
+                            aria-label={`${item.label} — ${getRoleLabel(role)}`}
+                          />
+                        </td>
+                      );
+                    })}
                   </tr>
                 ))}
               </tbody>
@@ -132,9 +180,23 @@ export default function AdminPermissionsPage() {
       ))}
 
       <div className="form-actions">
-        <button type="button" disabled={saveMutation.isPending} onClick={() => saveMutation.mutate()}>
+        <button type="button" disabled={saveMutation.isPending || !draft} onClick={() => saveMutation.mutate()}>
           {saveMutation.isPending ? 'Salvando...' : 'Salvar permissões'}
         </button>
+        {draft ? (
+          <button
+            type="button"
+            className="btn-secondary"
+            disabled={saveMutation.isPending}
+            onClick={() => {
+              setDraft(null);
+              setError(null);
+              setSuccess(null);
+            }}
+          >
+            Descartar alterações
+          </button>
+        ) : null}
       </div>
     </section>
   );
