@@ -206,7 +206,7 @@ export async function fetchAvailableTurnos(psf: PsfConfig, servicoId: number, da
     {
       servico: servicoId,
       empresa: psf.empresaId,
-      data
+      data: date
     }
   );
 

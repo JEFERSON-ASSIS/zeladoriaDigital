@@ -209,7 +209,7 @@ export default function SchedulingPage() {
         serviceKind: selectedService.kind,
         data: selectedDay.date,
         hora: needsTime ? selectedTime : undefined,
-        turno: needsTurno ? selectedTurno : undefined
+        turno: needsTurno && selectedTurno ? selectedTurno : undefined
       });
 
       if (result.id && psf) {
