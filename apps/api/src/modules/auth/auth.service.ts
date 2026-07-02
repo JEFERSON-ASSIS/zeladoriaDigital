@@ -93,7 +93,7 @@ export class AuthService {
     const requestedUnit = healthUnitPsfId as HealthUnitPsfId | undefined;
 
     if (!cpf) {
-      const citizen = await this.citizensService.findByPhone(normalizedPhone);
+      let citizen = await this.citizensService.findByPhone(normalizedPhone);
       if (!citizen?.cpf || !citizen.lgpdAcceptedAt) {
         throw new BadRequestException('Complete seu cadastro informando CPF e aceite LGPD.');
       }
