@@ -91,6 +91,7 @@ export function CitizenUnitShell({ children, title, subtitle }: CitizenUnitShell
         className="citizen-app__nav"
         aria-label={`Navegação ${activeUnit.psf.label}`}
         data-nav-count={navItems.length}
+        style={{ '--citizen-nav-count': navItems.length } as React.CSSProperties}
       >
         {navItems.map((item) => {
           const isActive = item.match(pathname);

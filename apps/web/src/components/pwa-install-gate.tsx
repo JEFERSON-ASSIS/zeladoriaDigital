@@ -131,11 +131,11 @@ export function PwaInstallGate({
   );
 }
 
-export function usePwaDisplayMode(isUnitRoute = false) {
+export function usePwaDisplayMode(skipInstallGate = false) {
   const [mode, setMode] = useState<'loading' | 'standalone' | 'gate' | 'preview' | 'browser'>('loading');
 
   useEffect(() => {
-    if (isUnitRoute) {
+    if (skipInstallGate) {
       setMode(isStandaloneMode() ? 'standalone' : 'browser');
       return;
     }
@@ -152,7 +152,7 @@ export function usePwaDisplayMode(isUnitRoute = false) {
     }
 
     setMode('gate');
-  }, [isUnitRoute]);
+  }, [skipInstallGate]);
 
   const markInstalled = useCallback(() => {
     if (isStandaloneMode()) {

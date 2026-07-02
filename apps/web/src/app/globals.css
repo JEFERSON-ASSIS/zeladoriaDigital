@@ -1799,6 +1799,30 @@ body:has(.citizen-pwa-root) {
   box-shadow: 0 -8px 32px rgba(15, 23, 42, 0.08);
 }
 
+.citizen-app__nav[data-nav-count='1'] {
+  --citizen-nav-count: 1;
+}
+
+.citizen-app__nav[data-nav-count='2'] {
+  --citizen-nav-count: 2;
+}
+
+.citizen-app__nav[data-nav-count='3'] {
+  --citizen-nav-count: 3;
+}
+
+.citizen-app__nav[data-nav-count='4'] {
+  --citizen-nav-count: 4;
+}
+
+.citizen-app__nav[data-nav-count='1'],
+.citizen-app__nav[data-nav-count='2'],
+.citizen-app__nav[data-nav-count='3'] {
+  justify-content: center;
+  grid-template-columns: repeat(var(--citizen-nav-count), minmax(80px, 104px));
+  padding-inline: max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right));
+}
+
 .citizen-app__nav-link {
   display: flex;
   flex-direction: column;
@@ -3520,6 +3544,14 @@ html.pwa-standalone body {
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   border-top: 0.5px solid var(--native-separator);
   box-shadow: none;
+}
+
+.citizen-pwa-root .citizen-app--native .citizen-app__nav[data-nav-count='1'],
+.citizen-pwa-root .citizen-app--native .citizen-app__nav[data-nav-count='2'],
+.citizen-pwa-root .citizen-app--native .citizen-app__nav[data-nav-count='3'] {
+  justify-content: center;
+  grid-template-columns: repeat(var(--citizen-nav-count), minmax(80px, 104px));
+  padding-inline: max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right));
 }
 
 .citizen-pwa-root .citizen-app--native .citizen-app__nav-link {
