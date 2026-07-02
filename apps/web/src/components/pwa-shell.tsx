@@ -1,11 +1,15 @@
 'use client';
 
 import { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { PwaInstallGate, usePwaDisplayMode } from './pwa-install-gate';
 import { registerPwaServiceWorker } from '../lib/pwa';
+import { isUnitPwaPath } from '../lib/psf-unit';
 
 export function PwaShell({ children }: { children: React.ReactNode }) {
-  const { mode, markInstalled, enterBrowserMode } = usePwaDisplayMode();
+  const pathname = usePathname();
+  const isUnitRoute = isUnitPwaPath(pathname);
+  const { mode, markInstalled, enterBrowserMode } = usePwaDisplayMode(isUnitRoute);
 
   useEffect(() => {
     void registerPwaServiceWorker();

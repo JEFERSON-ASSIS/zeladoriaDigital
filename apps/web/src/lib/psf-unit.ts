@@ -13,6 +13,10 @@ export function parsePsfIdFromPath(pathname: string): PsfId | null {
   return match[1];
 }
 
+export function isUnitPwaPath(pathname: string) {
+  return parsePsfIdFromPath(pathname) !== null;
+}
+
 export function unitBasePath(psfId: PsfId) {
   return `${PWA_SCOPE}/unidade/${psfId}`;
 }

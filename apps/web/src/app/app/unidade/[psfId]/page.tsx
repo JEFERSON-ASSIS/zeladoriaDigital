@@ -1,9 +1,7 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { CitizenUnitShell } from '../../../../components/citizen-unit-shell';
 import { usePsfUnit } from '../../../../components/psf-unit-provider';
 import { getSession } from '../../../../lib/auth';
 import { buildPwaLoginUrl } from '../../../../lib/pwa';
@@ -14,37 +12,24 @@ export default function PsfUnitLandingPage() {
 
   useEffect(() => {
     if (!unit) return;
-    if (!getSession()) {
-      router.replace(buildPwaLoginUrl(unit.path()));
+
+    const session = getSession();
+    if (!session) {
+      router.replace(buildPwaLoginUrl(unit.path('/agendamento')));
+      return;
     }
+
+    router.replace(unit.path('/agendamento'));
   }, [router, unit]);
 
   if (!unit) return null;
 
   return (
-    <CitizenUnitShell title={unit.psf.label} subtitle={unit.psf.subtitle}>
-      <section className="citizen-unit-landing">
-        <div className="citizen-unit-landing__badge">{unit.psf.label}</div>
-        <h3>Agendamento de consultas</h3>
-        <p>
-          Instale este atalho na tela inicial do celular para agendar e consultar suas visitas diretamente em{' '}
-          <strong>{unit.psf.label}</strong>.
-        </p>
-
-        <div className="citizen-unit-landing__actions">
-          <Link href={unit.path('/agendamento')} className="btn-primary citizen-empty-state__btn">
-            Agendar consulta
-          </Link>
-          <Link href={unit.path('/meus-agendamentos')} className="btn-secondary citizen-empty-state__btn">
-            Minhas consultas
-          </Link>
-        </div>
-
-        <p className="citizen-unit-landing__hint">
-          Dica: abra no Chrome ou Safari, toque em <strong>Instalar app</strong> ou <strong>Adicionar à Tela de Início</strong>.
-          O ícone na área de trabalho abrirá sempre esta unidade.
-        </p>
-      </section>
-    </CitizenUnitShell>
+    <main className="pwa-splash-screen" aria-busy="true" aria-label={`Abrindo ${unit.psf.label}`}>
+      <img src="/icons/icon-192.png" alt="" className="pwa-splash-screen__logo" width={120} height={120} />
+      <h1 className="pwa-splash-screen__title">{unit.psf.label}</h1>
+      <p className="pwa-splash-screen__tagline">{unit.psf.subtitle}</p>
+      <div className="pwa-splash-screen__spinner" aria-hidden />
+    </main>
   );
 }

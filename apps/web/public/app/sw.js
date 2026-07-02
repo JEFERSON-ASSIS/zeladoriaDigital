@@ -1,5 +1,5 @@
 /* Gerado em build — não edite sw.js diretamente; use sw.template.js */
-const CACHE_VERSION = 'prefeitura-pwa-e1Ii1SRqNUD1eRag9RvLl';
+const CACHE_VERSION = 'prefeitura-pwa-7-ys7hqO-TZEgiBtyBzbb';
 const OFFLINE_URL = '/app/offline';
 
 const PRECACHE = [
@@ -38,32 +38,32 @@ const PRECACHE = [
   "/_next/static/chunks/9569-cca5198bb43a52dd.js",
   "/_next/static/chunks/app/layout-d3beed2c4749bb3a.js",
   "/_next/static/chunks/2738-3448c60fe85aa1b1.js",
-  "/_next/static/chunks/8610-6c7c963c114dcb62.js",
-  "/_next/static/chunks/1237-4195e08363973c5f.js",
-  "/_next/static/chunks/1673-3841310468115fde.js",
-  "/_next/static/chunks/app/app/inicio/page-e131392d827953bc.js",
-  "/_next/static/chunks/app/app/layout-190ca15d2a0b0858.js",
-  "/_next/static/chunks/app/app/login/page-f3d06df763f83dae.js",
-  "/_next/static/chunks/9837-f42ed1ab74252f8c.js",
-  "/_next/static/chunks/140-95afa36ed4ce56df.js",
-  "/_next/static/chunks/app/app/minhas-solicitacoes/page-58b63e4c3b5f4c9f.js",
-  "/_next/static/chunks/5345-e7e545459fb08d33.js",
-  "/_next/static/chunks/7000-019608a8bd64e0c4.js",
-  "/_next/static/chunks/app/app/meus-agendamentos/page-92ff6ae3cbd53d31.js",
-  "/_next/static/chunks/244-6232074c7e797add.js",
+  "/_next/static/chunks/8610-1a8f3ce1c36a5964.js",
+  "/_next/static/chunks/1237-3fd8ff6920767e86.js",
+  "/_next/static/chunks/5345-801d2feb28721316.js",
+  "/_next/static/chunks/244-5b42f4809cc88fd7.js",
   "/_next/static/chunks/app/app/agendamento/page-e9940e2f928b9ea5.js",
-  "/_next/static/chunks/6252-66e9f3028c4698bd.js",
+  "/_next/static/chunks/app/app/layout-a739792c9388bbb1.js",
+  "/_next/static/chunks/app/app/login/page-f3d06df763f83dae.js",
+  "/_next/static/chunks/7000-7592570bb5cab1dd.js",
+  "/_next/static/chunks/app/app/meus-agendamentos/page-92ff6ae3cbd53d31.js",
+  "/_next/static/chunks/9837-f42ed1ab74252f8c.js",
+  "/_next/static/chunks/140-4143fda34b5b9e44.js",
+  "/_next/static/chunks/app/app/minhas-solicitacoes/page-58b63e4c3b5f4c9f.js",
+  "/_next/static/chunks/app/app/page-303bb338db236adb.js",
+  "/_next/static/chunks/app/app/offline/page-4f7d416a4eb276bb.js",
+  "/_next/static/chunks/6252-f5124d74001eb583.js",
   "/_next/static/chunks/app/app/nova-ocorrencia/page-754419b9195f2edb.js",
-  "/_next/static/chunks/app/app/page-9af3ddc9f1b098fb.js",
-  "/_next/static/chunks/app/app/offline/page-2e0bfb202ac8cb22.js",
-  "/_next/static/chunks/app/app/saude/page-3e3d82af13dee8a5.js",
-  "/_next/static/chunks/app/app/unidade/[psfId]/meus-agendamentos/page-fa98b3b065c0ceda.js",
-  "/_next/static/chunks/app/app/unidade/[psfId]/layout-a73c0bde0214d66e.js",
+  "/_next/static/chunks/app/app/saude/page-3dead955a7c38223.js",
+  "/_next/static/chunks/1673-41c49c70bc83348c.js",
+  "/_next/static/chunks/app/app/inicio/page-e131392d827953bc.js",
   "/_next/static/chunks/app/app/unidade/[psfId]/agendamento/page-3751dc920e9bfd00.js",
-  "/_next/static/chunks/app/app/unidade/[psfId]/page-6eec84db70fc51c5.js",
+  "/_next/static/chunks/app/app/unidade/[psfId]/layout-94221067aa4af62c.js",
+  "/_next/static/chunks/app/app/unidade/[psfId]/page-d17454ff2fa522b1.js",
+  "/_next/static/chunks/app/app/unidade/[psfId]/meus-agendamentos/page-fa98b3b065c0ceda.js",
   "/_next/static/chunks/polyfills-42372ed130431b0a.js",
-  "/_next/static/e1Ii1SRqNUD1eRag9RvLl/_buildManifest.js",
-  "/_next/static/e1Ii1SRqNUD1eRag9RvLl/_ssgManifest.js"
+  "/_next/static/7-ys7hqO-TZEgiBtyBzbb/_buildManifest.js",
+  "/_next/static/7-ys7hqO-TZEgiBtyBzbb/_ssgManifest.js"
 ];
 
 self.addEventListener('install', (event) => {

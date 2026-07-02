@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { CitizenPwaManifest } from '../../components/citizen-pwa-manifest';
 import { CitizenPwaRouteGuard } from '../../components/citizen-pwa-route-guard';
 import { PwaShell } from '../../components/pwa-shell';
 
@@ -32,7 +33,7 @@ export const viewport: Viewport = {
 export default function AppPwaLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="citizen-pwa-root">
-      <link rel="manifest" href="/app/manifest.json" />
+      <CitizenPwaManifest />
       <meta name="theme-color" content="#f2f2f7" />
       <PwaShell>
         <CitizenPwaRouteGuard>{children}</CitizenPwaRouteGuard>
