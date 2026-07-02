@@ -70,19 +70,22 @@ model User {
 }
 
 model Citizen {
-  id              String    @id @default(cuid())
-  name            String
-  email           String?   @unique
-  password        String?
-  phone           String?
-  cpf             String?   @unique
-  lgpdAcceptedAt  DateTime?
-  municipalityId  String?
-  municipality    Municipality? @relation(fields: [municipalityId], references: [id])
-  occurrences     Occurrence[]
+  id               String    @id @default(cuid())
+  name             String
+  email            String?   @unique
+  password         String?
+  phone            String?
+  cpf              String?   @unique
+  lgpdAcceptedAt   DateTime?
+  healthUnitPsfId  String?
+  municipalityId   String?
+  municipality     Municipality? @relation(fields: [municipalityId], references: [id])
+  occurrences      Occurrence[]
   pushSubscriptions CitizenPushSubscription[]
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([healthUnitPsfId])
 }
 
 model Department {

@@ -1,4 +1,5 @@
 import { buildUnitManifest, isPsfId } from '../../../../lib/psf-unit';
+import { resolvePublicOrigin } from '../../../../lib/public-origin';
 
 export async function GET(request: Request, context: { params: { psfId: string } }) {
   const psfId = context.params.psfId;
@@ -6,8 +7,7 @@ export async function GET(request: Request, context: { params: { psfId: string }
     return new Response('Unidade não encontrada', { status: 404 });
   }
 
-  const url = new URL(request.url);
-  const origin = `${url.protocol}//${url.host}`;
+  const origin = resolvePublicOrigin(request);
   const manifest = buildUnitManifest(psfId, origin);
 
   if (!manifest) {
@@ -17,7 +17,7 @@ export async function GET(request: Request, context: { params: { psfId: string }
   return Response.json(manifest, {
     headers: {
       'Content-Type': 'application/manifest+json; charset=utf-8',
-      'Cache-Control': 'public, max-age=3600'
+      'Cache-Control': 'public, max-age=300'
     }
   });
 }

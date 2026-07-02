@@ -2,9 +2,9 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { CitizenProductLogo } from '../../../../components/brand-logo';
-import { fetchCurrentUser } from '../../../../lib/auth-api';
-import { getSession } from '../../../../lib/auth';
+import { CitizenProductLogo } from '../../../components/brand-logo';
+import { fetchCurrentUser } from '../../../lib/auth-api';
+import { getSession } from '../../../lib/auth';
 import {
   citizenAccess,
   formatCpf,
@@ -12,9 +12,10 @@ import {
   getLastCitizenPhone,
   lookupCitizenPhone,
   onlyDigits
-} from '../../../../lib/citizen-access-api';
-import { refreshCitizenSession, resolveCitizenPwaHome } from '../../../../lib/citizen-pwa-access';
-import { buildPwaLoginUrl } from '../../../../lib/pwa';
+} from '../../../lib/citizen-access-api';
+import { refreshCitizenSession, resolveCitizenPwaHome } from '../../../lib/citizen-pwa-access';
+import { buildPwaLoginUrl } from '../../../lib/pwa';
+import { parsePsfIdFromPath } from '../../../lib/psf-unit';
 
 const LGPD_TEXT = `A Prefeitura na Mão trata seus dados pessoais (CPF e celular) para identificar você no aplicativo, registrar solicitações urbanas, agendamentos de saúde e comunicações relacionadas aos serviços públicos.
 
@@ -45,6 +46,7 @@ function PwaLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const returnPath = searchParams.get('return');
+  const registrationUnitId = returnPath ? parsePsfIdFromPath(returnPath) : null;
   const [step, setStep] = useState<Step>('phone');
   const [phone, setPhone] = useState('');
   const [cpf, setCpf] = useState('');
@@ -70,7 +72,12 @@ function PwaLoginForm() {
   }, []);
 
   async function completeAccess(accessPhone: string, accessCpf?: string, accessLgpd = false) {
-    const result = await citizenAccess(accessPhone, accessCpf, accessLgpd);
+    const result = await citizenAccess(
+      accessPhone,
+      accessCpf,
+      accessLgpd,
+      registrationUnitId ?? undefined
+    );
     let user;
     try {
       user = await fetchCurrentUser(result.access_token);

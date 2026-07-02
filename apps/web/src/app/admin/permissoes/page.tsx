@@ -52,10 +52,14 @@ export default function AdminPermissionsPage() {
   function toggle(role: string, menuKey: string) {
     if (!PERMISSION_MATRIX_ROLES.includes(role as (typeof PERMISSION_MATRIX_ROLES)[number])) return;
     setDraft((current) => {
-      const base = current ?? structuredClone(matrix);
-      base[role] ??= {};
-      base[role][menuKey] = !base[role][menuKey];
-      return base;
+      const base = structuredClone(current ?? matrix);
+      return {
+        ...base,
+        [role]: {
+          ...base[role],
+          [menuKey]: !Boolean(base[role]?.[menuKey])
+        }
+      };
     });
   }
 

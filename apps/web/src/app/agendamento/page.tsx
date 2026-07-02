@@ -7,17 +7,14 @@ import { CitizenShell } from '../../components/citizen-shell';
 import { CitizenUnitShell } from '../../components/citizen-unit-shell';
 import { usePsfUnit } from '../../components/psf-unit-provider';
 import { buildPwaLoginUrl, pwaPath } from '../../lib/pwa';
-import { PsfSelectionFlow } from '../../components/psf-selection-flow';
 import { getAvailableServices, type PsfConfig, type ServiceKind } from '../../lib/scheduling/psf-config';
 import {
   formatCpf,
   formatPhone,
   getPatientProfile,
   getSavedPsfConfig,
-  getSavedPsfId,
   onlyDigits,
   savePatientProfile,
-  savePsfChoice,
   type PatientProfile
 } from '../../lib/scheduling/psf-storage';
 import {
@@ -27,7 +24,6 @@ import {
   SchedulingApiError,
   type AvailableDay
 } from '../../lib/scheduling/scheduling-api';
-import type { PsfId } from '../../lib/scheduling/psf-config';
 import { recordBookingHistory } from '../../lib/scheduling/scheduling-history';
 
 type Step = 'psf' | 'booking' | 'success';
@@ -70,13 +66,11 @@ export default function SchedulingPage() {
       setPsf(unit.psf);
       setStep('booking');
     } else {
-      const savedId = getSavedPsfId();
       const savedPsf = getSavedPsfConfig();
       if (savedPsf) {
         setPsf(savedPsf);
         setStep('booking');
-      }
-      if (!savedId) {
+      } else {
         setStep('psf');
       }
     }
@@ -92,15 +86,6 @@ export default function SchedulingPage() {
       }));
     }
   }, [router, unit]);
-
-  function handlePsfConfirmed(psfId: PsfId) {
-    savePsfChoice(psfId);
-    const config = getSavedPsfConfig();
-    if (!config) return;
-    setPsf(config);
-    setStep('booking');
-    setError(null);
-  }
 
   async function loadDays() {
     if (!psf || !selectedService) return;
@@ -224,8 +209,13 @@ export default function SchedulingPage() {
 
   if (step === 'psf') {
     return (
-      <Shell title="Agendamento" subtitle="Escolha sua unidade de saúde para continuar.">
-        <PsfSelectionFlow onConfirmed={handlePsfConfirmed} />
+      <Shell title="Agendamento" subtitle="Use o link da sua unidade de saúde para agendar.">
+        <section className="panel scheduling-panel">
+          <p className="scheduling-copy">
+            Seu cadastro ainda não está vinculado a uma unidade ou você entrou pelo app geral.
+            Acesse o link oficial do PSF (PSF 1, PSF 2 ou UBS Rural) para se cadastrar e agendar.
+          </p>
+        </section>
       </Shell>
     );
   }

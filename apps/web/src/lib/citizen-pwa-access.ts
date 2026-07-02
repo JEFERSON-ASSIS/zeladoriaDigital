@@ -64,10 +64,23 @@ export async function loadCitizenMenuKeys(accessToken: string): Promise<MenuKey[
 }
 
 export async function refreshCitizenSession(accessToken: string, user: AuthUser): Promise<AuthSession> {
-  const menuKeys = await loadCitizenMenuKeys(accessToken);
+  let nextUser = user;
+
+  try {
+    const fresh = await fetchCurrentUser(accessToken);
+    nextUser = { ...user, ...fresh, menuKeys: fresh.menuKeys ?? user.menuKeys };
+  } catch {
+    try {
+      const menuKeys = await fetchMyMenuPermissions(accessToken);
+      nextUser = { ...user, menuKeys };
+    } catch {
+      // Mantém usuário informado pelo login.
+    }
+  }
+
   const session: AuthSession = {
     accessToken,
-    user: { ...user, menuKeys }
+    user: nextUser
   };
   setSession(session);
   return session;

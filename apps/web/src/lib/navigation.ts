@@ -70,6 +70,9 @@ export function isNavItemActive(pathname: string, href: string) {
   if (href === '/admin/avisos') {
     return pathname.startsWith('/admin/avisos');
   }
+  if (href === '/admin/cidadaos-saude') {
+    return pathname.startsWith('/admin/cidadaos-saude');
+  }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 

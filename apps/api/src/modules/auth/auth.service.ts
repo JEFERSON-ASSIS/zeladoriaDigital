@@ -6,6 +6,7 @@ import { CitizensService } from '../citizens/citizens.service';
 import { PermissionsService } from '../permissions/permissions.service';
 import { UserRole } from '@prisma/client';
 import { isValidCitizenCpf, normalizeCitizenCpf, normalizeCitizenPhone } from '../citizens/citizen-identifiers';
+import { isHealthUnitPsfId, type HealthUnitPsfId } from '@zeladoria/shared';
 
 const DEV_ACCOUNTS = [
   { id: 'dev-admin', name: 'Administrador', email: 'admin@zeladoria.local', password: 'secret123', role: UserRole.ADMIN },
@@ -82,13 +83,26 @@ export class AuthService {
     };
   }
 
-  async citizenAccess(phone: string, cpf?: string, lgpdAccepted = false) {
+  async citizenAccess(phone: string, cpf?: string, lgpdAccepted = false, healthUnitPsfId?: string) {
     const normalizedPhone = normalizeCitizenPhone(phone);
+
+    if (healthUnitPsfId && !isHealthUnitPsfId(healthUnitPsfId)) {
+      throw new BadRequestException('Unidade de saúde inválida');
+    }
+
+    const requestedUnit = healthUnitPsfId as HealthUnitPsfId | undefined;
 
     if (!cpf) {
       const citizen = await this.citizensService.findByPhone(normalizedPhone);
       if (!citizen?.cpf || !citizen.lgpdAcceptedAt) {
         throw new BadRequestException('Complete seu cadastro informando CPF e aceite LGPD.');
+      }
+      if (
+        requestedUnit &&
+        citizen.healthUnitPsfId &&
+        citizen.healthUnitPsfId !== requestedUnit
+      ) {
+        throw new UnauthorizedException('Este cadastro pertence a outra unidade de saúde.');
       }
       return this.issueToken({ ...citizen, role: 'CIDADAO' as const });
     }
@@ -106,11 +120,20 @@ export class AuthService {
       if (storedPhone !== normalizedPhone) {
         throw new UnauthorizedException('CPF ou celular incorretos');
       }
+      if (citizen.healthUnitPsfId && requestedUnit && citizen.healthUnitPsfId !== requestedUnit) {
+        throw new UnauthorizedException('Este cadastro pertence a outra unidade de saúde.');
+      }
+      if (!citizen.healthUnitPsfId && requestedUnit) {
+        citizen = await this.citizensService.assignHealthUnit(citizen.id, requestedUnit);
+      }
     } else {
+      if (!requestedUnit) {
+        throw new BadRequestException('Cadastre-se pelo link da sua unidade de saúde.');
+      }
       if (!lgpdAccepted) {
         throw new BadRequestException('É necessário aceitar os termos de privacidade');
       }
-      citizen = await this.citizensService.registerAccess(normalizedPhone, normalizedCpf);
+      citizen = await this.citizensService.registerAccess(normalizedPhone, normalizedCpf, requestedUnit);
     }
 
     if (!citizen.lgpdAcceptedAt) {
@@ -154,6 +177,7 @@ export class AuthService {
           email: citizen.email ?? '',
           phone: citizen.phone ?? '',
           cpf: citizen.cpf ?? '',
+          healthUnitPsfId: citizen.healthUnitPsfId,
           lgpdAcceptedAt: citizen.lgpdAcceptedAt,
           role: UserRole.CIDADAO,
           menuKeys

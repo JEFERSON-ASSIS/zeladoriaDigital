@@ -42,5 +42,8 @@ export async function fetchCurrentUser(accessToken: string) {
     departmentId?: string | null;
     department?: { id: string; name: string } | null;
     menuKeys?: MenuKey[];
+    phone?: string;
+    cpf?: string;
+    healthUnitPsfId?: string | null;
   }>;
 }

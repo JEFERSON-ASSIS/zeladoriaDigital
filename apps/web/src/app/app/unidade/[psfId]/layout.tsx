@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { notFound } from 'next/navigation';
 import { CitizenPwaRouteGuard } from '../../../../components/citizen-pwa-route-guard';
+import { CitizenHealthUnitGuard } from '../../../../components/citizen-health-unit-guard';
 import { PsfUnitProvider } from '../../../../components/psf-unit-provider';
 import { PwaShell } from '../../../../components/pwa-shell';
 import { UnitPwaHead } from '../../../../components/unit-pwa-head';
@@ -52,7 +53,9 @@ export default function PsfUnitLayout({ children, params }: UnitLayoutProps) {
       <UnitPwaHead psfId={params.psfId} title={psf.label} />
       <PwaShell>
         <CitizenPwaRouteGuard>
-          <PsfUnitProvider psfId={params.psfId}>{children}</PsfUnitProvider>
+          <CitizenHealthUnitGuard psfId={params.psfId}>
+            <PsfUnitProvider psfId={params.psfId}>{children}</PsfUnitProvider>
+          </CitizenHealthUnitGuard>
         </CitizenPwaRouteGuard>
       </PwaShell>
     </div>

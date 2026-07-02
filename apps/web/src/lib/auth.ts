@@ -10,6 +10,9 @@ export type AuthUser = {
   departmentId?: string | null;
   department?: { id: string; name: string } | null;
   menuKeys?: MenuKey[];
+  phone?: string;
+  cpf?: string;
+  healthUnitPsfId?: string | null;
 };
 
 export type AuthSession = {

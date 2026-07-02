@@ -28,6 +28,11 @@ export async function registerPwaServiceWorker() {
     return null;
   }
 
+  const pathname = window.location.pathname;
+  if (/^\/app\/unidade\/psf[123](?:\/|$)/.test(pathname)) {
+    return null;
+  }
+
   try {
     const existing = await navigator.serviceWorker.getRegistration(`${PWA_SCOPE}/`);
     if (existing) return existing;

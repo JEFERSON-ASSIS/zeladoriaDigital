@@ -4,6 +4,7 @@ import * as bcrypt from 'bcryptjs';
 import { CreateCitizenDto } from './dto/create-citizen.dto';
 import { UpdateCitizenDto } from './dto/update-citizen.dto';
 import { normalizeCitizenCpf, normalizeCitizenPhone } from './citizen-identifiers';
+import type { HealthUnitPsfId } from '@zeladoria/shared';
 
 @Injectable()
 export class CitizensService {
@@ -38,18 +39,29 @@ export class CitizensService {
     return this.prisma.citizen.findUnique({ where: { id } });
   }
 
-  findAll() {
-    return this.prisma.citizen.findMany();
+  findAll(healthUnitPsfId?: HealthUnitPsfId) {
+    return this.prisma.citizen.findMany({
+      where: healthUnitPsfId ? { healthUnitPsfId } : undefined,
+      orderBy: { createdAt: 'desc' }
+    });
   }
 
-  registerAccess(phone: string, cpf: string) {
+  registerAccess(phone: string, cpf: string, healthUnitPsfId: HealthUnitPsfId) {
     return this.prisma.citizen.create({
       data: {
         name: 'Cidadão',
         phone: normalizeCitizenPhone(phone),
         cpf: normalizeCitizenCpf(cpf),
+        healthUnitPsfId,
         lgpdAcceptedAt: new Date()
       }
+    });
+  }
+
+  assignHealthUnit(id: string, healthUnitPsfId: HealthUnitPsfId) {
+    return this.prisma.citizen.update({
+      where: { id },
+      data: { healthUnitPsfId }
     });
   }
 

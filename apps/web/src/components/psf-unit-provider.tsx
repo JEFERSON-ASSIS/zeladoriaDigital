@@ -1,8 +1,7 @@
 'use client';
 
-import { createContext, useContext, useEffect, useMemo } from 'react';
+import { createContext, useContext, useMemo } from 'react';
 import type { PsfConfig, PsfId } from '../lib/scheduling/psf-config';
-import { savePsfChoice } from '../lib/scheduling/psf-storage';
 import { getPsfUnitConfig, unitBasePath, unitPath } from '../lib/psf-unit';
 
 export type PsfUnitContextValue = {
@@ -26,10 +25,6 @@ export function PsfUnitProvider({ psfId, children }: { psfId: PsfId; children: R
       path: (segment = '') => unitPath(psfId, segment)
     };
   }, [psf, psfId]);
-
-  useEffect(() => {
-    if (psfId) savePsfChoice(psfId);
-  }, [psfId]);
 
   if (!value) return null;
 

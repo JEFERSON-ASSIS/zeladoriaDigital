@@ -1,4 +1,5 @@
-import { IsBoolean, IsOptional, IsString, Length, Matches } from 'class-validator';
+import { IsBoolean, IsIn, IsOptional, IsString, Length, Matches } from 'class-validator';
+import { HEALTH_UNIT_PSF_IDS } from '@zeladoria/shared';
 
 export class CitizenPhoneLookupDto {
   @IsString()
@@ -20,4 +21,9 @@ export class CitizenAccessDto {
   @IsOptional()
   @IsBoolean()
   lgpdAccepted?: boolean;
+
+  @IsOptional()
+  @IsString()
+  @IsIn([...HEALTH_UNIT_PSF_IDS], { message: 'Unidade de saúde inválida' })
+  healthUnitPsfId?: string;
 }

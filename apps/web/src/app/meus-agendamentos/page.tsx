@@ -8,13 +8,10 @@ import { CitizenUnitShell } from '../../components/citizen-unit-shell';
 import { usePsfUnit } from '../../components/psf-unit-provider';
 import { buildPwaLoginUrl, pwaPath } from '../../lib/pwa';
 import { CitizenConfirmDialog } from '../../components/citizen-confirm-dialog';
-import { PsfSelectionFlow } from '../../components/psf-selection-flow';
 import {
   getSavedPsfConfig,
-  getSavedPsfId,
   formatCpf,
   getPatientProfile,
-  savePsfChoice,
   onlyDigits
 } from '../../lib/scheduling/psf-storage';
 import {
@@ -35,7 +32,6 @@ import {
 } from '../../lib/scheduling/scheduling-history';
 import { processAppointmentReminders } from '../../lib/scheduling/scheduling-reminders';
 import { SchedulingReminderPrompt } from '../../components/scheduling-reminder-prompt';
-import type { PsfId } from '../../lib/scheduling/psf-config';
 
 const AUTO_REFRESH_MS = 60_000;
 
@@ -117,7 +113,7 @@ export default function MyAppointmentsPage() {
 
     if (unit) {
       setNeedsPsf(false);
-    } else if (!getSavedPsfId()) {
+    } else if (!getSavedPsfConfig()) {
       setNeedsPsf(true);
       setReady(true);
       return;
@@ -154,17 +150,6 @@ export default function MyAppointmentsPage() {
       window.clearInterval(interval);
     };
   }, [ready, search]);
-
-  function handlePsfConfirmed(psfId: PsfId) {
-    savePsfChoice(psfId);
-    setNeedsPsf(false);
-    const profile = getPatientProfile();
-    if (profile?.cpf) {
-      setCpf(profile.cpf);
-      loadHistory(onlyDigits(profile.cpf));
-      void search(profile.cpf);
-    }
-  }
 
   async function handleCancel(item: SchedulingAppointment) {
     const psf = getSavedPsfConfig();
@@ -209,8 +194,13 @@ export default function MyAppointmentsPage() {
 
   if (needsPsf) {
     return (
-      <Shell title="Meus agendamentos" subtitle="Primeiro, informe em qual PSF você se consulta.">
-        <PsfSelectionFlow onConfirmed={handlePsfConfirmed} />
+      <Shell title="Meus agendamentos" subtitle="Use o link da sua unidade de saúde.">
+        <section className="panel scheduling-panel">
+          <p className="scheduling-copy">
+            Seu cadastro ainda não está vinculado a uma unidade. Acesse o link oficial do PSF para consultar
+            agendamentos.
+          </p>
+        </section>
       </Shell>
     );
   }

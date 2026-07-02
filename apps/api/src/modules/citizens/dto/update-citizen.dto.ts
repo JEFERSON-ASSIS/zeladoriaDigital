@@ -1,4 +1,5 @@
-import { IsEmail, IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
+import { IsEmail, IsIn, IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
+import { HEALTH_UNIT_PSF_IDS } from '@zeladoria/shared';
 
 export class UpdateCitizenDto {
   @IsOptional()
@@ -25,4 +26,9 @@ export class UpdateCitizenDto {
   @IsOptional()
   @IsUUID()
   municipalityId?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn([...HEALTH_UNIT_PSF_IDS])
+  healthUnitPsfId?: string | null;
 }

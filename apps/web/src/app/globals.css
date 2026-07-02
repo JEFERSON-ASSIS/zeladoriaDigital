@@ -2106,6 +2106,48 @@ body:has(.citizen-pwa-root) {
   font-size: 0.78rem;
 }
 
+.health-citizens-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.health-citizens-summary__card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid var(--i7-border);
+  border-radius: var(--i7-radius-md);
+  background: var(--i7-bg-secondary);
+}
+
+.health-citizens-summary__card span {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.health-citizens-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.health-citizens-edit {
+  margin-top: 24px;
+  padding: 16px;
+  border: 1px solid var(--i7-border);
+  border-radius: var(--i7-radius-md);
+  background: var(--i7-bg-secondary);
+}
+
+.health-citizens-table td:last-child,
+.health-citizens-table th:last-child {
+  white-space: nowrap;
+}
+
 .scheduling-history {
   margin-top: 16px;
 }

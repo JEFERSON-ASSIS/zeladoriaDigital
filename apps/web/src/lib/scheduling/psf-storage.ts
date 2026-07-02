@@ -1,7 +1,7 @@
 import type { PsfId } from './psf-config';
 import { getPsfById } from './psf-config';
+import { getSession } from '../auth';
 
-const PSF_UNIT_KEY = 'zeladoria.psf.unidade';
 const PATIENT_PROFILE_KEY = 'zeladoria.psf.patient';
 
 export type PatientProfile = {
@@ -11,9 +11,10 @@ export type PatientProfile = {
 };
 
 export function getSavedPsfId(): PsfId | null {
-  if (typeof window === 'undefined') return null;
-  const raw = window.localStorage.getItem(PSF_UNIT_KEY);
-  if (raw === 'psf1' || raw === 'psf2' || raw === 'psf3') return raw;
+  const fromSession = getSession()?.user?.healthUnitPsfId;
+  if (fromSession === 'psf1' || fromSession === 'psf2' || fromSession === 'psf3') {
+    return fromSession;
+  }
   return null;
 }
 
@@ -22,12 +23,12 @@ export function getSavedPsfConfig() {
   return id ? getPsfById(id) : null;
 }
 
-export function savePsfChoice(id: PsfId) {
-  window.localStorage.setItem(PSF_UNIT_KEY, id);
+export function savePsfChoice(_id: PsfId) {
+  // Unidade de saúde fica no cadastro do cidadão (banco), não no localStorage.
 }
 
 export function clearPsfChoice() {
-  window.localStorage.removeItem(PSF_UNIT_KEY);
+  // No-op: apenas admin altera a unidade no painel.
 }
 
 export function getPatientProfile(): PatientProfile | null {

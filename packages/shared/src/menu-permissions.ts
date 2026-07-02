@@ -20,7 +20,8 @@ export type MenuKey =
   | 'nova-ocorrencia'
   | 'minhas-solicitacoes'
   | 'agendamento'
-  | 'meus-agendamentos';
+  | 'meus-agendamentos'
+  | 'cidadaos-saude';
 
 export type MenuCatalogItem = {
   key: MenuKey;
@@ -44,6 +45,7 @@ export const MENU_CATALOG: MenuCatalogItem[] = [
   { key: 'usuarios', label: 'Usuários', href: '/admin/users', group: 'admin' },
   { key: 'permissoes', label: 'Permissões', href: '/admin/permissoes', group: 'admin' },
   { key: 'avisos-app', label: 'Avisos do app', href: '/admin/avisos', group: 'admin' },
+  { key: 'cidadaos-saude', label: 'Cidadãos — Saúde', href: '/admin/cidadaos-saude', group: 'admin' },
   { key: 'transparencia', label: 'Transparência', href: '/transparency', group: 'gestao' },
   { key: 'inicio', label: 'Início (PWA)', href: '/inicio', group: 'cidadao' },
   { key: 'nova-ocorrencia', label: 'Solicitar (PWA)', href: '/nova-ocorrencia', group: 'cidadao' },
@@ -94,8 +96,8 @@ export const DEFAULT_ROLE_MENU_KEYS: Record<
   Exclude<UserRole, 'TRIAGEM'>,
   MenuKey[]
 > = {
-  ADMIN: [...staffMenus, 'configuracoes', 'secretarias', 'usuarios', 'permissoes', 'avisos-app'],
-  PREFEITURA: [...staffMenus, 'avisos-app'],
+  ADMIN: [...staffMenus, 'configuracoes', 'secretarias', 'usuarios', 'permissoes', 'avisos-app', 'cidadaos-saude'],
+  PREFEITURA: [...staffMenus, 'avisos-app', 'cidadaos-saude'],
   SECRETARIA: ['painel', 'ocorrencias', 'ordens-servico', 'alertas', 'mapas', 'usuarios'],
   EQUIPE_CAMPO: ['painel', 'ordens-servico'],
   CIDADAO: ['inicio', 'nova-ocorrencia', 'minhas-solicitacoes', 'agendamento', 'meus-agendamentos']

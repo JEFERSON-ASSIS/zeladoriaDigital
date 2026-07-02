@@ -1,10 +1,11 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { CitizensService } from './citizens.service';
 import { CreateCitizenDto } from './dto/create-citizen.dto';
 import { UpdateCitizenDto } from './dto/update-citizen.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Public } from '../auth/public.decorator';
 import { Roles } from '../auth/roles.decorator';
+import { isHealthUnitPsfId, type HealthUnitPsfId } from '@zeladoria/shared';
 
 @Controller('citizens')
 export class CitizensController {
@@ -12,9 +13,12 @@ export class CitizensController {
 
   @Get()
   @UseGuards(JwtAuthGuard)
-  @Roles('ADMIN', 'PREFEITURA', 'SECRETARIA', 'TRIAGEM')
-  findAll() {
-    return this.citizensService.findAll();
+  @Roles('ADMIN', 'PREFEITURA')
+  findAll(@Query('healthUnitPsfId') healthUnitPsfId?: string) {
+    if (healthUnitPsfId && !isHealthUnitPsfId(healthUnitPsfId)) {
+      throw new BadRequestException('Unidade de saúde inválida');
+    }
+    return this.citizensService.findAll(healthUnitPsfId as HealthUnitPsfId | undefined);
   }
 
   @Public()
@@ -24,7 +28,7 @@ export class CitizensController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Roles('ADMIN', 'PREFEITURA', 'SECRETARIA', 'TRIAGEM')
+  @Roles('ADMIN', 'PREFEITURA')
   @Patch(':id')
   update(@Param('id') id: string, @Body() body: UpdateCitizenDto) {
     return this.citizensService.update(id, body);

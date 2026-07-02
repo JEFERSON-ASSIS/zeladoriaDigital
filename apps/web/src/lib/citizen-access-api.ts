@@ -44,14 +44,28 @@ export async function lookupCitizenPhone(phone: string) {
   return response.json() as Promise<{ registered: boolean }>;
 }
 
-export async function citizenAccess(phone: string, cpf?: string, lgpdAccepted = false) {
-  const payload: { phone: string; cpf?: string; lgpdAccepted?: boolean } = {
+export async function citizenAccess(
+  phone: string,
+  cpf?: string,
+  lgpdAccepted = false,
+  healthUnitPsfId?: string
+) {
+  const payload: {
+    phone: string;
+    cpf?: string;
+    lgpdAccepted?: boolean;
+    healthUnitPsfId?: string;
+  } = {
     phone: onlyDigits(phone)
   };
 
   if (cpf) {
     payload.cpf = onlyDigits(cpf);
     payload.lgpdAccepted = lgpdAccepted;
+  }
+
+  if (healthUnitPsfId) {
+    payload.healthUnitPsfId = healthUnitPsfId;
   }
 
   const response = await fetch(`${API_URL}/auth/citizen/access`, {

@@ -24,7 +24,12 @@ export class AuthController {
   @Public()
   @Post('citizen/access')
   citizenAccess(@Body() body: CitizenAccessDto) {
-    return this.authService.citizenAccess(body.phone, body.cpf, body.lgpdAccepted ?? false);
+    return this.authService.citizenAccess(
+      body.phone,
+      body.cpf,
+      body.lgpdAccepted ?? false,
+      body.healthUnitPsfId
+    );
   }
 
   @Get('me')
