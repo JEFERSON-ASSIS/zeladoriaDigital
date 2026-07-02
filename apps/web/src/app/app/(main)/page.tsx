@@ -2,9 +2,9 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getSession } from '../../lib/auth';
-import { resolveCitizenPwaHome } from '../../lib/citizen-pwa-access';
-import { PWA_LOGIN } from '../../lib/pwa';
+import { getSession } from '../../../lib/auth';
+import { resolveCitizenPwaHome } from '../../../lib/citizen-pwa-access';
+import { PWA_LOGIN } from '../../../lib/pwa';
 
 export default function PwaLauncherPage() {
   const router = useRouter();

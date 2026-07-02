@@ -25,3 +25,17 @@ export function buildPwaLoginUrl(returnPath?: string) {
   if (!returnPath || !returnPath.startsWith(PWA_SCOPE)) return PWA_LOGIN;
   return `${PWA_LOGIN}?return=${encodeURIComponent(returnPath)}`;
 }
+
+const UNIT_PWA_PATH_RE = /^\/app\/unidade\/psf[123](?:\/|$)/;
+
+export function shouldSkipPwaInstallGate(pathname: string, search = '') {
+  if (UNIT_PWA_PATH_RE.test(pathname)) return true;
+  if (pathname === PWA_LOGIN || pathname === '/app/offline') return true;
+
+  if (search) {
+    const returnPath = new URLSearchParams(search).get('return');
+    if (returnPath && UNIT_PWA_PATH_RE.test(returnPath)) return true;
+  }
+
+  return false;
+}

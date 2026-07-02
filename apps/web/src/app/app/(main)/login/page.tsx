@@ -2,9 +2,9 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { CitizenProductLogo } from '../../../components/brand-logo';
-import { fetchCurrentUser } from '../../../lib/auth-api';
-import { getSession } from '../../../lib/auth';
+import { CitizenProductLogo } from '../../../../components/brand-logo';
+import { fetchCurrentUser } from '../../../../lib/auth-api';
+import { getSession } from '../../../../lib/auth';
 import {
   citizenAccess,
   formatCpf,
@@ -12,9 +12,9 @@ import {
   getLastCitizenPhone,
   lookupCitizenPhone,
   onlyDigits
-} from '../../../lib/citizen-access-api';
-import { refreshCitizenSession, resolveCitizenPwaHome } from '../../../lib/citizen-pwa-access';
-import { buildPwaLoginUrl } from '../../../lib/pwa';
+} from '../../../../lib/citizen-access-api';
+import { refreshCitizenSession, resolveCitizenPwaHome } from '../../../../lib/citizen-pwa-access';
+import { buildPwaLoginUrl } from '../../../../lib/pwa';
 
 const LGPD_TEXT = `A Prefeitura na Mão trata seus dados pessoais (CPF e celular) para identificar você no aplicativo, registrar solicitações urbanas, agendamentos de saúde e comunicações relacionadas aos serviços públicos.
 

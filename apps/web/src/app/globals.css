@@ -4721,3 +4721,30 @@ html.pwa-standalone body {
 .citizen-app--unit .citizen-app__nav-label {
   font-size: 0.72rem;
 }
+
+.citizen-unit-install-hint {
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(37, 99, 235, 0.08);
+  border: 0.5px solid rgba(37, 99, 235, 0.18);
+}
+
+.citizen-unit-install-hint__title {
+  margin: 0 0 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--i7-blue);
+}
+
+.citizen-unit-install-hint__steps {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--i7-text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.citizen-unit-install-hint__steps li + li {
+  margin-top: 6px;
+}

@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { CitizenConfirmDialog } from './citizen-confirm-dialog';
 import { BrandMark } from './brand-logo';
+import { UnitInstallHint } from './unit-install-hint';
 import { usePsfUnit } from './psf-unit-provider';
 import { clearSession } from '../lib/auth';
 import { buildPwaLoginUrl } from '../lib/pwa';
@@ -84,6 +85,7 @@ export function CitizenUnitShell({ children, title, subtitle }: CitizenUnitShell
             <p>{subtitle}</p>
           </section>
         ) : null}
+        <UnitInstallHint unitLabel={activeUnit.psf.label} />
         {children}
       </main>
 
