@@ -5240,15 +5240,45 @@ html.pwa-standalone body {
   border: 0.5px solid rgba(37, 99, 235, 0.18);
 }
 
+.pwa-inline-install-hint__header {
+  display: grid;
+  gap: 12px;
+}
+
 .pwa-inline-install-hint__title {
-  margin: 0 0 10px;
+  margin: 0;
   font-size: 0.92rem;
   font-weight: 700;
   color: var(--i7-blue);
 }
 
+.pwa-inline-install-hint__copy {
+  margin: 4px 0 0;
+  color: var(--i7-text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.pwa-inline-install-hint__button {
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--i7-blue);
+  color: #fff;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pwa-inline-install-hint__button:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.3);
+  outline-offset: 2px;
+}
+
 .pwa-inline-install-hint__warn {
-  margin: 0 0 10px;
+  margin: 12px 0 0;
   padding: 10px 12px;
   border-radius: 10px;
   background: rgba(220, 38, 38, 0.08);
@@ -5259,7 +5289,7 @@ html.pwa-standalone body {
 }
 
 .pwa-inline-install-hint__steps {
-  margin: 0;
+  margin: 12px 0 0;
   padding-left: 18px;
   color: var(--i7-text-secondary);
   font-size: 0.82rem;
