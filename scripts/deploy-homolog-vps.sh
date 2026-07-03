@@ -27,8 +27,8 @@ docker build -f docker/web/Dockerfile \
   -t "${WEB_IMAGE}" .
 
 echo "==> Reiniciando serviços Swarm"
-docker service update --force --resolve-image never --image "${API_IMAGE}" prefeitura_zeladoria-api
-docker service update --force --resolve-image never --image "${WEB_IMAGE}" prefeitura_zeladoria-web
+docker service update --force --image "${API_IMAGE}" prefeitura_zeladoria-api
+docker service update --force --image "${WEB_IMAGE}" prefeitura_zeladoria-web
 
 echo "==> Migration (confirmação)"
 sleep 15
