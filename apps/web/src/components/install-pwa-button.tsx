@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { usePwaInstallPrompt } from '../lib/pwa-install';
 
 const DISMISS_KEY = 'zeladoria-pwa-install-dismissed';
 
@@ -27,14 +28,9 @@ export type InstallPWAButtonProps = {
   persistent?: boolean;
 };
 
-type BeforeInstallPromptEvent = Event & {
-  prompt: () => Promise<void> | void;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
-};
-
 export function InstallPWAButton({ variant = 'toast', persistent = false }: InstallPWAButtonProps) {
   const [ready, setReady] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const { canInstall, requestInstall } = usePwaInstallPrompt();
   const [visible, setVisible] = useState(false);
   const [iosMode, setIosMode] = useState(false);
   const [showCard, setShowCard] = useState(false);
@@ -62,28 +58,23 @@ export function InstallPWAButton({ variant = 'toast', persistent = false }: Inst
       return;
     }
 
-    function onBeforeInstallPrompt(event: Event) {
-      event.preventDefault();
-      setDeferredPrompt(event as BeforeInstallPromptEvent);
-      setVisible(true);
-    }
-
     function onAppInstalled() {
       setVisible(false);
-      setDeferredPrompt(null);
     }
 
-    window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt);
     window.addEventListener('appinstalled', onAppInstalled);
 
     const showFallbackTimer = window.setTimeout(() => setVisible(true), ios ? 1200 : 2500);
 
     return () => {
       window.clearTimeout(showFallbackTimer);
-      window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt);
       window.removeEventListener('appinstalled', onAppInstalled);
     };
   }, [ready, variant, persistent]);
+
+  useEffect(() => {
+    if (canInstall && variant === 'toast') setVisible(true);
+  }, [canInstall, variant]);
 
   useEffect(() => {
     if (!visible || variant !== 'toast' || persistent) return;
@@ -92,11 +83,9 @@ export function InstallPWAButton({ variant = 'toast', persistent = false }: Inst
   }, [visible, variant, dismiss, persistent]);
 
   async function handleInstall() {
-    if (deferredPrompt) {
-      await deferredPrompt.prompt();
-      const choice = await deferredPrompt.userChoice;
-      setDeferredPrompt(null);
-      if (choice.outcome === 'accepted') {
+    if (canInstall) {
+      const choice = await requestInstall();
+      if (choice?.outcome === 'accepted') {
         setVisible(false);
         return;
       }
@@ -135,7 +124,7 @@ export function InstallPWAButton({ variant = 'toast', persistent = false }: Inst
         <p>
           {iosMode
             ? 'Toque em Compartilhar e depois em Adicionar à Tela de Início.'
-            : deferredPrompt
+            : canInstall
               ? 'Acesso rápido no celular, como um app nativo.'
               : 'Menu ⋮ do Chrome → Instalar app (não use "Adicionar à tela inicial").'}
         </p>
@@ -143,7 +132,7 @@ export function InstallPWAButton({ variant = 'toast', persistent = false }: Inst
       <div className="pwa-install-toast__actions">
         {!iosMode ? (
           <button type="button" className="pwa-install-toast__install" onClick={() => void handleInstall()}>
-            {deferredPrompt ? 'Instalar' : 'Como instalar'}
+            {canInstall ? 'Instalar' : 'Como instalar'}
           </button>
         ) : null}
         {!persistent ? (

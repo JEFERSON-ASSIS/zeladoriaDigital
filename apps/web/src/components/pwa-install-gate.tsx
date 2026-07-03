@@ -3,11 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { CitizenProductLogo } from './brand-logo';
 import { PWA_BROWSER_MODE_KEY, isPwaEntryRoute } from '../lib/pwa-constants';
-
-type BeforeInstallPromptEvent = Event & {
-  prompt: () => Promise<void> | void;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
-};
+import { usePwaInstallPrompt } from '../lib/pwa-install';
 
 function isStandaloneMode() {
   if (typeof window === 'undefined') return false;
@@ -52,36 +48,27 @@ export function PwaInstallGate({
   onInstalled: () => void;
   onSkip: () => void;
 }) {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const { canInstall, requestInstall } = usePwaInstallPrompt();
   const ios = isIOSDevice();
   const android = isAndroidChrome();
   const insecure = typeof window !== 'undefined' && !window.isSecureContext;
 
   useEffect(() => {
-    function onBeforeInstallPrompt(event: Event) {
-      event.preventDefault();
-      setDeferredPrompt(event as BeforeInstallPromptEvent);
-    }
-
     function onAppInstalled() {
       onInstalled();
     }
 
-    window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt);
     window.addEventListener('appinstalled', onAppInstalled);
     return () => {
-      window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt);
       window.removeEventListener('appinstalled', onAppInstalled);
     };
   }, [onInstalled]);
 
   const handleInstall = useCallback(async () => {
-    if (!deferredPrompt) return;
-    await deferredPrompt.prompt();
-    const choice = await deferredPrompt.userChoice;
-    setDeferredPrompt(null);
+    const choice = await requestInstall();
+    if (!choice) return;
     if (choice.outcome === 'accepted') onInstalled();
-  }, [deferredPrompt, onInstalled]);
+  }, [requestInstall, onInstalled]);
 
   function handleSkip() {
     skipInstallGate();
@@ -118,19 +105,27 @@ export function PwaInstallGate({
             <li>Escolha <strong>Adicionar à Tela de Início</strong></li>
             <li>Feche o Safari e abra pelo ícone na tela inicial</li>
           </ol>
-        ) : deferredPrompt ? (
-          <button type="button" className="btn-primary pwa-install-gate__btn" onClick={() => void handleInstall()}>
-            Instalar aplicativo
-          </button>
         ) : (
-          <ol className="pwa-install-gate__steps">
-            <li>Toque no menu <strong>⋮</strong> do Chrome</li>
-            <li>
-              Escolha <strong>Instalar app</strong> ou <strong>Adicionar à tela inicial</strong>
-            </li>
-            <li>Remova atalhos antigos da tela inicial</li>
-            <li>Abra pelo ícone novo instalado</li>
-          </ol>
+          <>
+            <button
+              type="button"
+              className="btn-primary pwa-install-gate__btn"
+              onClick={() => void handleInstall()}
+              disabled={!canInstall}
+            >
+              Instalar aplicativo
+            </button>
+            {!canInstall ? (
+              <ol className="pwa-install-gate__steps">
+                <li>Toque no menu <strong>⋮</strong> do Chrome</li>
+                <li>
+                  Escolha <strong>Instalar app</strong> ou <strong>Adicionar à tela inicial</strong>
+                </li>
+                <li>Remova atalhos antigos da tela inicial</li>
+                <li>Abra pelo ícone novo instalado</li>
+              </ol>
+            ) : null}
+          </>
         )}
 
         <button type="button" className="pwa-install-gate__skip" onClick={handleSkip}>
