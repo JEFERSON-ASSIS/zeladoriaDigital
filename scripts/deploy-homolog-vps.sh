@@ -5,12 +5,14 @@ set -euo pipefail
 
 REPO_DIR="${REPO_DIR:-/opt/zeladoriaDigital}"
 VAPID_KEY="${VAPID_KEY:-BBgnsD01iawVTAFIv7a36-dflljF9eS5EAytPG6cKgcQi-J_0ZJdgrcLF2S0rLqWebvgMupYPb_DCB6C3G6xI-c}"
-API_IMAGE="ghcr.io/jeferson-assis/zeladoria-api:homolog"
-WEB_IMAGE="ghcr.io/jeferson-assis/zeladoria-web:homolog"
 
 echo "==> Atualizando código em ${REPO_DIR}"
 cd "${REPO_DIR}"
 git pull origin main
+
+DEPLOY_TAG="${DEPLOY_TAG:-$(git rev-parse --short HEAD)}"
+API_IMAGE="zeladoria-api:${DEPLOY_TAG}"
+WEB_IMAGE="zeladoria-web:${DEPLOY_TAG}"
 
 echo "==> Build API"
 docker build -f docker/api/Dockerfile -t "${API_IMAGE}" .
@@ -25,8 +27,8 @@ docker build -f docker/web/Dockerfile \
   -t "${WEB_IMAGE}" .
 
 echo "==> Reiniciando serviços Swarm"
-docker service update --force --image "${API_IMAGE}" prefeitura_zeladoria-api
-docker service update --force --image "${WEB_IMAGE}" prefeitura_zeladoria-web
+docker service update --force --resolve-image never --image "${API_IMAGE}" prefeitura_zeladoria-api
+docker service update --force --resolve-image never --image "${WEB_IMAGE}" prefeitura_zeladoria-web
 
 echo "==> Migration (confirmação)"
 sleep 15
