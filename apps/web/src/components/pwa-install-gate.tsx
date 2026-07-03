@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { CitizenProductLogo } from './brand-logo';
-import { PWA_BROWSER_MODE_KEY } from '../lib/pwa-constants';
+import { PWA_BROWSER_MODE_KEY, isPwaEntryRoute } from '../lib/pwa-constants';
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void> | void;
@@ -55,6 +55,7 @@ export function PwaInstallGate({
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const ios = isIOSDevice();
   const android = isAndroidChrome();
+  const insecure = typeof window !== 'undefined' && !window.isSecureContext;
 
   useEffect(() => {
     function onBeforeInstallPrompt(event: Event) {
@@ -97,6 +98,13 @@ export function PwaInstallGate({
           Para a melhor experiência, instale na tela inicial. Você também pode continuar pelo navegador.
         </p>
 
+        {insecure ? (
+          <div className="pwa-install-gate__warn">
+            <strong>HTTPS inválido:</strong> o cadeado está vermelho. Corrija o certificado SSL no servidor antes de
+            instalar — o Chrome bloqueia instalação automática.
+          </div>
+        ) : null}
+
         {android ? (
           <div className="pwa-install-gate__warn">
             <strong>Atenção:</strong> &quot;Adicionar à tela inicial&quot; <em>não</em> instala o app — continua com barra do Chrome.
@@ -117,7 +125,9 @@ export function PwaInstallGate({
         ) : (
           <ol className="pwa-install-gate__steps">
             <li>Toque no menu <strong>⋮</strong> do Chrome</li>
-            <li>Escolha <strong>Instalar app</strong> (não use &quot;Adicionar à tela inicial&quot;)</li>
+            <li>
+              Escolha <strong>Instalar app</strong> ou <strong>Adicionar à tela inicial</strong>
+            </li>
             <li>Remova atalhos antigos da tela inicial</li>
             <li>Abra pelo ícone novo instalado</li>
           </ol>
@@ -131,7 +141,7 @@ export function PwaInstallGate({
   );
 }
 
-export function usePwaDisplayMode(skipInstallGate = false) {
+export function usePwaDisplayMode(skipInstallGate = false, pathname = '') {
   const [mode, setMode] = useState<'loading' | 'standalone' | 'gate' | 'preview' | 'browser'>('loading');
 
   useEffect(() => {
@@ -146,13 +156,23 @@ export function usePwaDisplayMode(skipInstallGate = false) {
     }
 
     const host = window.location.hostname;
-    if (isLocalPreviewHost(host) || hasSkippedInstallGate()) {
-      setMode(isLocalPreviewHost(host) ? 'preview' : 'browser');
+    if (isLocalPreviewHost(host)) {
+      setMode('preview');
+      return;
+    }
+
+    if (isPwaEntryRoute(pathname)) {
+      setMode('gate');
+      return;
+    }
+
+    if (hasSkippedInstallGate()) {
+      setMode('browser');
       return;
     }
 
     setMode('gate');
-  }, [skipInstallGate]);
+  }, [skipInstallGate, pathname]);
 
   const markInstalled = useCallback(() => {
     if (isStandaloneMode()) {

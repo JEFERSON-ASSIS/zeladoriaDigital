@@ -29,3 +29,9 @@ export function buildPwaLoginUrl(returnPath?: string) {
 export function shouldSkipPwaInstallGate(pathname: string) {
   return pathname === '/app/offline';
 }
+
+/** Login e landing de unidade: sempre mostrar tela de instalação até abrir como app instalado. */
+export function isPwaEntryRoute(pathname: string) {
+  if (pathname === PWA_LOGIN) return true;
+  return /^\/app\/unidade\/psf[123]\/?$/.test(pathname);
+}

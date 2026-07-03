@@ -5231,3 +5231,41 @@ html.pwa-standalone body {
 .citizen-unit-install-hint__steps li + li {
   margin-top: 6px;
 }
+
+.pwa-inline-install-hint {
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(37, 99, 235, 0.08);
+  border: 0.5px solid rgba(37, 99, 235, 0.18);
+}
+
+.pwa-inline-install-hint__title {
+  margin: 0 0 10px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--i7-blue);
+}
+
+.pwa-inline-install-hint__warn {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(220, 38, 38, 0.08);
+  border: 0.5px solid rgba(220, 38, 38, 0.2);
+  color: #991b1b;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.pwa-inline-install-hint__steps {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--i7-text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.pwa-inline-install-hint__steps li + li {
+  margin-top: 6px;
+}

@@ -10,7 +10,7 @@ import { shouldSkipPwaInstallGate } from '../lib/pwa-constants';
 export function PwaShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const skipInstallGate = shouldSkipPwaInstallGate(pathname);
-  const { mode, markInstalled, enterBrowserMode } = usePwaDisplayMode(skipInstallGate);
+  const { mode, markInstalled, enterBrowserMode } = usePwaDisplayMode(skipInstallGate, pathname);
 
   useEffect(() => {
     void registerPwaServiceWorker();
