@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { PwaInstallGate, usePwaDisplayMode } from './pwa-install-gate';
+import { PwaInstallPrompt } from './install-pwa-button';
 import { registerPwaServiceWorker } from '../lib/pwa';
 import { shouldSkipPwaInstallGate } from '../lib/pwa-constants';
 
@@ -52,12 +53,17 @@ export function PwaShell({ children }: { children: React.ReactNode }) {
       <>
         <div className="pwa-preview-banner" role="status">
           Modo preview ({typeof window !== 'undefined' ? window.location.host : 'rede local'}). Para instalar o app de
-          verdade, use <strong>homolog.prefeituranamao.com.br/app</strong>
+          verdade, use <strong>app.prefeituranamao.com.br/app</strong>
         </div>
         {children}
       </>
     );
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <PwaInstallPrompt />
+    </>
+  );
 }

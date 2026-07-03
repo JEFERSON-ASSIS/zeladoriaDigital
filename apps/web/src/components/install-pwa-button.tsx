@@ -76,16 +76,10 @@ export function InstallPWAButton({ variant = 'toast', persistent = false }: Inst
     window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt);
     window.addEventListener('appinstalled', onAppInstalled);
 
-    if (ios) {
-      const timer = window.setTimeout(() => setVisible(true), 1200);
-      return () => {
-        window.clearTimeout(timer);
-        window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt);
-        window.removeEventListener('appinstalled', onAppInstalled);
-      };
-    }
+    const showFallbackTimer = window.setTimeout(() => setVisible(true), ios ? 1200 : 2500);
 
     return () => {
+      window.clearTimeout(showFallbackTimer);
       window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt);
       window.removeEventListener('appinstalled', onAppInstalled);
     };
@@ -99,7 +93,7 @@ export function InstallPWAButton({ variant = 'toast', persistent = false }: Inst
 
   async function handleInstall() {
     if (deferredPrompt) {
-      deferredPrompt.prompt();
+      await deferredPrompt.prompt();
       const choice = await deferredPrompt.userChoice;
       setDeferredPrompt(null);
       if (choice.outcome === 'accepted') {
@@ -107,7 +101,6 @@ export function InstallPWAButton({ variant = 'toast', persistent = false }: Inst
         return;
       }
     }
-    dismiss();
   }
 
   function handleDismiss() {
@@ -142,13 +135,15 @@ export function InstallPWAButton({ variant = 'toast', persistent = false }: Inst
         <p>
           {iosMode
             ? 'Toque em Compartilhar e depois em Adicionar à Tela de Início.'
-            : 'Acesso rápido no celular, como um app nativo.'}
+            : deferredPrompt
+              ? 'Acesso rápido no celular, como um app nativo.'
+              : 'Menu ⋮ do Chrome → Instalar app (não use "Adicionar à tela inicial").'}
         </p>
       </div>
       <div className="pwa-install-toast__actions">
-        {!iosMode && deferredPrompt ? (
+        {!iosMode ? (
           <button type="button" className="pwa-install-toast__install" onClick={() => void handleInstall()}>
-            Instalar
+            {deferredPrompt ? 'Instalar' : 'Como instalar'}
           </button>
         ) : null}
         {!persistent ? (
