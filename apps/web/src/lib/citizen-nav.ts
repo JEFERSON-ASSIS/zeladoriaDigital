@@ -6,15 +6,16 @@ export type CitizenNavItem = {
   key: string;
   label: string;
   href: string;
-  iconKey: MenuKey | 'saude';
+  iconKey: MenuKey;
   matchPaths: string[];
 };
 
-const NAV_ORDER: Array<'inicio' | 'nova-ocorrencia' | 'minhas-solicitacoes' | 'saude'> = [
+const NAV_ORDER: Array<'inicio' | 'nova-ocorrencia' | 'minhas-solicitacoes' | 'agendamento' | 'meus-agendamentos'> = [
   'inicio',
   'nova-ocorrencia',
   'minhas-solicitacoes',
-  'saude'
+  'agendamento',
+  'meus-agendamentos'
 ];
 
 const UNIT_NAV_ORDER: Array<'inicio' | 'nova-ocorrencia' | 'minhas-solicitacoes' | 'agendamento' | 'meus-agendamentos'> = [
@@ -34,46 +35,11 @@ const UNIT_NAV_LABELS: Record<(typeof UNIT_NAV_ORDER)[number], string> = {
 };
 
 export function resolveCitizenNavItems(menuKeys: MenuKey[]): CitizenNavItem[] {
-  const allowed = new Set(menuKeys);
   const modules = resolveCitizenPwaModules(menuKeys);
   const moduleMap = new Map(modules.map((module) => [module.key, module]));
   const items: CitizenNavItem[] = [];
 
-  const hasAgendar = allowed.has('agendamento');
-  const hasConsultas = allowed.has('meus-agendamentos');
-
   for (const key of NAV_ORDER) {
-    if (key === 'saude') {
-      if (hasAgendar && hasConsultas) {
-        items.push({
-          key: 'saude',
-          label: 'Saúde',
-          href: pwaPath('/saude'),
-          iconKey: 'saude',
-          matchPaths: [pwaPath('/saude'), pwaPath('/agendamento'), pwaPath('/meus-agendamentos')]
-        });
-      } else if (hasAgendar && moduleMap.has('agendamento')) {
-        const module = moduleMap.get('agendamento')!;
-        items.push({
-          key: module.key,
-          label: module.label,
-          href: pwaPath(module.route),
-          iconKey: module.key,
-          matchPaths: [pwaPath(module.route)]
-        });
-      } else if (hasConsultas && moduleMap.has('meus-agendamentos')) {
-        const module = moduleMap.get('meus-agendamentos')!;
-        items.push({
-          key: module.key,
-          label: module.label,
-          href: pwaPath(module.route),
-          iconKey: module.key,
-          matchPaths: [pwaPath(module.route)]
-        });
-      }
-      continue;
-    }
-
     const module = moduleMap.get(key);
     if (!module) continue;
 
@@ -82,7 +48,9 @@ export function resolveCitizenNavItems(menuKeys: MenuKey[]): CitizenNavItem[] {
       label: module.label,
       href: pwaPath(module.route),
       iconKey: module.key,
-      matchPaths: [pwaPath(module.route)]
+      matchPaths: module.key === 'agendamento'
+        ? [pwaPath('/agendamento'), pwaPath('/saude')]
+        : [pwaPath(module.route)]
     });
   }
 

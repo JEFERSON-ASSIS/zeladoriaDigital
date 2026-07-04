@@ -77,14 +77,14 @@ export function buildUnitManifest(psfId: PsfId, origin: string) {
         name: 'Agendar consulta',
         short_name: 'Agendar',
         description: `Agendar em ${psf.label}`,
-        url: unitPath(psfId),
+        url: `${PWA_SCOPE}/agendamento`,
         icons: [{ src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }]
       },
       {
         name: 'Minhas consultas',
         short_name: 'Consultas',
         description: 'Ver agendamentos',
-        url: unitPath(psfId, '/meus-agendamentos'),
+        url: `${PWA_SCOPE}/meus-agendamentos`,
         icons: [{ src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }]
       }
     ]

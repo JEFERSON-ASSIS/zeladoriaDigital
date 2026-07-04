@@ -6,7 +6,7 @@ import { getSession } from '../../lib/auth';
 import { CitizenAppShell } from '../../components/citizen-app-shell';
 import { useResolvedPsfUnit } from '../../hooks/use-resolved-psf-unit';
 import { buildPwaLoginUrl, pwaPath } from '../../lib/pwa';
-import { parsePsfIdFromPath } from '../../lib/psf-unit';
+import { parsePsfIdFromPath, unitPath } from '../../lib/psf-unit';
 import { getAvailableServices, getMedicoBookingFlow, type PsfConfig, type ServiceKind } from '../../lib/scheduling/psf-config';
 import {
   formatCpf,
@@ -34,7 +34,8 @@ export default function SchedulingPage() {
   const router = useRouter();
   const pathname = usePathname();
   const unit = useResolvedPsfUnit();
-  const hasKnownUnit = Boolean(unit || parsePsfIdFromPath(pathname) || getSavedPsfConfig());
+  const unitFromPath = parsePsfIdFromPath(pathname);
+  const hasKnownUnit = Boolean(unit || getSavedPsfConfig());
   const [step, setStep] = useState<Step>(() => (hasKnownUnit ? 'booking' : 'psf'));
   const [psf, setPsf] = useState<PsfConfig | null>(null);
   const [loadingDays, setLoadingDays] = useState(false);
@@ -65,9 +66,15 @@ export default function SchedulingPage() {
   const selectedTurnoLabel = turnos.find((item) => item.id === selectedTurno)?.label ?? '';
 
   useEffect(() => {
-    const loginUrl = buildPwaLoginUrl(unit?.path('/agendamento'));
+    const loginReturnPath = unitFromPath ? unitPath(unitFromPath, '/agendamento') : pwaPath('/agendamento');
+    const loginUrl = buildPwaLoginUrl(loginReturnPath);
     if (!getSession()) {
       router.replace(loginUrl);
+      return;
+    }
+
+    if (unitFromPath) {
+      router.replace(pwaPath('/agendamento'));
       return;
     }
 
@@ -94,7 +101,7 @@ export default function SchedulingPage() {
         serviceKind: current.serviceKind
       }));
     }
-  }, [router, unit]);
+  }, [router, unit, unitFromPath]);
 
   async function loadDays() {
     if (!psf || !selectedService) return;
@@ -259,7 +266,7 @@ export default function SchedulingPage() {
   }
 
   if (step === 'success') {
-    const appointmentsPath = unit ? unit.path('/meus-agendamentos') : pwaPath('/meus-agendamentos');
+    const appointmentsPath = pwaPath('/meus-agendamentos');
     return (
       <CitizenAppShell title="Agendamento confirmado" subtitle={successMessage ?? 'Sua consulta foi registrada.'}>
         <section className="panel scheduling-panel">

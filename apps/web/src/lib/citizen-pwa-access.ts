@@ -10,7 +10,7 @@ import type { AuthSession, AuthUser } from './auth';
 import { setSession } from './auth';
 import { isCitizenHealthPath } from './citizen-nav';
 import type { PsfId } from './scheduling/psf-config';
-import { isPsfId, parsePsfIdFromPath, unitPath } from './psf-unit';
+import { parsePsfIdFromPath, unitPath } from './psf-unit';
 import { PWA_LOGIN, pwaPath } from './pwa';
 
 export function resolveCitizenPwaHome(menuKeys?: MenuKey[] | null, _healthUnitPsfId?: string | null) {
@@ -28,23 +28,12 @@ export function resolveCitizenDestination(
   return resolveCitizenPwaHome(user.menuKeys, user.healthUnitPsfId);
 }
 
-export function mapGeneralPwaPathToUnit(pathname: string, psfId: PsfId): string | null {
-  if (pathname === pwaPath('/saude') || pathname.startsWith(`${pwaPath('/saude')}/`)) {
-    return unitPath(psfId);
-  }
-  if (pathname === pwaPath('/agendamento') || pathname.startsWith(`${pwaPath('/agendamento')}/`)) {
-    return unitPath(psfId, '/agendamento');
-  }
-  if (pathname === pwaPath('/meus-agendamentos') || pathname.startsWith(`${pwaPath('/meus-agendamentos')}/`)) {
-    return unitPath(psfId, '/meus-agendamentos');
-  }
+export function mapGeneralPwaPathToUnit(_pathname: string, _psfId: PsfId): string | null {
   return null;
 }
 
-export function shouldRedirectBoundCitizen(pathname: string, healthUnitPsfId?: string | null) {
-  if (!healthUnitPsfId || !isPsfId(healthUnitPsfId)) return null;
-  if (parsePsfIdFromPath(pathname)) return null;
-  return mapGeneralPwaPathToUnit(pathname, healthUnitPsfId);
+export function shouldRedirectBoundCitizen(_pathname: string, _healthUnitPsfId?: string | null) {
+  return null;
 }
 
 export function getMenuKeyForPwaPath(pathname: string): MenuKey | null {

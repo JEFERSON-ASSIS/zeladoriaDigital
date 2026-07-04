@@ -1,11 +1,13 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import { getSession } from '../../lib/auth';
 import { CitizenAppShell } from '../../components/citizen-app-shell';
 import { useResolvedPsfUnit } from '../../hooks/use-resolved-psf-unit';
 import { buildPwaLoginUrl, pwaPath } from '../../lib/pwa';
+import { parsePsfIdFromPath, unitPath } from '../../lib/psf-unit';
 import { CitizenConfirmDialog } from '../../components/citizen-confirm-dialog';
 import {
   getSavedPsfConfig,
@@ -36,6 +38,7 @@ const AUTO_REFRESH_MS = 60_000;
 
 export default function MyAppointmentsPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const unit = useResolvedPsfUnit();
   const [ready, setReady] = useState(false);
   const [needsPsf, setNeedsPsf] = useState(false);
@@ -103,9 +106,16 @@ export default function MyAppointmentsPage() {
   }, [cpf]);
 
   useEffect(() => {
-    const loginUrl = buildPwaLoginUrl(unit?.path('/meus-agendamentos'));
+    const unitFromPath = parsePsfIdFromPath(pathname);
+    const loginReturnPath = unitFromPath ? unitPath(unitFromPath, '/meus-agendamentos') : pwaPath('/meus-agendamentos');
+    const loginUrl = buildPwaLoginUrl(loginReturnPath);
     if (!getSession()) {
       router.replace(loginUrl);
+      return;
+    }
+
+    if (unitFromPath) {
+      router.replace(pwaPath('/meus-agendamentos'));
       return;
     }
 
@@ -125,7 +135,7 @@ export default function MyAppointmentsPage() {
     }
 
     setReady(true);
-  }, [router, loadHistory, search, unit]);
+  }, [router, loadHistory, search, unit, pathname]);
 
   useEffect(() => {
     if (!ready) return;
@@ -295,7 +305,7 @@ export default function MyAppointmentsPage() {
         <div className="form-actions" style={{ marginTop: 16 }}>
           <button
             type="button"
-            onClick={() => router.push(unit ? unit.path('/agendamento') : pwaPath('/agendamento'))}
+            onClick={() => router.push(pwaPath('/agendamento'))}
           >
             Novo agendamento
           </button>
