@@ -13,10 +13,7 @@ import type { PsfId } from './scheduling/psf-config';
 import { isPsfId, parsePsfIdFromPath, unitPath } from './psf-unit';
 import { PWA_LOGIN, pwaPath } from './pwa';
 
-export function resolveCitizenPwaHome(menuKeys?: MenuKey[] | null, healthUnitPsfId?: string | null) {
-  if (healthUnitPsfId && isPsfId(healthUnitPsfId)) {
-    return unitPath(healthUnitPsfId);
-  }
+export function resolveCitizenPwaHome(menuKeys?: MenuKey[] | null, _healthUnitPsfId?: string | null) {
   const route = resolveCitizenPwaHomeRoute(menuKeys);
   return route ? pwaPath(route) : PWA_LOGIN;
 }
@@ -40,9 +37,6 @@ export function mapGeneralPwaPathToUnit(pathname: string, psfId: PsfId): string 
   }
   if (pathname === pwaPath('/meus-agendamentos') || pathname.startsWith(`${pwaPath('/meus-agendamentos')}/`)) {
     return unitPath(psfId, '/meus-agendamentos');
-  }
-  if (pathname === pwaPath('/inicio') || pathname === pwaPath('/')) {
-    return unitPath(psfId);
   }
   return null;
 }

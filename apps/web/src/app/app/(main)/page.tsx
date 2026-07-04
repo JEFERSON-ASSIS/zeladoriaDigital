@@ -4,7 +4,8 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSession } from '../../../lib/auth';
 import { resolveCitizenPwaHome } from '../../../lib/citizen-pwa-access';
-import { PWA_LOGIN } from '../../../lib/pwa';
+import { buildPwaLoginUrl, PWA_LOGIN } from '../../../lib/pwa';
+import { isPsfId, unitPath } from '../../../lib/psf-unit';
 
 export default function PwaLauncherPage() {
   const router = useRouter();
@@ -12,7 +13,8 @@ export default function PwaLauncherPage() {
   useEffect(() => {
     const session = getSession();
     if (!session) {
-      router.replace(PWA_LOGIN);
+      const unit = new URLSearchParams(window.location.search).get('unit');
+      router.replace(unit && isPsfId(unit) ? buildPwaLoginUrl(unitPath(unit)) : PWA_LOGIN);
       return;
     }
 

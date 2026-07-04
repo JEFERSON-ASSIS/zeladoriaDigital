@@ -1,11 +1,9 @@
 'use client';
 
-import { getSession } from '../lib/auth';
-import { getPsfUnitConfig, isPsfId } from '../lib/psf-unit';
 import { CitizenShell } from './citizen-shell';
 import type { CitizenShellProps } from './citizen-shell';
 import { CitizenUnitShell } from './citizen-unit-shell';
-import { PsfUnitProvider, usePsfUnit } from './psf-unit-provider';
+import { usePsfUnit } from './psf-unit-provider';
 
 type CitizenAppShellProps = CitizenShellProps & {
   loading?: boolean;
@@ -31,15 +29,6 @@ export function CitizenAppShell(props: CitizenAppShellProps) {
       <CitizenUnitShell title={props.title} subtitle={props.subtitle}>
         {props.children}
       </CitizenUnitShell>
-    );
-  }
-
-  const boundPsfId = getSession()?.user?.healthUnitPsfId;
-  if (boundPsfId && isPsfId(boundPsfId) && getPsfUnitConfig(boundPsfId)) {
-    return (
-      <PsfUnitProvider psfId={boundPsfId}>
-        <CitizenAppShellInner {...props} />
-      </PsfUnitProvider>
     );
   }
 

@@ -48,8 +48,8 @@ export function buildUnitManifest(psfId: PsfId, origin: string) {
   const psf = getPsfById(psfId);
   if (!psf) return null;
 
-  const scope = `${unitBasePath(psfId)}/`;
-  const startUrl = unitPath(psfId);
+  const scope = `${PWA_SCOPE}/`;
+  const startUrl = `${PWA_SCOPE}?unit=${psfId}`;
 
   return {
     id: `${origin}${unitBasePath(psfId)}`,
@@ -77,7 +77,7 @@ export function buildUnitManifest(psfId: PsfId, origin: string) {
         name: 'Agendar consulta',
         short_name: 'Agendar',
         description: `Agendar em ${psf.label}`,
-        url: startUrl,
+        url: unitPath(psfId),
         icons: [{ src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }]
       },
       {
