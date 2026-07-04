@@ -7,6 +7,21 @@ import { parsePsfIdFromPath, unitManifestPath } from '../lib/psf-unit';
 
 const LOGIN_MANIFEST_ID = 'zeladoria-login-manifest';
 
+function setSingleManifestLink(href: string) {
+  const links = Array.from(document.querySelectorAll<HTMLLinkElement>('link[rel~="manifest"]'));
+  const link = links[0] ?? document.createElement('link');
+
+  link.id = LOGIN_MANIFEST_ID;
+  link.rel = 'manifest';
+  link.href = href;
+
+  if (!link.parentNode) {
+    document.head.appendChild(link);
+  }
+
+  links.slice(1).forEach((extraLink) => extraLink.remove());
+}
+
 function LoginPwaHeadInner() {
   const searchParams = useSearchParams();
   const returnPath = searchParams.get('return');
@@ -14,14 +29,7 @@ function LoginPwaHeadInner() {
   const manifestHref = psfId ? unitManifestPath(psfId) : PWA_MANIFEST_URL;
 
   useLayoutEffect(() => {
-    let link = document.getElementById(LOGIN_MANIFEST_ID) as HTMLLinkElement | null;
-    if (!link) {
-      link = document.createElement('link');
-      link.id = LOGIN_MANIFEST_ID;
-      link.rel = 'manifest';
-      document.head.appendChild(link);
-    }
-    link.href = manifestHref;
+    setSingleManifestLink(manifestHref);
   }, [manifestHref]);
 
   return null;

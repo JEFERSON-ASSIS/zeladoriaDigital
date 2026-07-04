@@ -6,19 +6,27 @@ import { unitManifestPath } from '../lib/psf-unit';
 
 const UNIT_MANIFEST_ID = 'zeladoria-unit-manifest';
 
+function setSingleManifestLink(href: string) {
+  const links = Array.from(document.querySelectorAll<HTMLLinkElement>('link[rel~="manifest"]'));
+  const link = links[0] ?? document.createElement('link');
+
+  link.id = UNIT_MANIFEST_ID;
+  link.rel = 'manifest';
+  link.href = href;
+
+  if (!link.parentNode) {
+    document.head.appendChild(link);
+  }
+
+  links.slice(1).forEach((extraLink) => extraLink.remove());
+}
+
 /** @deprecated Prefer generateMetadata no layout da unidade. Mantido só se precisar override em runtime. */
 export function UnitPwaHead({ psfId, title }: { psfId: PsfId; title: string }) {
   const manifestHref = unitManifestPath(psfId);
 
   useLayoutEffect(() => {
-    let link = document.getElementById(UNIT_MANIFEST_ID) as HTMLLinkElement | null;
-    if (!link) {
-      link = document.createElement('link');
-      link.id = UNIT_MANIFEST_ID;
-      link.rel = 'manifest';
-      document.head.appendChild(link);
-    }
-    link.href = manifestHref;
+    setSingleManifestLink(manifestHref);
 
     let appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
     if (!appleTitle) {

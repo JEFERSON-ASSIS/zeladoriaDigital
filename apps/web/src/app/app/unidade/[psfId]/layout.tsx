@@ -4,6 +4,7 @@ import { CitizenPwaRouteGuard } from '../../../../components/citizen-pwa-route-g
 import { CitizenHealthUnitGuard } from '../../../../components/citizen-health-unit-guard';
 import { PsfUnitProvider } from '../../../../components/psf-unit-provider';
 import { PwaShell } from '../../../../components/pwa-shell';
+import { UnitPwaHead } from '../../../../components/unit-pwa-head';
 import { getPsfUnitConfig, isPsfId, unitManifestPath } from '../../../../lib/psf-unit';
 
 type UnitLayoutProps = {
@@ -49,6 +50,7 @@ export default function PsfUnitLayout({ children, params }: UnitLayoutProps) {
 
   return (
     <div className="citizen-pwa-root citizen-pwa-root--unit">
+      <UnitPwaHead psfId={psf.id} title={psf.label} />
       <PwaShell>
         <CitizenPwaRouteGuard>
           <CitizenHealthUnitGuard psfId={params.psfId}>

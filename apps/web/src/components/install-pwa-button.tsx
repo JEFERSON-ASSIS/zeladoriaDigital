@@ -34,6 +34,7 @@ export function InstallPWAButton({ variant = 'toast', persistent = false }: Inst
   const [visible, setVisible] = useState(false);
   const [iosMode, setIosMode] = useState(false);
   const [showCard, setShowCard] = useState(false);
+  const [installed, setInstalled] = useState(false);
 
   const dismiss = useCallback(() => {
     setVisible(false);
@@ -59,7 +60,8 @@ export function InstallPWAButton({ variant = 'toast', persistent = false }: Inst
     }
 
     function onAppInstalled() {
-      setVisible(false);
+      setInstalled(true);
+      setVisible(true);
     }
 
     window.addEventListener('appinstalled', onAppInstalled);
@@ -77,17 +79,22 @@ export function InstallPWAButton({ variant = 'toast', persistent = false }: Inst
   }, [canInstall, variant]);
 
   useEffect(() => {
-    if (!visible || variant !== 'toast' || persistent) return;
+    if (!visible || variant !== 'toast') return;
+    if (installed) {
+      const timer = window.setTimeout(() => setVisible(false), 5000);
+      return () => window.clearTimeout(timer);
+    }
+    if (persistent) return;
     const timer = window.setTimeout(() => dismiss(), 12000);
     return () => window.clearTimeout(timer);
-  }, [visible, variant, dismiss, persistent]);
+  }, [visible, variant, dismiss, persistent, installed]);
 
   async function handleInstall() {
     if (canInstall) {
       const choice = await requestInstall();
       if (choice?.outcome === 'accepted') {
-        setVisible(false);
-        return;
+        setInstalled(true);
+        setVisible(true);
       }
     }
   }
@@ -103,13 +110,17 @@ export function InstallPWAButton({ variant = 'toast', persistent = false }: Inst
       <section className="pwa-install-card">
         <div>
           <p className="eyebrow">App</p>
-          <h3>Instalar aplicativo</h3>
-          <p className="muted-copy">Acesse mais rápido na tela inicial do celular.</p>
+          <h3>{installed ? 'Aplicativo instalado' : 'Instalar aplicativo'}</h3>
+          <p className="muted-copy">
+            {installed ? 'Abra pelo ícone criado na tela inicial.' : 'Acesse mais rápido na tela inicial do celular.'}
+          </p>
         </div>
         <div className="pwa-install-actions">
-          <button type="button" className="pwa-install-button" onClick={() => void handleInstall()}>
-            Instalar aplicativo
-          </button>
+          {!installed ? (
+            <button type="button" className="pwa-install-button" onClick={() => void handleInstall()}>
+              Instalar aplicativo
+            </button>
+          ) : null}
         </div>
       </section>
     );
@@ -120,17 +131,21 @@ export function InstallPWAButton({ variant = 'toast', persistent = false }: Inst
   const toast = (
     <div className="pwa-install-toast" role="status" aria-live="polite">
       <div className="pwa-install-toast__body">
-        <strong>{iosMode ? 'Adicionar à tela inicial' : 'Instalar Prefeitura na Mão'}</strong>
+        <strong>
+          {installed ? 'Aplicativo instalado' : iosMode ? 'Adicionar à tela inicial' : 'Instalar Prefeitura na Mão'}
+        </strong>
         <p>
-          {iosMode
-            ? 'Toque em Compartilhar e depois em Adicionar à Tela de Início.'
-            : canInstall
-              ? 'Acesso rápido no celular, como um app nativo.'
-              : 'Menu ⋮ do Chrome → Instalar app (não use "Adicionar à tela inicial").'}
+          {installed
+            ? 'Abra pelo ícone criado na tela inicial do celular.'
+            : iosMode
+              ? 'Toque em Compartilhar e depois em Adicionar à Tela de Início.'
+              : canInstall
+                ? 'Acesso rápido no celular, como um app nativo.'
+                : 'Menu ⋮ do Chrome → Instalar app (não use "Adicionar à tela inicial").'}
         </p>
       </div>
       <div className="pwa-install-toast__actions">
-        {!iosMode ? (
+        {!iosMode && !installed ? (
           <button type="button" className="pwa-install-toast__install" onClick={() => void handleInstall()}>
             {canInstall ? 'Instalar' : 'Como instalar'}
           </button>

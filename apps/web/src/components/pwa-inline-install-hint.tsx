@@ -15,6 +15,7 @@ function isIOSDevice() {
 export function PwaInlineInstallHint() {
   const [visible, setVisible] = useState(false);
   const [manualHelp, setManualHelp] = useState(false);
+  const [installed, setInstalled] = useState(false);
   const { canInstall, requestInstall } = usePwaInstallPrompt();
   const android = isAndroidChrome();
   const ios = isIOSDevice();
@@ -23,12 +24,13 @@ export function PwaInlineInstallHint() {
   useEffect(() => {
     setVisible(!isStandaloneDisplayMode());
 
-    function hideAfterInstall() {
-      setVisible(false);
+    function showInstalledMessage() {
+      setInstalled(true);
+      setVisible(true);
     }
 
-    window.addEventListener('appinstalled', hideAfterInstall);
-    return () => window.removeEventListener('appinstalled', hideAfterInstall);
+    window.addEventListener('appinstalled', showInstalledMessage);
+    return () => window.removeEventListener('appinstalled', showInstalledMessage);
   }, []);
 
   if (!visible) return null;
@@ -40,29 +42,40 @@ export function PwaInlineInstallHint() {
     }
 
     const choice = await requestInstall();
-    if (choice?.outcome === 'accepted') setVisible(false);
+    if (choice?.outcome === 'accepted') {
+      setInstalled(true);
+      setManualHelp(false);
+    }
   }
 
   return (
     <section className="pwa-inline-install-hint" aria-label="Como instalar o aplicativo">
       <div className="pwa-inline-install-hint__header">
         <div>
-          <p className="pwa-inline-install-hint__title">Tenha o app no seu celular</p>
-          <p className="pwa-inline-install-hint__copy">Este botão continuará disponível enquanto o app não estiver instalado.</p>
+          <p className="pwa-inline-install-hint__title">
+            {installed ? 'Aplicativo instalado' : 'Tenha o app no seu celular'}
+          </p>
+          <p className="pwa-inline-install-hint__copy">
+            {installed
+              ? 'Abra pelo ícone criado na tela inicial do celular.'
+              : 'Este botão continuará disponível enquanto o app não estiver instalado.'}
+          </p>
         </div>
-        <button type="button" className="pwa-inline-install-hint__button" onClick={() => void handleInstall()}>
-          {canInstall ? 'Instalar aplicativo' : ios ? 'Como adicionar' : 'Adicionar à tela inicial'}
-        </button>
+        {!installed ? (
+          <button type="button" className="pwa-inline-install-hint__button" onClick={() => void handleInstall()}>
+            {canInstall ? 'Instalar aplicativo' : ios ? 'Como adicionar' : 'Adicionar à tela inicial'}
+          </button>
+        ) : null}
       </div>
 
       {insecure ? (
         <p className="pwa-inline-install-hint__warn">
-          Conexão não segura (cadeado vermelho). O Chrome só instala com HTTPS válido — peça ao administrador
-          corrigir o certificado do site.
+          Conexão não segura (cadeado vermelho). O Chrome só instala com HTTPS válido — peça ao administrador corrigir o
+          certificado do site.
         </p>
       ) : null}
 
-      {android && (!canInstall || manualHelp) ? (
+      {!installed && android && (!canInstall || manualHelp) ? (
         <ol className="pwa-inline-install-hint__steps">
           <li>
             Toque no menu <strong>⋮</strong> do Chrome (canto superior direito)
@@ -72,12 +85,16 @@ export function PwaInlineInstallHint() {
           </li>
           <li>Não use atalho antigo de homolog — instale de novo neste endereço</li>
         </ol>
-      ) : ios ? (
+      ) : !installed && ios ? (
         <ol className="pwa-inline-install-hint__steps">
-          <li>Toque em <strong>Compartilhar</strong></li>
-          <li>Escolha <strong>Adicionar à Tela de Início</strong></li>
+          <li>
+            Toque em <strong>Compartilhar</strong>
+          </li>
+          <li>
+            Escolha <strong>Adicionar à Tela de Início</strong>
+          </li>
         </ol>
-      ) : !canInstall || manualHelp ? (
+      ) : !installed && (!canInstall || manualHelp) ? (
         <ol className="pwa-inline-install-hint__steps">
           <li>Use o menu do navegador para instalar ou adicionar à tela inicial</li>
         </ol>
