@@ -1,0 +1,84 @@
+name: Build and deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL || 'https://api.prefeituranamao.com.br' }}
+  NEXT_PUBLIC_PSF1_API_URL: ${{ vars.NEXT_PUBLIC_PSF1_API_URL || 'https://saude.agendaclique.com.br/api_chatbot_psf1' }}
+  NEXT_PUBLIC_PSF2_API_URL: ${{ vars.NEXT_PUBLIC_PSF2_API_URL || 'https://saude.agendaclique.com.br/api_chatbot_psf2' }}
+  NEXT_PUBLIC_PSF3_API_URL: ${{ vars.NEXT_PUBLIC_PSF3_API_URL || 'https://saude.agendaclique.com.br/api_chatbot_psf3' }}
+  NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${{ vars.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '' }}
+  PORTAINER_WEBHOOK_URL: ${{ secrets.PORTAINER_WEBHOOK_URL || '' }}
+
+jobs:
+  docker:
+    name: Build and publish Docker images
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare image names
+        shell: bash
+        run: |
+          OWNER="$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')"
+          SHORT_SHA="${GITHUB_SHA::7}"
+          {
+            echo "WEB_IMAGE=${REGISTRY}/${OWNER}/zeladoria-web"
+            echo "API_IMAGE=${REGISTRY}/${OWNER}/zeladoria-api"
+            echo "SHORT_SHA=${SHORT_SHA}"
+          } >> "${GITHUB_ENV}"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push API
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/api/Dockerfile
+          push: true
+          tags: |
+            ${{ env.API_IMAGE }}:main
+            ${{ env.API_IMAGE }}:homolog
+            ${{ env.API_IMAGE }}:${{ env.SHORT_SHA }}
+
+      - name: Build and push Web
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/web/Dockerfile
+          push: true
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ env.NEXT_PUBLIC_API_URL }}
+            NEXT_PUBLIC_PSF1_API_URL=${{ env.NEXT_PUBLIC_PSF1_API_URL }}
+            NEXT_PUBLIC_PSF2_API_URL=${{ env.NEXT_PUBLIC_PSF2_API_URL }}
+            NEXT_PUBLIC_PSF3_API_URL=${{ env.NEXT_PUBLIC_PSF3_API_URL }}
+            NEXT_PUBLIC_VAPID_PUBLIC_KEY=${{ env.NEXT_PUBLIC_VAPID_PUBLIC_KEY }}
+          tags: |
+            ${{ env.WEB_IMAGE }}:main
+            ${{ env.WEB_IMAGE }}:homolog
+            ${{ env.WEB_IMAGE }}:${{ env.SHORT_SHA }}
+
+      - name: Trigger Portainer webhook
+        if: env.PORTAINER_WEBHOOK_URL != ''
+        shell: bash
+        run: |
+          curl --fail --show-error --silent --request POST "${PORTAINER_WEBHOOK_URL}"
