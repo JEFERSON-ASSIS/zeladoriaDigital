@@ -154,6 +154,21 @@ function getTurnoFromTime(time: string): MedicoTurno {
   return time < '12:00' ? 'manha' : 'tarde';
 }
 
+function isTurnoLiberado<T extends { disponivel?: boolean; vagas?: number }>(
+  turno: T | undefined,
+  rootFlag: boolean | undefined
+): turno is T {
+  return rootFlag === true && turno?.disponivel === true && (turno.vagas ?? 0) > 0;
+}
+
+async function assertMedicoTimeTurnoAvailable(psf: PsfConfig, servicoId: number, date: string, time: string) {
+  const { turnos } = await fetchAvailableTurnos(psf, servicoId, date);
+  const turno = getTurnoFromTime(time);
+  if (!turnos.some((item) => item.id === turno)) {
+    throw new SchedulingApiError('Este horário não está liberado para o turno desta data.');
+  }
+}
+
 export async function fetchAvailableDays(psf: PsfConfig, serviceKind: ServiceKind, servicoId: number) {
   const medicoFlow = serviceKind === 'medico' ? getMedicoBookingFlow(psf) : null;
   const path =
@@ -206,6 +221,8 @@ export async function fetchAvailableTimes(psf: PsfConfig, serviceKind: ServiceKi
 
 export async function fetchAvailableTurnos(psf: PsfConfig, servicoId: number, date: string) {
   const data = await schedulingRequest<{
+    turnos_manha?: boolean;
+    turnos_tarde?: boolean;
     turnos?: {
       manha?: { disponivel?: boolean; vagas?: number; label?: string };
       tarde?: { disponivel?: boolean; vagas?: number; label?: string };
@@ -226,10 +243,10 @@ export async function fetchAvailableTurnos(psf: PsfConfig, servicoId: number, da
   const manha = data.turnos?.manha;
   const tarde = data.turnos?.tarde;
 
-  if (manha?.disponivel) {
+  if (isTurnoLiberado(manha, data.turnos_manha)) {
     turnos.push({ id: 'manha', label: manha.label ?? 'Manhã', vagas: manha.vagas ?? 0 });
   }
-  if (tarde?.disponivel) {
+  if (isTurnoLiberado(tarde, data.turnos_tarde)) {
     turnos.push({ id: 'tarde', label: tarde.label ?? 'Tarde', vagas: tarde.vagas ?? 0 });
   }
 
@@ -267,11 +284,13 @@ export async function createBooking(psf: PsfConfig, input: CreateBookingInput) {
     const medicoFlow = getMedicoBookingFlow(psf);
     if (medicoFlow === 'hora') {
       if (!input.hora) throw new SchedulingApiError('Selecione um horário para a consulta médica.');
+      await assertMedicoTimeTurnoAvailable(psf, input.servicoId, input.data, input.hora);
       path = '/endpoints/agendamentos/criar_medico_hora.php';
       body.hora = input.hora;
       delete body.servico;
     } else if (medicoFlow === 'hora_servico') {
       if (!input.hora) throw new SchedulingApiError('Selecione um horário para a consulta médica.');
+      await assertMedicoTimeTurnoAvailable(psf, input.servicoId, input.data, input.hora);
       body.hora = input.hora;
     } else {
       if (!input.turno) throw new SchedulingApiError('Selecione o turno (manhã ou tarde).');
