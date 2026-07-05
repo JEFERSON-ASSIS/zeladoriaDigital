@@ -6,6 +6,7 @@ export {
   PWA_MANIFEST_URL,
   PWA_LOGIN,
   PWA_HOME,
+  PWA_PRIVACY_POLICY,
   PWA_CITIZEN_ROUTES,
   pwaPath,
   buildPwaLoginUrl

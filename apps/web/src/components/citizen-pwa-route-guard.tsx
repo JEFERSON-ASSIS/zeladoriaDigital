@@ -9,10 +9,10 @@ import {
   resolveCitizenPwaHome,
   shouldRedirectBoundCitizen
 } from '../lib/citizen-pwa-access';
-import { PWA_LOGIN } from '../lib/pwa';
+import { PWA_LOGIN, PWA_PRIVACY_POLICY } from '../lib/pwa';
 import { isUnitPwaPath } from '../lib/psf-unit';
 
-const PUBLIC_PWA_PATHS = new Set([PWA_LOGIN, '/app/offline', '/app']);
+const PUBLIC_PWA_PATHS = new Set([PWA_LOGIN, PWA_PRIVACY_POLICY, '/app/offline', '/app']);
 
 export function CitizenPwaRouteGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

@@ -3,6 +3,7 @@ export const PWA_SW_URL = '/app/sw.js';
 export const PWA_MANIFEST_URL = '/app/manifest.json';
 export const PWA_LOGIN = '/app/login';
 export const PWA_HOME = '/app/inicio';
+export const PWA_PRIVACY_POLICY = '/app/politica-privacidade';
 
 export const PWA_CITIZEN_ROUTES = [
   '/inicio',
@@ -27,7 +28,7 @@ export function buildPwaLoginUrl(returnPath?: string) {
 }
 
 export function shouldSkipPwaInstallGate(pathname: string) {
-  return pathname === '/app/offline';
+  return pathname === '/app/offline' || pathname === PWA_PRIVACY_POLICY;
 }
 
 /** Login e landing de unidade: sempre mostrar tela de instalação até abrir como app instalado. */

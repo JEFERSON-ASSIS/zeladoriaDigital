@@ -4107,13 +4107,26 @@ html.pwa-standalone body {
 }
 
 /* Login nativo */
+.citizen-pwa-root .login-shell--pwa {
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
 .citizen-pwa-root .login-shell--pwa .login-form-panel {
   background: var(--native-bg);
+  height: 100dvh;
+  max-height: 100dvh;
+  min-height: 100dvh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  align-content: start;
 }
 
 .citizen-pwa-root .login-shell--pwa .login-card {
   max-width: 420px;
   margin: 0 auto;
+  padding-bottom: max(28px, env(safe-area-inset-bottom));
 }
 
 .citizen-pwa-root .login-shell--pwa .login-card h1 {
@@ -4273,12 +4286,18 @@ html.pwa-standalone body {
 
 .citizen-pwa-root .pwa-lgpd-box__text {
   margin: 0 0 12px;
-  max-height: 140px;
+  max-height: min(140px, 22dvh);
   overflow-y: auto;
   font-size: 0.82rem;
   line-height: 1.45;
   color: var(--i7-text-secondary);
   white-space: pre-line;
+}
+
+.citizen-pwa-root .pwa-lgpd-box__text a {
+  color: var(--i7-blue);
+  font-weight: 700;
+  text-decoration: none;
 }
 
 .citizen-pwa-root .pwa-lgpd-box__check {
@@ -4300,6 +4319,94 @@ html.pwa-standalone body {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
+}
+
+@media (max-height: 760px) {
+  .citizen-pwa-root .login-shell--pwa .login-mobile-brand,
+  .citizen-pwa-root .login-shell--pwa .login-credit {
+    display: none;
+  }
+
+  .citizen-pwa-root .login-shell--pwa .login-card h1 {
+    font-size: 1.55rem;
+  }
+
+  .citizen-pwa-root .login-shell--pwa .login-form {
+    margin-top: 12px;
+  }
+
+  .citizen-pwa-root .pwa-access-steps {
+    margin-bottom: 12px;
+  }
+
+  .citizen-pwa-root .pwa-lgpd-box__text {
+    max-height: 96px;
+  }
+}
+
+.citizen-pwa-root .privacy-policy-page {
+  min-height: 100dvh;
+  background: var(--native-bg);
+  padding: max(18px, env(safe-area-inset-top)) 16px max(28px, env(safe-area-inset-bottom));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.citizen-pwa-root .privacy-policy-card {
+  width: min(720px, 100%);
+  margin: 0 auto;
+  background: var(--native-surface);
+  border: 0.5px solid var(--native-separator);
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.08);
+}
+
+.citizen-pwa-root .privacy-policy-header {
+  border-bottom: 0.5px solid var(--native-separator);
+  padding-bottom: 18px;
+  margin-bottom: 18px;
+}
+
+.citizen-pwa-root .privacy-policy-header h1 {
+  margin: 6px 0 10px;
+  font-size: 1.7rem;
+  line-height: 1.12;
+  font-weight: 800;
+  color: var(--i7-text);
+}
+
+.citizen-pwa-root .privacy-policy-header p,
+.citizen-pwa-root .privacy-policy-section p,
+.citizen-pwa-root .privacy-policy-section li {
+  color: var(--i7-text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.62;
+}
+
+.citizen-pwa-root .privacy-policy-content {
+  display: grid;
+  gap: 18px;
+}
+
+.citizen-pwa-root .privacy-policy-section h2 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  line-height: 1.25;
+  color: var(--i7-text);
+}
+
+.citizen-pwa-root .privacy-policy-section p {
+  margin: 0;
+}
+
+.citizen-pwa-root .privacy-policy-section ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.citizen-pwa-root .privacy-policy-section li + li {
+  margin-top: 6px;
 }
 
 .citizen-pwa-root .pwa-install-gate {

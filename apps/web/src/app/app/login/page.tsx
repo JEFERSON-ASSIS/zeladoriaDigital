@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CitizenProductLogo } from '../../../components/brand-logo';
 import { PwaInlineInstallHint } from '../../../components/pwa-inline-install-hint';
@@ -16,12 +17,6 @@ import {
 import { refreshCitizenSession, resolveCitizenDestination } from '../../../lib/citizen-pwa-access';
 import { buildPwaLoginUrl } from '../../../lib/pwa';
 import { getPsfUnitConfig, getPsfUnitDisplayName, parsePsfIdFromPath } from '../../../lib/psf-unit';
-
-const LGPD_TEXT = `A Prefeitura na Mão trata seus dados pessoais (CPF e celular) para identificar você no aplicativo, registrar solicitações urbanas, agendamentos de saúde e comunicações relacionadas aos serviços públicos.
-
-Seus dados são utilizados apenas para finalidades ligadas aos serviços do app, armazenados de forma segura e não compartilhados com terceiros sem base legal.
-
-Você pode solicitar informações ou atualização dos seus dados pelos canais oficiais da prefeitura.`;
 
 function LoginUnitBadge({ label }: { label: string }) {
   return (
@@ -288,7 +283,14 @@ function PwaLoginForm() {
                 {!registeredNeedsName ? (
                   <div className="pwa-lgpd-box">
                     <p className="pwa-lgpd-box__title">Privacidade e proteção de dados (LGPD)</p>
-                    <p className="pwa-lgpd-box__text">{LGPD_TEXT}</p>
+                    <p className="pwa-lgpd-box__text">
+                      Ao continuar, você confirma que leu e concorda com a{' '}
+                      <Link href="/app/politica-privacidade" target="_blank">
+                        Política de Privacidade
+                      </Link>{' '}
+                      e autoriza o tratamento dos seus dados para identificação, acesso ao aplicativo, agendamentos,
+                      solicitações e comunicações relacionadas aos serviços públicos.
+                    </p>
                     <label className="pwa-lgpd-box__check">
                       <input
                         type="checkbox"
