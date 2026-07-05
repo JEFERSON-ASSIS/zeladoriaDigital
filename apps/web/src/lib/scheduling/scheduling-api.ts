@@ -150,6 +150,10 @@ export function extractDateFromDayLabel(label: string) {
   return match?.[1] ?? label.split(' ')[0] ?? label;
 }
 
+function getTurnoFromTime(time: string): MedicoTurno {
+  return time < '12:00' ? 'manha' : 'tarde';
+}
+
 export async function fetchAvailableDays(psf: PsfConfig, serviceKind: ServiceKind, servicoId: number) {
   const medicoFlow = serviceKind === 'medico' ? getMedicoBookingFlow(psf) : null;
   const path =
@@ -189,7 +193,15 @@ export async function fetchAvailableTimes(psf: PsfConfig, serviceKind: ServiceKi
   if (serviceKind !== 'medico' || medicoFlow !== 'hora') params.servico = servicoId;
 
   const data = await schedulingRequest<{ horarios?: string[] }>(psf, path, { method: 'GET' }, params);
-  return data.horarios ?? [];
+  const horarios = data.horarios ?? [];
+
+  if (serviceKind !== 'medico' || medicoFlow === 'turno') {
+    return horarios;
+  }
+
+  const { turnos } = await fetchAvailableTurnos(psf, servicoId, date);
+  const availableTurnos = new Set(turnos.map((turno) => turno.id));
+  return horarios.filter((horario) => availableTurnos.has(getTurnoFromTime(horario)));
 }
 
 export async function fetchAvailableTurnos(psf: PsfConfig, servicoId: number, date: string) {
