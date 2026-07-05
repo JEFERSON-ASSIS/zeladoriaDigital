@@ -49,17 +49,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push API
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: docker/api/Dockerfile
-          push: true
-          tags: |
-            ${{ env.API_IMAGE }}:main
-            ${{ env.API_IMAGE }}:homolog
-            ${{ env.API_IMAGE }}:${{ env.SHORT_SHA }}
-
       - name: Build and push Web
         uses: docker/build-push-action@v6
         with:
@@ -76,6 +65,18 @@ jobs:
             ${{ env.WEB_IMAGE }}:main
             ${{ env.WEB_IMAGE }}:homolog
             ${{ env.WEB_IMAGE }}:${{ env.SHORT_SHA }}
+
+      - name: Build and push API
+        uses: docker/build-push-action@v6
+        continue-on-error: true
+        with:
+          context: .
+          file: docker/api/Dockerfile
+          push: true
+          tags: |
+            ${{ env.API_IMAGE }}:main
+            ${{ env.API_IMAGE }}:homolog
+            ${{ env.API_IMAGE }}:${{ env.SHORT_SHA }}
 
       - name: Trigger Portainer webhook
         if: env.PORTAINER_WEBHOOK_URL != ''
