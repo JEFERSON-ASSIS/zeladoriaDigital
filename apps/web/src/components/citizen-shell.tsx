@@ -2,13 +2,13 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import type { MenuKey } from '@zeladoria/shared';
 import { clearSession, getSession } from '../lib/auth';
 import { refreshCitizenSession } from '../lib/citizen-pwa-access';
 import { CITIZEN_PWA_NAV_ICONS } from './citizen-pwa-nav-icons';
 import { isNavPathActive, resolveCitizenNavItems } from '../lib/citizen-nav';
-import { PWA_LOGIN } from '../lib/pwa';
+import { exitPwaOrFallback, PWA_LOGIN } from '../lib/pwa';
 import { BrandMark } from './brand-logo';
 import { CitizenConfirmDialog } from './citizen-confirm-dialog';
 import { CitizenPageSkeleton } from './citizen-page-skeleton';
@@ -28,7 +28,6 @@ export function CitizenShell({
   loading = false,
   loadingVariant = 'list'
 }: CitizenShellProps) {
-  const router = useRouter();
   const pathname = usePathname();
   const [menuKeys, setMenuKeys] = useState<MenuKey[] | null>(null);
   const [logoutOpen, setLogoutOpen] = useState(false);
@@ -62,7 +61,7 @@ export function CitizenShell({
   function confirmLogout() {
     clearSession();
     setLogoutOpen(false);
-    router.push(PWA_LOGIN);
+    exitPwaOrFallback(PWA_LOGIN);
   }
 
   if (menuKeys == null) {

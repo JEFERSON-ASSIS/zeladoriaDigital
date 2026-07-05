@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import type { MenuKey } from '@zeladoria/shared';
 import { CitizenConfirmDialog } from './citizen-confirm-dialog';
 import { BrandMark } from './brand-logo';
@@ -12,7 +12,7 @@ import { usePsfUnit } from './psf-unit-provider';
 import { clearSession, getSession } from '../lib/auth';
 import { refreshCitizenSession } from '../lib/citizen-pwa-access';
 import { isNavPathActive, resolveCitizenUnitNavItems } from '../lib/citizen-nav';
-import { buildPwaLoginUrl } from '../lib/pwa';
+import { buildPwaLoginUrl, exitPwaOrFallback } from '../lib/pwa';
 import { CitizenPageSkeleton } from './citizen-page-skeleton';
 
 type CitizenUnitShellProps = {
@@ -22,7 +22,6 @@ type CitizenUnitShellProps = {
 };
 
 export function CitizenUnitShell({ children, title, subtitle }: CitizenUnitShellProps) {
-  const router = useRouter();
   const pathname = usePathname();
   const unit = usePsfUnit();
   const [menuKeys, setMenuKeys] = useState<MenuKey[] | null>(null);
@@ -58,7 +57,7 @@ export function CitizenUnitShell({ children, title, subtitle }: CitizenUnitShell
     if (!unit) return;
     clearSession();
     setLogoutOpen(false);
-    router.push(buildPwaLoginUrl(unit.path()));
+    exitPwaOrFallback(buildPwaLoginUrl(unit.path()));
   }
 
   if (!unit) return null;

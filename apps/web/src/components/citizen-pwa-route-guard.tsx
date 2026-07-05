@@ -9,8 +9,7 @@ import {
   resolveCitizenPwaHome,
   shouldRedirectBoundCitizen
 } from '../lib/citizen-pwa-access';
-import { PWA_LOGIN, PWA_PRIVACY_POLICY } from '../lib/pwa';
-import { isUnitPwaPath } from '../lib/psf-unit';
+import { buildPwaLoginUrl, PWA_LOGIN, PWA_PRIVACY_POLICY } from '../lib/pwa';
 
 const PUBLIC_PWA_PATHS = new Set([PWA_LOGIN, PWA_PRIVACY_POLICY, '/app/offline', '/app']);
 
@@ -20,10 +19,12 @@ export function CitizenPwaRouteGuard({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     if (PUBLIC_PWA_PATHS.has(pathname)) return;
-    if (isUnitPwaPath(pathname)) return;
 
     const session = getSession();
-    if (!session || session.user.role !== 'CIDADAO') return;
+    if (!session || session.user.role !== 'CIDADAO') {
+      router.replace(buildPwaLoginUrl(pathname));
+      return;
+    }
 
     let cancelled = false;
 

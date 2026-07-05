@@ -52,3 +52,21 @@ export async function getPwaServiceWorkerRegistration() {
 
   return registerPwaServiceWorker();
 }
+
+export function exitPwaOrFallback(fallbackUrl: string) {
+  if (typeof window === 'undefined') return;
+
+  if (!isStandaloneDisplayMode()) {
+    window.location.replace(fallbackUrl);
+    return;
+  }
+
+  window.setTimeout(() => {
+    if (document.visibilityState !== 'hidden') {
+      window.location.replace(fallbackUrl);
+    }
+  }, 350);
+
+  window.open('', '_self');
+  window.close();
+}
