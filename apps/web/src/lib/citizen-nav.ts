@@ -73,7 +73,7 @@ export function resolveCitizenUnitNavItems(
         label: UNIT_NAV_LABELS[key],
         href: unit.path(),
         iconKey: key,
-        matchPaths: [unit.basePath, `${unit.basePath}/`]
+        matchPaths: [`=${unit.basePath}`, `=${unit.basePath}/`]
       });
       continue;
     }
@@ -127,5 +127,11 @@ export function isCitizenHealthPath(pathname: string) {
 }
 
 export function isNavPathActive(pathname: string, matchPaths: string[]) {
-  return matchPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+  return matchPaths.some((path) => {
+    if (path.startsWith('=')) {
+      const exactPath = path.slice(1);
+      return pathname === exactPath;
+    }
+    return pathname === path || pathname.startsWith(`${path}/`);
+  });
 }

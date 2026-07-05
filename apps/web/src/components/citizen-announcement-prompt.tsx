@@ -14,11 +14,7 @@ export function CitizenAnnouncementPrompt() {
   if (!canUseCitizenPush()) return null;
 
   if (typeof window !== 'undefined' && Notification.permission === 'granted') {
-    return (
-      <p className="scheduling-copy scheduling-reminder-note">
-        Notificações ativas: você receberá avisos importantes da prefeitura.
-      </p>
-    );
+    return null;
   }
 
   if (typeof window !== 'undefined' && Notification.permission === 'denied') {
