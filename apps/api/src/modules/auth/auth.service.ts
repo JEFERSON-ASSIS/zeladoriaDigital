@@ -29,6 +29,15 @@ function matchDevStaffAccount(email: string, password: string) {
   return fallback && fallback.password === password ? fallback : null;
 }
 
+function normalizeCitizenName(name?: string | null) {
+  return name?.trim().replace(/\s+/g, ' ') ?? '';
+}
+
+function isGenericCitizenName(name?: string | null) {
+  const normalized = normalizeCitizenName(name).toLowerCase();
+  return !normalized || normalized === 'cidadão' || normalized === 'cidadao';
+}
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -78,9 +87,11 @@ export class AuthService {
 
   async citizenPhoneLookup(phone: string) {
     const citizen = await this.citizensService.findByPhone(normalizeCitizenPhone(phone));
+    const registered = Boolean(citizen?.cpf && citizen.lgpdAcceptedAt);
     return {
-      registered: Boolean(citizen?.cpf && citizen.lgpdAcceptedAt),
-      blocked: Boolean(citizen?.blockedAt)
+      registered,
+      blocked: Boolean(citizen?.blockedAt),
+      needsName: registered && isGenericCitizenName(citizen?.name)
     };
   }
 
@@ -92,8 +103,15 @@ export class AuthService {
     }
   }
 
-  async citizenAccess(phone: string, cpf?: string, lgpdAccepted = false, healthUnitPsfId?: string) {
+  async citizenAccess(
+    phone: string,
+    cpf?: string,
+    lgpdAccepted = false,
+    healthUnitPsfId?: string,
+    name?: string
+  ) {
     const normalizedPhone = normalizeCitizenPhone(phone);
+    const normalizedName = normalizeCitizenName(name);
 
     if (healthUnitPsfId && !isHealthUnitPsfId(healthUnitPsfId)) {
       throw new BadRequestException('Unidade de saúde inválida');
@@ -116,6 +134,9 @@ export class AuthService {
       }
       if (!citizen.healthUnitPsfId && requestedUnit) {
         citizen = await this.citizensService.assignHealthUnit(citizen.id, requestedUnit);
+      }
+      if (normalizedName && isGenericCitizenName(citizen.name)) {
+        citizen = await this.citizensService.update(citizen.id, { name: normalizedName });
       }
       this.assertCitizenNotBlocked(citizen);
       return this.issueToken({ ...citizen, role: 'CIDADAO' as const });
@@ -143,6 +164,9 @@ export class AuthService {
       if (!citizen.healthUnitPsfId && requestedUnit) {
         citizen = await this.citizensService.assignHealthUnit(citizen.id, requestedUnit);
       }
+      if (normalizedName && isGenericCitizenName(citizen.name)) {
+        citizen = await this.citizensService.update(citizen.id, { name: normalizedName });
+      }
     } else {
       if (!requestedUnit) {
         throw new BadRequestException('Cadastre-se pelo link da sua unidade de saúde.');
@@ -150,7 +174,10 @@ export class AuthService {
       if (!lgpdAccepted) {
         throw new BadRequestException('É necessário aceitar os termos de privacidade');
       }
-      citizen = await this.citizensService.registerAccess(normalizedPhone, normalizedCpf, requestedUnit);
+      if (!normalizedName) {
+        throw new BadRequestException('Informe seu nome completo.');
+      }
+      citizen = await this.citizensService.registerAccess(normalizedPhone, normalizedCpf, requestedUnit, normalizedName);
     }
 
     if (!citizen.lgpdAcceptedAt) {

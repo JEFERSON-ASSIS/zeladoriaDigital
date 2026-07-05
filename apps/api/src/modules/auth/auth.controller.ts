@@ -28,7 +28,8 @@ export class AuthController {
       body.phone,
       body.cpf,
       body.lgpdAccepted ?? false,
-      body.healthUnitPsfId
+      body.healthUnitPsfId,
+      body.name
     );
   }
 

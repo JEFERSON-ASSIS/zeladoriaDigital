@@ -1,4 +1,4 @@
-import { IsBoolean, IsIn, IsOptional, IsString, Length, Matches } from 'class-validator';
+import { IsBoolean, IsIn, IsOptional, IsString, Length, Matches, MaxLength, MinLength } from 'class-validator';
 import { HEALTH_UNIT_PSF_IDS } from '@zeladoria/shared';
 
 export class CitizenPhoneLookupDto {
@@ -11,6 +11,12 @@ export class CitizenAccessDto {
   @IsString()
   @Matches(/^\d{10,11}$/, { message: 'Celular inválido' })
   phone!: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(3, { message: 'Nome completo inválido' })
+  @MaxLength(120, { message: 'Nome completo inválido' })
+  name?: string;
 
   @IsOptional()
   @IsString()

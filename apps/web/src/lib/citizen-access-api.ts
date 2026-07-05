@@ -30,23 +30,29 @@ export async function lookupCitizenPhone(phone: string) {
     throw new Error('Não foi possível verificar o celular.');
   }
 
-  return response.json() as Promise<{ registered: boolean }>;
+  return response.json() as Promise<{ registered: boolean; needsName?: boolean }>;
 }
 
 export async function citizenAccess(
   phone: string,
   cpf?: string,
   lgpdAccepted = false,
-  healthUnitPsfId?: string
+  healthUnitPsfId?: string,
+  name?: string
 ) {
   const payload: {
     phone: string;
+    name?: string;
     cpf?: string;
     lgpdAccepted?: boolean;
     healthUnitPsfId?: string;
   } = {
     phone: onlyDigits(phone)
   };
+
+  if (name?.trim()) {
+    payload.name = name.trim().replace(/\s+/g, ' ');
+  }
 
   if (cpf) {
     payload.cpf = onlyDigits(cpf);

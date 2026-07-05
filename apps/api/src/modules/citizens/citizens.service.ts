@@ -46,10 +46,10 @@ export class CitizensService {
     });
   }
 
-  registerAccess(phone: string, cpf: string, healthUnitPsfId: HealthUnitPsfId) {
+  registerAccess(phone: string, cpf: string, healthUnitPsfId: HealthUnitPsfId, name: string) {
     return this.prisma.citizen.create({
       data: {
-        name: 'Cidadão',
+        name,
         phone: normalizeCitizenPhone(phone),
         cpf: normalizeCitizenCpf(cpf),
         healthUnitPsfId,

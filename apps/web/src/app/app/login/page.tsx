@@ -60,8 +60,10 @@ function PwaLoginForm() {
   const registrationUnitLabel = registrationUnitId ? getPsfUnitDisplayName(registrationUnitId) : null;
   const [step, setStep] = useState<Step>('phone');
   const [phone, setPhone] = useState('');
+  const [fullName, setFullName] = useState('');
   const [cpf, setCpf] = useState('');
   const [lgpdAccepted, setLgpdAccepted] = useState(false);
+  const [registeredNeedsName, setRegisteredNeedsName] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -100,12 +102,13 @@ function PwaLoginForm() {
     }
   }, [registrationUnitId]);
 
-  async function completeAccess(accessPhone: string, accessCpf?: string, accessLgpd = false) {
+  async function completeAccess(accessPhone: string, accessCpf?: string, accessLgpd = false, accessName?: string) {
     const result = await citizenAccess(
       accessPhone,
       accessCpf,
       accessLgpd,
-      registrationUnitId ?? undefined
+      registrationUnitId ?? undefined,
+      accessName
     );
     let user;
     try {
@@ -134,11 +137,12 @@ function PwaLoginForm() {
 
     setLoading(true);
     try {
-      const { registered } = await lookupCitizenPhone(phone);
-      if (registered) {
+      const { registered, needsName } = await lookupCitizenPhone(phone);
+      if (registered && !needsName) {
         await completeAccess(phone);
         return;
       }
+      setRegisteredNeedsName(Boolean(registered && needsName));
       setStep('cpf');
     } catch (accessError) {
       setError(accessError instanceof Error ? accessError.message : 'Não foi possível continuar.');
@@ -149,6 +153,24 @@ function PwaLoginForm() {
 
   async function onRegisterSubmit() {
     setError(null);
+    const normalizedName = fullName.trim().replace(/\s+/g, ' ');
+    if (normalizedName.length < 3) {
+      setError('Informe seu nome completo.');
+      return;
+    }
+
+    if (registeredNeedsName) {
+      setLoading(true);
+      try {
+        await completeAccess(phone, undefined, false, normalizedName);
+      } catch (accessError) {
+        setError(accessError instanceof Error ? accessError.message : 'Não foi possível entrar.');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     if (onlyDigits(cpf).length !== 11) {
       setError('Informe um CPF válido.');
       return;
@@ -160,7 +182,7 @@ function PwaLoginForm() {
 
     setLoading(true);
     try {
-      await completeAccess(phone, cpf, lgpdAccepted);
+      await completeAccess(phone, cpf, lgpdAccepted, normalizedName);
     } catch (accessError) {
       setError(accessError instanceof Error ? accessError.message : 'Não foi possível entrar.');
     } finally {
@@ -195,7 +217,10 @@ function PwaLoginForm() {
                   Celular
                   <input
                     value={phone}
-                    onChange={(event) => setPhone(formatPhone(event.target.value))}
+                    onChange={(event) => {
+                      setPhone(formatPhone(event.target.value));
+                      setRegisteredNeedsName(false);
+                    }}
                     type="tel"
                     inputMode="numeric"
                     autoComplete="tel"
@@ -211,25 +236,48 @@ function PwaLoginForm() {
             </>
           ) : (
             <>
-              <button type="button" className="pwa-access-back" onClick={() => setStep('phone')}>
+              <button
+                type="button"
+                className="pwa-access-back"
+                onClick={() => {
+                  setRegisteredNeedsName(false);
+                  setStep('phone');
+                }}
+              >
                 ← Voltar
               </button>
-              <h1>Primeiro acesso</h1>
-              <p className="login-copy">Informe seu CPF e aceite os termos. Nas próximas vezes, só o celular.</p>
+              <h1>{registeredNeedsName ? 'Complete seu cadastro' : 'Primeiro acesso'}</h1>
+              <p className="login-copy">
+                {registeredNeedsName
+                  ? 'Informe seu nome completo para atualizar seu cadastro.'
+                  : 'Informe seu nome completo, CPF e aceite os termos. Nas próximas vezes, só o celular.'}
+              </p>
               <div className="login-form">
                 <label>
-                  CPF
+                  Nome completo
                   <input
-                    value={cpf}
-                    onChange={(event) => setCpf(formatCpf(event.target.value))}
+                    value={fullName}
+                    onChange={(event) => setFullName(event.target.value)}
                     type="text"
-                    inputMode="numeric"
-                    autoComplete="off"
-                    placeholder="000.000.000-00"
+                    autoComplete="name"
+                    placeholder="Seu nome completo"
                     autoFocus
                   />
                 </label>
-                {registrationUnit ? (
+                {!registeredNeedsName ? (
+                  <label>
+                    CPF
+                    <input
+                      value={cpf}
+                      onChange={(event) => setCpf(formatCpf(event.target.value))}
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="off"
+                      placeholder="000.000.000-00"
+                    />
+                  </label>
+                ) : null}
+                {registrationUnit && !registeredNeedsName ? (
                   <p className="pwa-login-unit pwa-login-unit--field">
                     <span className="pwa-login-unit__label">Cadastro vinculado a</span>
                     <strong>
@@ -237,21 +285,23 @@ function PwaLoginForm() {
                     </strong>
                   </p>
                 ) : null}
-                <div className="pwa-lgpd-box">
-                  <p className="pwa-lgpd-box__title">Privacidade e proteção de dados (LGPD)</p>
-                  <p className="pwa-lgpd-box__text">{LGPD_TEXT}</p>
-                  <label className="pwa-lgpd-box__check">
-                    <input
-                      type="checkbox"
-                      checked={lgpdAccepted}
-                      onChange={(event) => setLgpdAccepted(event.target.checked)}
-                    />
-                    <span>Confirmo estar ciente e autorizo o tratamento dos meus dados conforme descrito acima.</span>
-                  </label>
-                </div>
+                {!registeredNeedsName ? (
+                  <div className="pwa-lgpd-box">
+                    <p className="pwa-lgpd-box__title">Privacidade e proteção de dados (LGPD)</p>
+                    <p className="pwa-lgpd-box__text">{LGPD_TEXT}</p>
+                    <label className="pwa-lgpd-box__check">
+                      <input
+                        type="checkbox"
+                        checked={lgpdAccepted}
+                        onChange={(event) => setLgpdAccepted(event.target.checked)}
+                      />
+                      <span>Confirmo estar ciente e autorizo o tratamento dos meus dados conforme descrito acima.</span>
+                    </label>
+                  </div>
+                ) : null}
                 {error ? <p className="login-error">{error}</p> : null}
                 <button type="button" className="btn-primary" disabled={loading} onClick={() => void onRegisterSubmit()}>
-                  {loading ? 'Entrando...' : 'Concluir cadastro'}
+                  {loading ? 'Entrando...' : registeredNeedsName ? 'Atualizar e entrar' : 'Concluir cadastro'}
                 </button>
               </div>
             </>
