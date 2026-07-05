@@ -23,6 +23,13 @@ type RemoteAppointment = {
   status?: string;
 };
 
+function normalizePsfBaseUrl(url: string) {
+  return url.replace(
+    'https://saude.agendaclique.com.br/api_chatbot_',
+    'https://saude.agendaclique.com.br/painel/api_chatbot_'
+  );
+}
+
 @Injectable()
 export class SchedulingRemindersService {
   private readonly logger = new Logger(SchedulingRemindersService.name);
@@ -156,19 +163,19 @@ export class SchedulingRemindersService {
         env: 'NEXT_PUBLIC_PSF1_API_URL',
         label: 'PSF 1',
         empresaId: 1,
-        fallback: 'https://saude.agendaclique.com.br/api_chatbot_psf1'
+        fallback: 'https://saude.agendaclique.com.br/painel/api_chatbot_psf1'
       },
       psf2: {
         env: 'NEXT_PUBLIC_PSF2_API_URL',
         label: 'PSF 2',
         empresaId: 2,
-        fallback: 'https://saude.agendaclique.com.br/api_chatbot_psf2'
+        fallback: 'https://saude.agendaclique.com.br/painel/api_chatbot_psf2'
       },
       psf3: {
         env: 'NEXT_PUBLIC_PSF3_API_URL',
         label: 'PSF 3',
         empresaId: 3,
-        fallback: 'https://saude.agendaclique.com.br/api_chatbot_psf3'
+        fallback: 'https://saude.agendaclique.com.br/painel/api_chatbot_psf3'
       }
     };
 
@@ -178,7 +185,7 @@ export class SchedulingRemindersService {
     return {
       id: psfId,
       label: item.label,
-      baseUrl: this.config.get<string>(item.env) ?? item.fallback,
+      baseUrl: normalizePsfBaseUrl(this.config.get<string>(item.env) ?? item.fallback),
       empresaId: item.empresaId
     };
   }

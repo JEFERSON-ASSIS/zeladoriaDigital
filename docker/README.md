@@ -22,9 +22,9 @@ docker build -f docker/api/Dockerfile -t ghcr.io/jeferson-assis/zeladoria-api:ho
 # Web — NEXT_PUBLIC_* entram no BUILD (obrigatório)
 docker build -f docker/web/Dockerfile \
   --build-arg NEXT_PUBLIC_API_URL=https://api-homolog.prefeituranamao.com.br \
-  --build-arg NEXT_PUBLIC_PSF1_API_URL=https://saude.agendaclique.com.br/api_chatbot_psf1 \
-  --build-arg NEXT_PUBLIC_PSF2_API_URL=https://saude.agendaclique.com.br/api_chatbot_psf2 \
-  --build-arg NEXT_PUBLIC_PSF3_API_URL=https://saude.agendaclique.com.br/api_chatbot_psf3 \
+  --build-arg NEXT_PUBLIC_PSF1_API_URL=https://saude.agendaclique.com.br/painel/api_chatbot_psf1 \
+  --build-arg NEXT_PUBLIC_PSF2_API_URL=https://saude.agendaclique.com.br/painel/api_chatbot_psf2 \
+  --build-arg NEXT_PUBLIC_PSF3_API_URL=https://saude.agendaclique.com.br/painel/api_chatbot_psf3 \
   --build-arg NEXT_PUBLIC_VAPID_PUBLIC_KEY=SUA_CHAVE \
   -t ghcr.io/jeferson-assis/zeladoria-web:homolog .
 

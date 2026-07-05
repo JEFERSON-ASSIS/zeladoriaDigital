@@ -13,9 +13,9 @@ permissions:
 env:
   REGISTRY: ghcr.io
   NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL || 'https://api-homolog.prefeituranamao.com.br' }}
-  NEXT_PUBLIC_PSF1_API_URL: ${{ vars.NEXT_PUBLIC_PSF1_API_URL || 'https://saude.agendaclique.com.br/api_chatbot_psf1' }}
-  NEXT_PUBLIC_PSF2_API_URL: ${{ vars.NEXT_PUBLIC_PSF2_API_URL || 'https://saude.agendaclique.com.br/api_chatbot_psf2' }}
-  NEXT_PUBLIC_PSF3_API_URL: ${{ vars.NEXT_PUBLIC_PSF3_API_URL || 'https://saude.agendaclique.com.br/api_chatbot_psf3' }}
+  NEXT_PUBLIC_PSF1_API_URL: ${{ vars.NEXT_PUBLIC_PSF1_API_URL || 'https://saude.agendaclique.com.br/painel/api_chatbot_psf1' }}
+  NEXT_PUBLIC_PSF2_API_URL: ${{ vars.NEXT_PUBLIC_PSF2_API_URL || 'https://saude.agendaclique.com.br/painel/api_chatbot_psf2' }}
+  NEXT_PUBLIC_PSF3_API_URL: ${{ vars.NEXT_PUBLIC_PSF3_API_URL || 'https://saude.agendaclique.com.br/painel/api_chatbot_psf3' }}
   NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${{ vars.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '' }}
   PORTAINER_WEBHOOK_URL: ${{ secrets.PORTAINER_WEBHOOK_URL || '' }}
 

@@ -22,7 +22,11 @@ export type PsfConfig = {
   medicoFlow?: MedicoBookingFlow;
 };
 
-const PROD_PSF_BASE = 'https://saude.agendaclique.com.br';
+const PROD_PSF_BASE = 'https://saude.agendaclique.com.br/painel';
+
+function normalizePsfBaseUrl(url: string) {
+  return url.replace('https://saude.agendaclique.com.br/api_chatbot_', `${PROD_PSF_BASE}/api_chatbot_`);
+}
 
 /** URLs conforme `api_agendamentos/api_chatbot_shared/docs/openapi.yaml` */
 export const PSF_OPTIONS: PsfConfig[] = [
@@ -30,7 +34,7 @@ export const PSF_OPTIONS: PsfConfig[] = [
     id: 'psf1',
     label: 'PSF 1',
     subtitle: 'Sol Nascente',
-    baseUrl: process.env.NEXT_PUBLIC_PSF1_API_URL ?? `${PROD_PSF_BASE}/api_chatbot_psf1`,
+    baseUrl: normalizePsfBaseUrl(process.env.NEXT_PUBLIC_PSF1_API_URL ?? `${PROD_PSF_BASE}/api_chatbot_psf1`),
     empresaId: 1,
     servicos: { medico: 18, enfermeiro: 20, dentista: 22 },
     bookingEnabled: true
@@ -39,7 +43,7 @@ export const PSF_OPTIONS: PsfConfig[] = [
     id: 'psf2',
     label: 'PSF 2',
     subtitle: 'PSF 2 — Centro',
-    baseUrl: process.env.NEXT_PUBLIC_PSF2_API_URL ?? `${PROD_PSF_BASE}/api_chatbot_psf2`,
+    baseUrl: normalizePsfBaseUrl(process.env.NEXT_PUBLIC_PSF2_API_URL ?? `${PROD_PSF_BASE}/api_chatbot_psf2`),
     empresaId: 2,
     servicos: { medico: 21, enfermeiro: 23, dentista: 19 },
     bookingEnabled: true
@@ -48,7 +52,7 @@ export const PSF_OPTIONS: PsfConfig[] = [
     id: 'psf3',
     label: 'UBS Rural',
     subtitle: 'PSF 3 — Zona Rural',
-    baseUrl: process.env.NEXT_PUBLIC_PSF3_API_URL ?? `${PROD_PSF_BASE}/api_chatbot_psf3`,
+    baseUrl: normalizePsfBaseUrl(process.env.NEXT_PUBLIC_PSF3_API_URL ?? `${PROD_PSF_BASE}/api_chatbot_psf3`),
     empresaId: 3,
     servicos: { medico: 24, enfermeiro: 25, dentista: 0 },
     bookingEnabled: true,
