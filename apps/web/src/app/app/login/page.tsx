@@ -50,7 +50,6 @@ function PwaLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const returnPath = searchParams.get('return');
-  const safeReturnPath = returnPath?.startsWith('/app') ? returnPath : null;
   const registrationUnitId = returnPath ? parsePsfIdFromPath(returnPath) : null;
   const registrationUnit = registrationUnitId ? getPsfUnitConfig(registrationUnitId) : null;
   const registrationUnitLabel = registrationUnitId ? getPsfUnitDisplayName(registrationUnitId) : null;
@@ -228,11 +227,6 @@ function PwaLoginForm() {
                 <button type="button" className="btn-primary" disabled={loading} onClick={() => void onPhoneSubmit()}>
                   {loading ? 'Verificando...' : 'Entrar'}
                 </button>
-                {safeReturnPath ? (
-                  <Link href={safeReturnPath} className="pwa-access-back pwa-access-back--home">
-                    Voltar para início
-                  </Link>
-                ) : null}
               </div>
             </>
           ) : (
