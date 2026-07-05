@@ -49,8 +49,6 @@ export default function MyAppointmentsPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [items, setItems] = useState<SchedulingAppointment[]>([]);
   const [history, setHistory] = useState<SchedulingHistoryEntry[]>([]);
-  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
-  const [partialSync, setPartialSync] = useState(false);
   const [cancelTarget, setCancelTarget] = useState<SchedulingAppointment | null>(null);
   const cpfRef = useRef('');
 
@@ -82,11 +80,13 @@ export default function MyAppointmentsPage() {
 
     try {
       const result = await listAllAppointmentsForPwa(psf, document);
-      const synced = syncHistoryWithRemote(document, result.agendamentos, psf.id, psf.label);
       setItems(result.agendamentos);
-      setHistory(synced);
-      setPartialSync(result.partialSync ?? false);
-      setLastSyncedAt(new Date().toISOString());
+      if (result.partialSync) {
+        setHistory(getSchedulingHistory(document));
+      } else {
+        const synced = syncHistoryWithRemote(document, result.agendamentos, psf.id, psf.label);
+        setHistory(synced);
+      }
       void processAppointmentReminders(result.agendamentos, psf.label);
     } catch (searchError) {
       if (!options?.silent) {
@@ -244,22 +244,13 @@ export default function MyAppointmentsPage() {
 
         <SchedulingReminderPrompt compact />
 
-        {lastSyncedAt ? (
-          <p className="scheduling-copy scheduling-sync-meta">
-            Status sincronizado com a unidade em {formatHistoryTimestamp(lastSyncedAt)}.
-            {partialSync
-              ? ' Sincronização parcial: aguardando atualização do servidor (listar_pwa).'
-              : null}
-          </p>
-        ) : null}
-
         {error ? <p className="login-error">{error}</p> : null}
         {success ? <p className="success-message">{success}</p> : null}
 
         {searching ? <p className="scheduling-copy">Consultando agendamentos...</p> : null}
 
-        {!searching && items.length === 0 && !error ? (
-          <p className="scheduling-copy">Nenhum agendamento encontrado para este CPF.</p>
+        {!searching && items.length === 0 && history.length === 0 && !error ? (
+          <p className="scheduling-copy">Nenhum histórico de agendamento encontrado para este CPF.</p>
         ) : null}
 
         {items.length > 0 ? (
@@ -308,15 +299,11 @@ export default function MyAppointmentsPage() {
       </section>
 
       <section className="panel scheduling-panel scheduling-history">
-        <p className="eyebrow">Histórico neste aparelho</p>
+        <p className="eyebrow">Histórico do CPF</p>
         <h3>Agendamentos e cancelamentos</h3>
-        <p className="scheduling-copy">
-          Registro local sincronizado com o sistema da unidade. Quando o status mudar na recepção, ele atualiza aqui
-          automaticamente.
-        </p>
 
         {history.length === 0 ? (
-          <p className="scheduling-copy">Nenhum registro local ainda.</p>
+          <p className="scheduling-copy">Nenhum histórico encontrado para este CPF.</p>
         ) : (
           <ul className="scheduling-history__list">
             {history.map((entry) => (

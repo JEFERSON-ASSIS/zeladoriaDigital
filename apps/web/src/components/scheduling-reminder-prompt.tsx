@@ -17,11 +17,7 @@ export function SchedulingReminderPrompt({ compact }: SchedulingReminderPromptPr
   const permission = getNotificationPermission();
 
   if (permission === 'granted') {
-    return (
-      <p className="scheduling-copy scheduling-reminder-note">
-        Lembretes ativos: você será avisado 1 dia antes de consultas pendentes.
-      </p>
-    );
+    return null;
   }
 
   if (permission === 'denied') {
@@ -57,11 +53,7 @@ export function SchedulingReminderPrompt({ compact }: SchedulingReminderPromptPr
   }
 
   if (status === 'enabled') {
-    return (
-      <p className="scheduling-copy scheduling-reminder-note">
-        Lembretes ativados. Avisaremos 1 dia antes da consulta.
-      </p>
-    );
+    return null;
   }
 
   return (
