@@ -4,6 +4,8 @@ import { HEALTH_UNIT_PSF_IDS } from '@zeladoria/shared';
 export class UpdateCitizenDto {
   @IsOptional()
   @IsString()
+  @MinLength(3)
+  @MaxLength(120)
   name?: string;
 
   @IsOptional()

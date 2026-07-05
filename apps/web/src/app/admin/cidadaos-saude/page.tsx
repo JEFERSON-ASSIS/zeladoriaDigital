@@ -59,6 +59,19 @@ function unitBadgeClass(psfId: string | null) {
   return `health-citizens-badge health-citizens-badge--${psfId}`;
 }
 
+function normalizeCitizenName(name: string | null | undefined) {
+  return name?.trim().replace(/\s+/g, ' ') ?? '';
+}
+
+function isGenericCitizenName(name: string | null | undefined) {
+  const normalized = normalizeCitizenName(name).toLowerCase();
+  return !normalized || normalized === 'cidadão' || normalized === 'cidadao';
+}
+
+function getCitizenDisplayName(citizen: AdminCitizenRecord) {
+  return isGenericCitizenName(citizen.name) ? 'Nome não informado' : citizen.name;
+}
+
 function closeActionsMenu(event: React.MouseEvent<HTMLButtonElement>) {
   const details = event.currentTarget.closest('details');
   if (details) details.open = false;
@@ -83,7 +96,7 @@ function CitizenActionsMenu({
 }) {
   return (
     <details className="health-citizens-menu">
-      <summary aria-label={`Ações para ${citizen.name}`}>Ações</summary>
+      <summary aria-label={`Ações para ${getCitizenDisplayName(citizen)}`}>Ações</summary>
       <div className="health-citizens-menu__panel">
         <button
           type="button"
@@ -92,7 +105,7 @@ function CitizenActionsMenu({
             onEdit();
           }}
         >
-          Alterar unidade
+          Editar cadastro
         </button>
         {blocked ? (
           <button
@@ -140,6 +153,7 @@ export default function AdminHealthCitizensPage() {
   const [filter, setFilter] = useState<ListFilter>('all');
   const [search, setSearch] = useState('');
   const [editing, setEditing] = useState<AdminCitizenRecord | null>(null);
+  const [nextName, setNextName] = useState('');
   const [nextUnit, setNextUnit] = useState<HealthUnitPsfId>('psf1');
   const [blockReason, setBlockReason] = useState('');
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
@@ -186,7 +200,7 @@ export default function AdminHealthCitizensPage() {
 
       if (!needle) return true;
 
-      const haystack = [item.name, item.phone ?? '', item.cpf ?? ''].join(' ').toLowerCase();
+      const haystack = [item.name, getCitizenDisplayName(item), item.phone ?? '', item.cpf ?? ''].join(' ').toLowerCase();
       if (haystack.includes(needle)) return true;
       if (digits && (item.phone?.includes(digits) || item.cpf?.includes(digits))) return true;
       return false;
@@ -202,13 +216,17 @@ export default function AdminHealthCitizensPage() {
   const saveUnitMutation = useMutation({
     mutationFn: () => {
       if (!editing) throw new Error('Nenhum cidadão selecionado.');
-      return updateCitizenHealthUnit(editing.id, nextUnit, getStoredAccessToken());
+      const normalizedName = normalizeCitizenName(nextName);
+      if (normalizedName.length < 3) {
+        throw new Error('Informe o nome completo do cidadão.');
+      }
+      return updateCitizenHealthUnit(editing.id, nextUnit, normalizedName, getStoredAccessToken());
     },
     onSuccess: async () => {
       setEditing(null);
-      await refreshList('Unidade atualizada. O cidadão precisa sair e entrar de novo no app.');
+      await refreshList('Cadastro atualizado. O cidadão precisa sair e entrar de novo no app.');
     },
-    onError: (err) => setError(err instanceof Error ? err.message : 'Não foi possível salvar a unidade.')
+    onError: (err) => setError(err instanceof Error ? err.message : 'Não foi possível salvar o cadastro.')
   });
 
   const confirmMutation = useMutation({
@@ -240,6 +258,7 @@ export default function AdminHealthCitizensPage() {
 
   function openEdit(citizen: AdminCitizenRecord) {
     setEditing(citizen);
+    setNextName(isGenericCitizenName(citizen.name) ? '' : citizen.name);
     setNextUnit((citizen.healthUnitPsfId as HealthUnitPsfId) ?? 'psf1');
     setSuccess(null);
     setError(null);
@@ -279,7 +298,8 @@ export default function AdminHealthCitizensPage() {
   function renderCitizenPerson(citizen: AdminCitizenRecord) {
     return (
       <div className="health-citizens-person">
-        <strong>{citizen.name}</strong>
+        <strong>{getCitizenDisplayName(citizen)}</strong>
+        {isGenericCitizenName(citizen.name) ? <span>Nome pendente</span> : null}
         <span>{citizen.phone ? formatPhone(citizen.phone) : 'Sem celular'}</span>
         <span>{citizen.cpf ? formatCpf(citizen.cpf) : 'Sem CPF'}</span>
       </div>
@@ -489,20 +509,30 @@ export default function AdminHealthCitizensPage() {
           <section className="health-citizens-modal" onClick={(event) => event.stopPropagation()}>
             <header className="health-citizens-modal__header">
               <div>
-                <p className="eyebrow">Unidade de saúde</p>
-                <h3>Alterar unidade</h3>
+                <p className="eyebrow">Cadastro do cidadão</p>
+                <h3>Editar cadastro</h3>
               </div>
               <button type="button" className="btn-secondary" onClick={() => setEditing(null)}>
                 Fechar
               </button>
             </header>
             <p className="health-citizens-modal__person">
-              <strong>{editing.name}</strong>
+              <strong>{getCitizenDisplayName(editing)}</strong>
               <span>
                 {editing.phone ? formatPhone(editing.phone) : 'Sem celular'} ·{' '}
                 {editing.cpf ? formatCpf(editing.cpf) : 'Sem CPF'}
               </span>
             </p>
+            <label className="form-field">
+              <span>Nome completo</span>
+              <input
+                value={nextName}
+                onChange={(event) => setNextName(event.target.value)}
+                placeholder="Nome completo do cidadão"
+                autoComplete="name"
+                maxLength={120}
+              />
+            </label>
             <div className="health-citizens-unit-grid">
               {HEALTH_UNIT_PSF_IDS.map((id) => (
                 <button
@@ -520,7 +550,7 @@ export default function AdminHealthCitizensPage() {
                 Cancelar
               </button>
               <button type="button" disabled={saveUnitMutation.isPending} onClick={() => saveUnitMutation.mutate()}>
-                {saveUnitMutation.isPending ? 'Salvando...' : 'Salvar unidade'}
+                {saveUnitMutation.isPending ? 'Salvando...' : 'Salvar cadastro'}
               </button>
             </div>
           </section>
@@ -552,7 +582,7 @@ export default function AdminHealthCitizensPage() {
             <dl className="citizen-dialog__details">
               <div className="citizen-dialog__detail-row">
                 <dt>Nome</dt>
-                <dd>{confirmAction.citizen.name}</dd>
+                <dd>{getCitizenDisplayName(confirmAction.citizen)}</dd>
               </div>
               <div className="citizen-dialog__detail-row">
                 <dt>Celular</dt>

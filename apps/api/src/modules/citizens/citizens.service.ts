@@ -14,6 +14,7 @@ export class CitizensService {
     return this.prisma.citizen.create({
       data: {
         ...data,
+        name: data.name.trim().replace(/\s+/g, ' '),
         phone: data.phone ? normalizeCitizenPhone(data.phone) : undefined,
         cpf: data.cpf ? normalizeCitizenCpf(data.cpf) : undefined,
         password: data.password ? await bcrypt.hash(data.password, 10) : undefined
@@ -75,6 +76,7 @@ export class CitizensService {
   async update(id: string, data: UpdateCitizenDto) {
     const payload: Record<string, unknown> = {
       ...data,
+      name: data.name ? data.name.trim().replace(/\s+/g, ' ') : data.name,
       phone: data.phone ? normalizeCitizenPhone(data.phone) : data.phone,
       cpf: data.cpf ? normalizeCitizenCpf(data.cpf) : data.cpf,
       password: data.password ? await bcrypt.hash(data.password, 10) : undefined

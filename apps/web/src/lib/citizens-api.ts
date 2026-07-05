@@ -17,6 +17,7 @@ export type AdminCitizenRecord = {
 };
 
 export type UpdateCitizenPayload = {
+  name?: string;
   healthUnitPsfId?: HealthUnitPsfId | null;
   blocked?: boolean;
   blockedReason?: string | null;
@@ -74,9 +75,10 @@ export async function updateCitizen(id: string, payload: UpdateCitizenPayload, a
 export async function updateCitizenHealthUnit(
   id: string,
   healthUnitPsfId: HealthUnitPsfId | null,
+  name?: string,
   accessToken?: string
 ) {
-  return updateCitizen(id, { healthUnitPsfId }, accessToken);
+  return updateCitizen(id, { healthUnitPsfId, name }, accessToken);
 }
 
 export async function setCitizenBlocked(
