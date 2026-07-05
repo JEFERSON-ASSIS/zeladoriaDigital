@@ -114,11 +114,6 @@ export default function MyAppointmentsPage() {
       return;
     }
 
-    if (unitFromPath) {
-      router.replace(pwaPath('/meus-agendamentos'));
-      return;
-    }
-
     if (unit) {
       setNeedsPsf(false);
     } else if (!getSavedPsfConfig()) {
@@ -305,7 +300,7 @@ export default function MyAppointmentsPage() {
         <div className="form-actions" style={{ marginTop: 16 }}>
           <button
             type="button"
-            onClick={() => router.push(pwaPath('/agendamento'))}
+            onClick={() => router.push(unit ? unit.path('/agendamento') : pwaPath('/agendamento'))}
           >
             Novo agendamento
           </button>

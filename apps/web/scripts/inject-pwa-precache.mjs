@@ -20,6 +20,9 @@ const PWA_HTML_ROUTES = [
   '/app/unidade/psf1/agendamento',
   '/app/unidade/psf2/agendamento',
   '/app/unidade/psf3/agendamento',
+  '/app/unidade/psf1/meus-agendamentos',
+  '/app/unidade/psf2/meus-agendamentos',
+  '/app/unidade/psf3/meus-agendamentos',
   '/app/offline'
 ];
 

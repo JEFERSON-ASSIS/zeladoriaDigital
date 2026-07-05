@@ -19,6 +19,12 @@ export default function PwaLauncherPage() {
     }
 
     if (session.user.role === 'CIDADAO') {
+      const unit = new URLSearchParams(window.location.search).get('unit');
+      if (unit && isPsfId(unit)) {
+        router.replace(unitPath(unit));
+        return;
+      }
+
       const home = resolveCitizenPwaHome(session.user.menuKeys, session.user.healthUnitPsfId);
       if (home !== PWA_LOGIN) {
         router.replace(home);

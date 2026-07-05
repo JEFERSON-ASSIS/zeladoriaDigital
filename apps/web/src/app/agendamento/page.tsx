@@ -73,11 +73,6 @@ export default function SchedulingPage() {
       return;
     }
 
-    if (unitFromPath) {
-      router.replace(pwaPath('/agendamento'));
-      return;
-    }
-
     if (unit) {
       setPsf(unit.psf);
       setStep('booking');
@@ -267,12 +262,13 @@ export default function SchedulingPage() {
 
   if (step === 'success') {
     const appointmentsPath = pwaPath('/meus-agendamentos');
+    const unitAppointmentsPath = unit ? unit.path('/meus-agendamentos') : appointmentsPath;
     return (
       <CitizenAppShell title="Agendamento confirmado" subtitle={successMessage ?? 'Sua consulta foi registrada.'}>
         <section className="panel scheduling-panel">
           <p className="success-message">{successMessage}</p>
           <div className="form-actions">
-            <button type="button" onClick={() => router.push(appointmentsPath)}>
+            <button type="button" onClick={() => router.push(unitAppointmentsPath)}>
               Ver meus agendamentos
             </button>
             <button

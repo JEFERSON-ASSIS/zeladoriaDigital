@@ -1,17 +1,19 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { CitizenAnnouncementPrompt } from '../../components/citizen-announcement-prompt';
 import { CitizenEmptyState } from '../../components/citizen-empty-state';
 import { CitizenAppShell } from '../../components/citizen-app-shell';
 import { getSession } from '../../lib/auth';
 import { fetchCurrentUser } from '../../lib/auth-api';
 import { fetchAnnouncementFeed, resolveAnnouncementAssetUrl, type CitizenAnnouncement } from '../../lib/announcements-api';
-import { PWA_LOGIN } from '../../lib/pwa';
+import { buildPwaLoginUrl, PWA_LOGIN } from '../../lib/pwa';
+import { isUnitPwaPath } from '../../lib/psf-unit';
 
 export default function CitizenHomePage() {
   const router = useRouter();
+  const pathname = usePathname();
   const [items, setItems] = useState<CitizenAnnouncement[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,7 +21,7 @@ export default function CitizenHomePage() {
   useEffect(() => {
     const session = getSession();
     if (!session) {
-      router.replace(PWA_LOGIN);
+      router.replace(isUnitPwaPath(pathname) ? buildPwaLoginUrl(pathname) : PWA_LOGIN);
       return;
     }
 
@@ -31,7 +33,7 @@ export default function CitizenHomePage() {
           .catch(() => setError('Não foi possível carregar os avisos.'))
           .finally(() => setLoading(false));
       });
-  }, [router]);
+  }, [pathname, router]);
 
   return (
     <CitizenAppShell title="Início" subtitle="Avisos e comunicados da prefeitura." loading={loading} loadingVariant="feed">

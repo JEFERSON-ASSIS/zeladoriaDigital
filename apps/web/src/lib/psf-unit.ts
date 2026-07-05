@@ -49,7 +49,7 @@ export function buildUnitManifest(psfId: PsfId, origin: string) {
   if (!psf) return null;
 
   const scope = `${PWA_SCOPE}/`;
-  const startUrl = `${PWA_SCOPE}?unit=${psfId}`;
+  const startUrl = unitBasePath(psfId);
 
   return {
     id: `${origin}${unitBasePath(psfId)}`,
@@ -77,14 +77,14 @@ export function buildUnitManifest(psfId: PsfId, origin: string) {
         name: 'Agendar consulta',
         short_name: 'Agendar',
         description: `Agendar em ${psf.label}`,
-        url: `${PWA_SCOPE}/agendamento`,
+        url: unitPath(psfId, '/agendamento'),
         icons: [{ src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }]
       },
       {
         name: 'Minhas consultas',
         short_name: 'Consultas',
         description: 'Ver agendamentos',
-        url: `${PWA_SCOPE}/meus-agendamentos`,
+        url: unitPath(psfId, '/meus-agendamentos'),
         icons: [{ src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }]
       }
     ]
