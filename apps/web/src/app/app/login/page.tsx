@@ -33,10 +33,15 @@ export default function PwaLoginPage() {
   return (
     <Suspense
       fallback={
-        <main className="login-shell login-shell--pwa">
-          <section className="login-card">
-            <p className="eyebrow">Prefeitura na Mão</p>
-            <h1>Carregando...</h1>
+        <main
+          className="login-shell login-shell--pwa"
+          style={{ display: 'flex', flexDirection: 'column', width: '100%', minHeight: '100dvh', margin: 0 }}
+        >
+          <section className="login-form-panel" style={{ flex: 1, width: '100%', minWidth: 0 }}>
+            <div className="login-card" style={{ width: '100%', maxWidth: 420, margin: '0 auto' }}>
+              <p className="eyebrow">Prefeitura na Mão</p>
+              <h1>Carregando...</h1>
+            </div>
           </section>
         </main>
       }
@@ -186,9 +191,12 @@ function PwaLoginForm() {
   }
 
   return (
-    <main className="login-shell login-shell--pwa">
-      <section className="login-form-panel">
-        <div className="login-card">
+    <main
+      className="login-shell login-shell--pwa"
+      style={{ display: 'flex', flexDirection: 'column', width: '100%', minHeight: '100dvh', margin: 0 }}
+    >
+      <section className="login-form-panel" style={{ flex: 1, width: '100%', minWidth: 0 }}>
+        <div className="login-card" style={{ width: '100%', maxWidth: 420, margin: '0 auto' }}>
           <div className="login-mobile-brand">
             <CitizenProductLogo size="md" />
           </div>

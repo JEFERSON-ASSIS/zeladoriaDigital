@@ -51,17 +51,15 @@ self.addEventListener('fetch', (event) => {
 
   if (isStaticAsset(url.pathname)) {
     event.respondWith(
-      caches.match(request).then(
-        (cached) =>
-          cached ||
-          fetch(request).then((response) => {
-            if (response.ok) {
-              const copy = response.clone();
-              caches.open(CACHE_VERSION).then((cache) => cache.put(request, copy));
-            }
-            return response;
-          })
-      )
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_VERSION).then((cache) => cache.put(request, copy));
+          }
+          return response;
+        })
+        .catch(() => caches.match(request))
     );
     return;
   }
@@ -82,6 +80,12 @@ self.addEventListener('fetch', (event) => {
           return caches.match(OFFLINE_URL);
         })
     );
+  }
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting();
   }
 });
 
