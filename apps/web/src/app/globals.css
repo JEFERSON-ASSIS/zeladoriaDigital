@@ -3246,6 +3246,25 @@ html.pwa-standalone .login-shell--pwa .login-form-panel {
   min-width: 0;
 }
 
+html.pwa-standalone .login-shell--pwa .login-credit,
+html.pwa-standalone .pwa-inline-install-hint,
+html.pwa-standalone .pwa-install-toast {
+  display: none !important;
+}
+
+html.pwa-standalone .login-shell--pwa .login-form-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-top: max(24px, env(safe-area-inset-top));
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+}
+
+html.pwa-standalone .login-shell--pwa .login-card {
+  width: min(100%, 420px);
+  margin: 0 auto;
+}
+
 .citizen-pwa-root .citizen-app--native {
   --citizen-nav-height: 84px;
   --citizen-nav-clearance: calc(var(--citizen-nav-height) + 36px + env(safe-area-inset-bottom));

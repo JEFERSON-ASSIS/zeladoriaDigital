@@ -60,6 +60,10 @@ export function PwaShell({ children }: { children: React.ReactNode }) {
     );
   }
 
+  if (mode === 'standalone') {
+    return <>{children}</>;
+  }
+
   return (
     <>
       {children}
