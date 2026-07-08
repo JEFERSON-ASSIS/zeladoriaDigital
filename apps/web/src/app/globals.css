@@ -751,6 +751,12 @@ h3 { font-size: 1.125rem; font-weight: 600; }
   grid-template-columns: 1fr 1fr;
 }
 
+.login-shell--pwa {
+  grid-template-columns: 1fr;
+  width: 100%;
+  min-height: 100dvh;
+}
+
 .login-brand-panel {
   background: var(--i7-gradient-dark);
   color: var(--i7-white);
@@ -3226,8 +3232,18 @@ body:has(.citizen-pwa-root) {
 
 html.pwa-standalone,
 html.pwa-standalone body {
+  width: 100%;
+  min-height: 100dvh;
+  min-height: 100svh;
   background: var(--native-bg) !important;
   overscroll-behavior: none;
+}
+
+html.pwa-standalone .citizen-pwa-root,
+html.pwa-standalone .login-shell--pwa,
+html.pwa-standalone .login-shell--pwa .login-form-panel {
+  width: 100%;
+  min-width: 0;
 }
 
 .citizen-pwa-root .citizen-app--native {
@@ -4108,12 +4124,20 @@ html.pwa-standalone body {
 
 /* Login nativo */
 .citizen-pwa-root .login-shell--pwa {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100dvh;
+  min-height: 100svh;
   height: 100dvh;
   max-height: 100dvh;
   overflow: hidden;
 }
 
 .citizen-pwa-root .login-shell--pwa .login-form-panel {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
   background: var(--native-bg);
   height: 100dvh;
   max-height: 100dvh;
@@ -4121,12 +4145,17 @@ html.pwa-standalone body {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   align-content: start;
+  padding: max(20px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom));
 }
 
 .citizen-pwa-root .login-shell--pwa .login-card {
+  width: 100%;
   max-width: 420px;
   margin: 0 auto;
   padding-bottom: max(28px, env(safe-area-inset-bottom));
+  border: none;
+  box-shadow: none;
+  background: transparent;
 }
 
 .citizen-pwa-root .login-shell--pwa .login-card h1 {
