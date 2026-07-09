@@ -22,7 +22,7 @@ const nextConfig = {
         ]
       },
       {
-        source: '/app/manifest.json',
+        source: '/app/manifest/:psfId',
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=0, must-revalidate' },
           { key: 'Content-Type', value: 'application/manifest+json; charset=utf-8' }

@@ -31,8 +31,7 @@ export function shouldSkipPwaInstallGate(pathname: string) {
   return pathname === '/app/offline' || pathname === PWA_PRIVACY_POLICY;
 }
 
-/** Login e landing de unidade: sempre mostrar tela de instalação até abrir como app instalado. */
+/** PWA instalável apenas na landing de cada unidade PSF (/app/unidade/psfX). */
 export function isPwaEntryRoute(pathname: string) {
-  if (pathname === PWA_LOGIN) return true;
   return /^\/app\/unidade\/psf[123]\/?$/.test(pathname);
 }

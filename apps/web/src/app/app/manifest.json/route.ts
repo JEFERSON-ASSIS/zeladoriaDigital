@@ -1,14 +1,6 @@
-import { buildCitizenManifest } from '../../../lib/pwa-manifest';
-import { resolvePublicOrigin } from '../../../lib/public-origin';
-
-export async function GET(request: Request) {
-  const origin = resolvePublicOrigin(request);
-  const manifest = buildCitizenManifest(origin);
-
-  return Response.json(manifest, {
-    headers: {
-      'Content-Type': 'application/manifest+json; charset=utf-8',
-      'Cache-Control': 'public, max-age=300'
-    }
+export async function GET() {
+  return new Response('PWA disponível apenas em /app/unidade/psf1, /app/unidade/psf2 ou /app/unidade/psf3.', {
+    status: 404,
+    headers: { 'Content-Type': 'text/plain; charset=utf-8' }
   });
 }

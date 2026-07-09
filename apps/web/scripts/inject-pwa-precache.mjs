@@ -27,7 +27,9 @@ const PWA_HTML_ROUTES = [
 ];
 
 const STATIC_ROUTES = [
-  '/app/manifest.json',
+  '/app/manifest/psf1',
+  '/app/manifest/psf2',
+  '/app/manifest/psf3',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
   '/icons/icon-512-maskable.png',

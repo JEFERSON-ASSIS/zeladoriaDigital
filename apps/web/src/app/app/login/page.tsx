@@ -4,7 +4,6 @@ import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CitizenProductLogo } from '../../../components/brand-logo';
-import { PwaInlineInstallHint } from '../../../components/pwa-inline-install-hint';
 import { fetchCurrentUser } from '../../../lib/auth-api';
 import { clearSession, getSession } from '../../../lib/auth';
 import {
@@ -200,8 +199,6 @@ function PwaLoginForm() {
           <div className="login-mobile-brand">
             <CitizenProductLogo size="md" />
           </div>
-
-          <PwaInlineInstallHint />
 
           {step === 'cpf' ? (
             <div className="pwa-access-steps" aria-hidden>

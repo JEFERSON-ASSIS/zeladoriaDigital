@@ -1,7 +1,7 @@
 import { PWA_SCOPE } from './pwa-constants';
 
-export function buildCitizenManifest(origin: string) {
-  const scope = `${PWA_SCOPE}/`;
+/** @deprecated Manifesto genérico removido — use buildUnitManifest em psf-unit.ts */
+export function buildCitizenManifest(origin: string) {  const scope = `${PWA_SCOPE}/`;
 
   return {
     id: `${origin}${scope}`,

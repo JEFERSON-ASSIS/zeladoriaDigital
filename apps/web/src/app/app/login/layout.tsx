@@ -1,12 +1,9 @@
 import type { Metadata, Viewport } from 'next';
-import { LoginPwaHead } from '../../../components/login-pwa-head';
-import { PwaShell } from '../../../components/pwa-shell';
-import { PWA_MANIFEST_URL } from '../../../lib/pwa-constants';
+import { PwaStandaloneSync } from '../../../components/pwa-standalone-sync';
 
 export const metadata: Metadata = {
   title: 'Prefeitura na Mão | Entrar',
   description: 'Acesse o aplicativo do cidadão.',
-  manifest: PWA_MANIFEST_URL,
   icons: {
     icon: [
       { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
@@ -36,8 +33,8 @@ export const viewport: Viewport = {
 export default function LoginPwaLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="citizen-pwa-root">
-      <LoginPwaHead />
-      <PwaShell>{children}</PwaShell>
+      <PwaStandaloneSync />
+      {children}
     </div>
   );
 }

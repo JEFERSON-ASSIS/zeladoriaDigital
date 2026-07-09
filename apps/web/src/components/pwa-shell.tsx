@@ -5,32 +5,17 @@ import { usePathname } from 'next/navigation';
 import { PwaInstallGate, usePwaDisplayMode } from './pwa-install-gate';
 import { PwaInstallPrompt } from './install-pwa-button';
 import { registerPwaServiceWorker } from '../lib/pwa';
-import { shouldSkipPwaInstallGate } from '../lib/pwa-constants';
+import { isPwaEntryRoute, shouldSkipPwaInstallGate } from '../lib/pwa-constants';
+import { PwaStandaloneSync } from './pwa-standalone-sync';
 
 export function PwaShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const skipInstallGate = shouldSkipPwaInstallGate(pathname);
+  const isEntryRoute = isPwaEntryRoute(pathname);
   const { mode, markInstalled, enterBrowserMode } = usePwaDisplayMode(skipInstallGate, pathname);
 
   useEffect(() => {
     void registerPwaServiceWorker();
-  }, []);
-
-  useEffect(() => {
-    const root = document.documentElement;
-    root.classList.add('pwa-native');
-
-    const media = window.matchMedia('(display-mode: standalone), (display-mode: fullscreen)');
-    const syncStandalone = () => {
-      root.classList.toggle('pwa-standalone', media.matches);
-    };
-
-    syncStandalone();
-    media.addEventListener('change', syncStandalone);
-    return () => {
-      root.classList.remove('pwa-native', 'pwa-standalone');
-      media.removeEventListener('change', syncStandalone);
-    };
   }, []);
 
   if (mode === 'loading') {
@@ -53,7 +38,7 @@ export function PwaShell({ children }: { children: React.ReactNode }) {
       <>
         <div className="pwa-preview-banner" role="status">
           Modo preview ({typeof window !== 'undefined' ? window.location.host : 'rede local'}). Para instalar o app de
-          verdade, use <strong>app.prefeituranamao.com.br/app</strong>
+          verdade, use <strong>app.prefeituranamao.com.br/app/unidade/psf1</strong> (ou psf2/psf3)
         </div>
         {children}
       </>
@@ -61,13 +46,19 @@ export function PwaShell({ children }: { children: React.ReactNode }) {
   }
 
   if (mode === 'standalone') {
-    return <>{children}</>;
+    return (
+      <>
+        <PwaStandaloneSync />
+        {children}
+      </>
+    );
   }
 
   return (
     <>
+      <PwaStandaloneSync />
       {children}
-      <PwaInstallPrompt />
+      {isEntryRoute ? <PwaInstallPrompt /> : null}
     </>
   );
 }
