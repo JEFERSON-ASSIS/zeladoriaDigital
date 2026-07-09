@@ -9,6 +9,7 @@ const DISMISS_KEY = 'zeladoria-pwa-install-dismissed';
 function isStandaloneMode() {
   return (
     window.matchMedia?.('(display-mode: standalone)')?.matches ||
+    window.matchMedia?.('(display-mode: fullscreen)')?.matches ||
     (window.navigator as Navigator & { standalone?: boolean }).standalone === true
   );
 }
