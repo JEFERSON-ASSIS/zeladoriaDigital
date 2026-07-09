@@ -8,6 +8,13 @@ export function middleware(request: NextRequest) {
   const isLocalhost = request.nextUrl.hostname === 'localhost' || request.nextUrl.hostname === '127.0.0.1';
   const alreadyCleaned = request.cookies.get(CLEANUP_COOKIE)?.value === '1';
 
+  const pluralUnitMatch = pathname.match(/^\/app\/unidades\/(psf[123])(?=\/|$)(.*)$/);
+  if (pluralUnitMatch) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/app/unidade/${pluralUnitMatch[1]}${pluralUnitMatch[2] ?? ''}`;
+    return NextResponse.redirect(url);
+  }
+
   for (const route of PWA_CITIZEN_ROUTES) {
     if (pathname === route || pathname.startsWith(`${route}/`)) {
       const url = request.nextUrl.clone();
@@ -39,6 +46,7 @@ export const config = {
     '/saude/:path*',
     '/agendamento/:path*',
     '/meus-agendamentos/:path*',
-    '/unidade/:path*'
+    '/unidade/:path*',
+    '/app/unidades/:path*'
   ]
 };
