@@ -12,6 +12,7 @@
     "@tanstack/react-query": "^5.51.23",
     "@zeladoria/shared": "file:../../packages/shared",
     "leaflet": "^1.9.4",
+    "lucide-react": "^1.24.0",
     "maplibre-gl": "^5.24.0",
     "next": "^14.2.14",
     "react": "^18.3.1",

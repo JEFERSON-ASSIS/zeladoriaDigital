@@ -10,6 +10,7 @@ import {
 } from '@zeladoria/shared';
 import {
   deleteCitizen,
+  fetchCitizenActivity,
   fetchCitizens,
   isCitizenBlocked,
   setCitizenBlocked,
@@ -19,6 +20,10 @@ import {
 import { formatCpf, formatPhone } from '../../../lib/citizen-access-api';
 import { getStoredAccessToken } from '../../../lib/api';
 import { getSession } from '../../../lib/auth';
+import { formatOccurrenceStatus, formatPriority } from '../../../lib/occurrence-map';
+import { getPsfById } from '../../../lib/scheduling/psf-config';
+import { listAllAppointmentsForPwa, SchedulingApiError } from '../../../lib/scheduling/scheduling-api';
+import { formatRemoteStatus } from '../../../lib/scheduling/scheduling-history';
 
 type ListFilter = 'all' | HealthUnitPsfId | 'sem' | 'blocked';
 
@@ -81,6 +86,7 @@ function CitizenActionsMenu({
   citizen,
   blocked,
   isAdmin,
+  onViewDetails,
   onEdit,
   onBlock,
   onUnblock,
@@ -89,6 +95,7 @@ function CitizenActionsMenu({
   citizen: AdminCitizenRecord;
   blocked: boolean;
   isAdmin: boolean;
+  onViewDetails: () => void;
   onEdit: () => void;
   onBlock: () => void;
   onUnblock: () => void;
@@ -98,6 +105,15 @@ function CitizenActionsMenu({
     <details className="health-citizens-menu">
       <summary aria-label={`Ações para ${getCitizenDisplayName(citizen)}`}>Ações</summary>
       <div className="health-citizens-menu__panel">
+        <button
+          type="button"
+          onClick={(event) => {
+            closeActionsMenu(event);
+            onViewDetails();
+          }}
+        >
+          Ver detalhes
+        </button>
         <button
           type="button"
           onClick={(event) => {
@@ -157,6 +173,7 @@ export default function AdminHealthCitizensPage() {
   const [nextUnit, setNextUnit] = useState<HealthUnitPsfId>('psf1');
   const [blockReason, setBlockReason] = useState('');
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
+  const [viewingDetails, setViewingDetails] = useState<AdminCitizenRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -206,6 +223,28 @@ export default function AdminHealthCitizensPage() {
       return false;
     });
   }, [rows, filter, search]);
+
+  const activity = useQuery({
+    queryKey: ['admin-citizen-activity', viewingDetails?.id],
+    queryFn: () => fetchCitizenActivity(viewingDetails!.id, getStoredAccessToken()),
+    enabled: Boolean(viewingDetails)
+  });
+
+  const detailsPsf =
+    viewingDetails?.healthUnitPsfId && HEALTH_UNIT_PSF_IDS.includes(viewingDetails.healthUnitPsfId as HealthUnitPsfId)
+      ? getPsfById(viewingDetails.healthUnitPsfId as HealthUnitPsfId)
+      : null;
+
+  const appointments = useQuery({
+    queryKey: ['admin-citizen-appointments', viewingDetails?.id],
+    queryFn: () => listAllAppointmentsForPwa(detailsPsf!, viewingDetails!.cpf!, 10),
+    enabled: Boolean(viewingDetails && detailsPsf && viewingDetails.cpf),
+    retry: false
+  });
+
+  function openDetails(citizen: AdminCitizenRecord) {
+    setViewingDetails(citizen);
+  }
 
   async function refreshList(message?: string) {
     await queryClient.invalidateQueries({ queryKey: ['admin-health-citizens'] });
@@ -462,6 +501,7 @@ export default function AdminHealthCitizensPage() {
                               citizen={citizen}
                               blocked={blocked}
                               isAdmin={isAdmin}
+                              onViewDetails={() => openDetails(citizen)}
                               onEdit={() => openEdit(citizen)}
                               onBlock={() => openConfirm({ type: 'block', citizen })}
                               onUnblock={() => openConfirm({ type: 'unblock', citizen })}
@@ -490,6 +530,7 @@ export default function AdminHealthCitizensPage() {
                         citizen={citizen}
                         blocked={blocked}
                         isAdmin={isAdmin}
+                        onViewDetails={() => openDetails(citizen)}
                         onEdit={() => openEdit(citizen)}
                         onBlock={() => openConfirm({ type: 'block', citizen })}
                         onUnblock={() => openConfirm({ type: 'unblock', citizen })}
@@ -621,6 +662,115 @@ export default function AdminHealthCitizensPage() {
                 onClick={() => confirmMutation.mutate(confirmAction)}
               >
                 {confirmMutation.isPending ? 'Processando...' : confirmCopy.confirmLabel}
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
+
+      {viewingDetails ? (
+        <div className="health-citizens-modal-backdrop" onClick={() => setViewingDetails(null)} role="presentation">
+          <section
+            className="health-citizens-modal health-citizens-modal--details"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className="health-citizens-modal__header">
+              <div>
+                <p className="eyebrow">Cidadão</p>
+                <h3>Detalhes do cidadão</h3>
+              </div>
+              <button type="button" className="btn-secondary" onClick={() => setViewingDetails(null)}>
+                Fechar
+              </button>
+            </header>
+            <p className="health-citizens-modal__person">
+              <strong>{getCitizenDisplayName(viewingDetails)}</strong>
+              <span>
+                {viewingDetails.phone ? formatPhone(viewingDetails.phone) : 'Sem celular'} ·{' '}
+                {viewingDetails.cpf ? formatCpf(viewingDetails.cpf) : 'Sem CPF'}
+              </span>
+            </p>
+
+            <div className="health-citizens-detail-section">
+              <h4>Atividade no app</h4>
+              {activity.isLoading ? <p className="health-citizens-empty">Carregando...</p> : null}
+              {activity.isError ? <p className="login-error">Não foi possível carregar a atividade.</p> : null}
+              {activity.data ? (
+                <p className="health-citizens-activity-summary">
+                  {activity.data.pushSubscriptionsCount > 0 ? (
+                    <span className="health-citizens-status health-citizens-status--active">
+                      Notificações ativas ({activity.data.pushSubscriptionsCount})
+                    </span>
+                  ) : (
+                    <span className="health-citizens-status health-citizens-status--blocked">
+                      Sem notificações ativas
+                    </span>
+                  )}
+                  <small>Indicador aproximado de uso: dispositivos com notificações do app habilitadas.</small>
+                </p>
+              ) : null}
+            </div>
+
+            <div className="health-citizens-detail-section">
+              <h4>Agendamentos de saúde</h4>
+              {!viewingDetails.healthUnitPsfId ? (
+                <p className="health-citizens-empty">Cidadão sem unidade de saúde vinculada.</p>
+              ) : !viewingDetails.cpf ? (
+                <p className="health-citizens-empty">Cidadão sem CPF cadastrado.</p>
+              ) : (
+                <>
+                  {appointments.isLoading ? <p className="health-citizens-empty">Carregando...</p> : null}
+                  {appointments.isError ? (
+                    <p className="login-error">
+                      {appointments.error instanceof SchedulingApiError
+                        ? appointments.error.message
+                        : 'Não foi possível carregar os agendamentos.'}
+                    </p>
+                  ) : null}
+                  {appointments.data && appointments.data.agendamentos.length === 0 ? (
+                    <p className="health-citizens-empty">Nenhum agendamento encontrado.</p>
+                  ) : null}
+                  {appointments.data && appointments.data.agendamentos.length > 0 ? (
+                    <ul className="health-citizens-detail-list">
+                      {appointments.data.agendamentos.map((item) => (
+                        <li key={item.id}>
+                          <strong>{item.servico ?? 'Consulta'}</strong>
+                          <span>
+                            {item.data ?? '—'} {item.hora ? `às ${item.hora}` : ''}
+                          </span>
+                          <span>{formatRemoteStatus(item.status)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </>
+              )}
+            </div>
+
+            <div className="health-citizens-detail-section">
+              <h4>Ocorrências na prefeitura</h4>
+              {activity.data && activity.data.occurrences.length === 0 ? (
+                <p className="health-citizens-empty">Nenhuma ocorrência registrada.</p>
+              ) : null}
+              {activity.data && activity.data.occurrences.length > 0 ? (
+                <ul className="health-citizens-detail-list">
+                  {activity.data.occurrences.map((item) => (
+                    <li key={item.id}>
+                      <strong>{item.title || item.description}</strong>
+                      <span>Protocolo {item.protocol}</span>
+                      <span>
+                        {formatOccurrenceStatus(item.status)} · {formatPriority(item.priority)}
+                      </span>
+                      <span>{formatDate(item.createdAt)}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+
+            <div className="form-actions">
+              <button type="button" className="btn-secondary" onClick={() => setViewingDetails(null)}>
+                Fechar
               </button>
             </div>
           </section>

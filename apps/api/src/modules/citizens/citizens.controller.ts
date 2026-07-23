@@ -21,6 +21,13 @@ export class CitizensController {
     return this.citizensService.findAll(healthUnitPsfId as HealthUnitPsfId | undefined);
   }
 
+  @Get(':id/activity')
+  @UseGuards(JwtAuthGuard)
+  @Roles('ADMIN', 'PREFEITURA')
+  getActivity(@Param('id') id: string) {
+    return this.citizensService.getActivity(id);
+  }
+
   @Public()
   @Post()
   create(@Body() body: CreateCitizenDto) {

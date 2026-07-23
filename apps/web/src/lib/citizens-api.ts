@@ -115,3 +115,33 @@ export async function deleteCitizen(id: string, accessToken?: string) {
 export function isCitizenBlocked(citizen: Pick<AdminCitizenRecord, 'blockedAt'>) {
   return Boolean(citizen.blockedAt);
 }
+
+export type CitizenOccurrenceSummary = {
+  id: string;
+  protocol: string;
+  title: string | null;
+  description: string;
+  status: string;
+  priority: string;
+  createdAt: string;
+};
+
+export type CitizenActivity = {
+  occurrences: CitizenOccurrenceSummary[];
+  pushSubscriptionsCount: number;
+};
+
+export async function fetchCitizenActivity(id: string, accessToken?: string) {
+  const response = await fetch(`${getPublicApiUrl()}/citizens/${id}/activity`, {
+    headers: {
+      Authorization: `Bearer ${accessToken ?? getStoredAccessToken()}`
+    },
+    cache: 'no-store'
+  });
+
+  if (!response.ok) {
+    throw new Error('Não foi possível carregar a atividade do cidadão.');
+  }
+
+  return response.json() as Promise<CitizenActivity>;
+}

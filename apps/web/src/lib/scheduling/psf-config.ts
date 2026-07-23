@@ -4,9 +4,9 @@ export type ServiceKind = 'medico' | 'enfermeiro' | 'dentista';
 
 /** Fluxo de agendamento médico por unidade (conforme rotas publicadas em produção). */
 export type MedicoBookingFlow =
-  | 'hora' // dias_medico → horarios_medico → criar_medico_hora (PSF1/2)
-  | 'hora_servico' // dias.php?servico → horarios.php?servico → criar.php+hora (PSF3)
-  | 'turno'; // dias.php → turnos.php → criar.php+turno
+  | 'hora' // dias_medico -> horarios_medico -> criar_medico_hora (PSF1/2)
+  | 'hora_servico' // dias.php?servico -> horarios.php?servico -> criar.php+hora (PSF3)
+  | 'turno'; // dias.php -> turnos.php -> criar.php+turno
 
 export type PsfConfig = {
   id: PsfId;
@@ -42,7 +42,7 @@ export const PSF_OPTIONS: PsfConfig[] = [
   {
     id: 'psf2',
     label: 'PSF 2',
-    subtitle: 'PSF 2 — Centro',
+    subtitle: 'PSF 2 - Centro',
     baseUrl: normalizePsfBaseUrl(process.env.NEXT_PUBLIC_PSF2_API_URL ?? `${PROD_PSF_BASE}/api_chatbot_psf2`),
     empresaId: 2,
     servicos: { medico: 21, enfermeiro: 23, dentista: 19 },
@@ -51,7 +51,7 @@ export const PSF_OPTIONS: PsfConfig[] = [
   {
     id: 'psf3',
     label: 'UBS Rural',
-    subtitle: 'PSF 3 — Zona Rural',
+    subtitle: 'PSF 3 - Zona Rural',
     baseUrl: normalizePsfBaseUrl(process.env.NEXT_PUBLIC_PSF3_API_URL ?? `${PROD_PSF_BASE}/api_chatbot_psf3`),
     empresaId: 3,
     servicos: { medico: 24, enfermeiro: 25, dentista: 0 },

@@ -47,6 +47,28 @@ export class CitizensService {
     });
   }
 
+  async getActivity(id: string) {
+    const [occurrences, pushSubscriptionsCount] = await Promise.all([
+      this.prisma.occurrence.findMany({
+        where: { citizenId: id },
+        select: {
+          id: true,
+          protocol: true,
+          title: true,
+          description: true,
+          status: true,
+          priority: true,
+          createdAt: true
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 20
+      }),
+      this.prisma.citizenPushSubscription.count({ where: { citizenId: id } })
+    ]);
+
+    return { occurrences, pushSubscriptionsCount };
+  }
+
   registerAccess(phone: string, cpf: string, healthUnitPsfId: HealthUnitPsfId, name: string) {
     return this.prisma.citizen.create({
       data: {
