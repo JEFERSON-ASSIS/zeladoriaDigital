@@ -1,5 +1,6 @@
 'use client';
 
+import { ImagePlus, Mic, Send } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import {
   connectSupportSocket,
@@ -67,10 +68,10 @@ export function SupportChatThread({ conversation, token, ownType }: {
         <div ref={endRef} />
       </div>
       <form className="support-chat__composer" onSubmit={submitText}>
-        <label className="support-chat__attach" title="Enviar imagem">📷<input type="file" accept="image/*" onChange={(event) => void upload(event.target.files?.[0])} /></label>
-        <label className="support-chat__attach" title="Enviar áudio">🎤<input type="file" accept="audio/*" capture onChange={(event) => void upload(event.target.files?.[0])} /></label>
+        <label className="support-chat__attach" title="Enviar imagem"><ImagePlus size={20} /><input type="file" accept="image/*" onChange={(event) => void upload(event.target.files?.[0])} /></label>
+        <label className="support-chat__attach" title="Enviar áudio"><Mic size={20} /><input type="file" accept="audio/*" capture onChange={(event) => void upload(event.target.files?.[0])} /></label>
         <input value={text} onChange={(event) => setText(event.target.value)} placeholder="Digite sua mensagem..." maxLength={4000} />
-        <button type="submit" disabled={sending || !text.trim()}>Enviar</button>
+        <button type="submit" disabled={sending || !text.trim()} aria-label="Enviar mensagem"><Send size={18} /><span>Enviar</span></button>
       </form>
     </section>
   );
