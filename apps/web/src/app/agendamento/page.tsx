@@ -10,7 +10,6 @@ import { parsePsfIdFromPath, unitPath } from '../../lib/psf-unit';
 import { getAvailableServices, getMedicoBookingFlow, type PsfConfig, type ServiceKind } from '../../lib/scheduling/psf-config';
 import {
   formatCpf,
-  formatPhone,
   getPatientProfile,
   getSavedPsfConfig,
   onlyDigits,
@@ -199,9 +198,15 @@ export default function SchedulingPage() {
     setError(null);
 
     try {
+      const accountProfile = getPatientProfile();
+      if (!accountProfile?.telefone) {
+        setError('Sua sessão não possui um telefone de contato válido.');
+        return;
+      }
+
       const profile: PatientProfile = {
         nome: form.nome.trim(),
-        telefone: onlyDigits(form.telefone),
+        telefone: onlyDigits(accountProfile.telefone),
         cpf: onlyDigits(form.cpf)
       };
 
@@ -212,7 +217,7 @@ export default function SchedulingPage() {
         data: selectedDay.date,
         hora: needsTime ? selectedTime : undefined,
         turno: needsTurno && selectedTurno ? selectedTurno : undefined
-      });
+      }, { useCitizenAccountPhone: true });
 
       if (result.id && psf) {
         recordBookingHistory({
@@ -275,12 +280,21 @@ export default function SchedulingPage() {
               type="button"
               className="btn-secondary"
               onClick={() => {
+                const accountProfile = getPatientProfile();
                 setStep('booking');
                 setSuccessMessage(null);
                 setDays([]);
                 setTimes([]);
                 setSelectedDay(null);
                 setSelectedTime('');
+                if (accountProfile) {
+                  setForm((current) => ({
+                    ...current,
+                    nome: accountProfile.nome,
+                    cpf: accountProfile.cpf,
+                    telefone: accountProfile.telefone
+                  }));
+                }
               }}
             >
               Novo agendamento
@@ -297,7 +311,7 @@ export default function SchedulingPage() {
       subtitle={psf ? `${psf.label} — ${psf.subtitle}` : 'Carregando unidade...'}
     >
       <form onSubmit={handleSubmit} style={{ display: 'block' }}>
-        <h3 className="form-section-title">Seus Dados</h3>
+        <h3 className="form-section-title">Dados do paciente</h3>
         <div className="form-group-card">
           <label>
             Nome completo *
@@ -309,14 +323,16 @@ export default function SchedulingPage() {
             />
           </label>
           <label>
-            Telefone *
+            Telefone de contato da conta *
             <input
               required
               inputMode="tel"
               value={form.telefone}
-              onChange={(e) => setForm((current) => ({ ...current, telefone: formatPhone(e.target.value) }))}
+              readOnly
+              aria-readonly="true"
               placeholder="(66) 99999-9999"
             />
+            <small>Este telefone é o da sua conta e será usado em todos os agendamentos.</small>
           </label>
           <label>
             CPF *

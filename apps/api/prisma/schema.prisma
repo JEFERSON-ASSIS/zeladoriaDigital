@@ -67,6 +67,8 @@ model User {
   auditLogs      AuditLog[]
   notifications  Notification[]
   changedMovements OccurrenceMovement[] @relation("ChangedBy")
+  assignedSupportConversations SupportConversation[] @relation("SupportAssignedTo")
+  supportMessages SupportMessage[]
 }
 
 model Citizen {
@@ -84,10 +86,66 @@ model Citizen {
   municipality     Municipality? @relation(fields: [municipalityId], references: [id])
   occurrences      Occurrence[]
   pushSubscriptions CitizenPushSubscription[]
+  supportConversations SupportConversation[]
+  supportMessages SupportMessage[]
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
   @@index([healthUnitPsfId])
+}
+
+enum SupportConversationStatus {
+  NOVA
+  EM_ATENDIMENTO
+  FINALIZADA
+}
+
+enum SupportSenderType {
+  CIDADAO
+  ATENDENTE
+}
+
+enum SupportMessageType {
+  TEXTO
+  IMAGEM
+  AUDIO
+}
+
+model SupportConversation {
+  id           String                    @id @default(cuid())
+  citizenId    String
+  citizen      Citizen                   @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  healthUnitPsfId String?
+  status       SupportConversationStatus @default(NOVA)
+  assignedToId String?
+  assignedTo   User?                     @relation("SupportAssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
+  messages     SupportMessage[]
+  createdAt    DateTime                  @default(now())
+  updatedAt    DateTime                  @updatedAt
+  closedAt     DateTime?
+
+  @@index([citizenId, updatedAt])
+  @@index([healthUnitPsfId, status, updatedAt])
+}
+
+model SupportMessage {
+  id             String             @id @default(cuid())
+  conversationId String
+  conversation   SupportConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderType     SupportSenderType
+  citizenId      String?
+  citizen        Citizen?           @relation(fields: [citizenId], references: [id], onDelete: SetNull)
+  userId         String?
+  user           User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  type           SupportMessageType
+  text           String?
+  mediaUrl       String?
+  mimeType       String?
+  readAt         DateTime?
+  createdAt      DateTime           @default(now())
+
+  @@index([conversationId, createdAt])
+  @@index([conversationId, readAt])
 }
 
 model Department {

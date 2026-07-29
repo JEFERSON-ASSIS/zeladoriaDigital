@@ -1,5 +1,6 @@
 import { getMedicoBookingFlow, type PsfConfig, type ServiceKind } from './psf-config';
 import { onlyDigits } from './psf-storage';
+import { getSession } from '../auth';
 
 const API_KEY = process.env.NEXT_PUBLIC_PSF_API_KEY ?? '';
 
@@ -26,11 +27,17 @@ export type AvailableTurno = {
 export type SchedulingAppointment = {
   id: number;
   nome?: string;
+  cpf?: string;
   servico?: string;
   data?: string;
   hora?: string;
   status?: string;
 };
+
+function citizenAuthorizationHeaders(): Record<string, string> {
+  const token = getSession()?.accessToken;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 export class SchedulingApiError extends Error {
   code?: string;
@@ -267,7 +274,11 @@ export type CreateBookingInput = {
   turno?: MedicoTurno;
 };
 
-export async function createBooking(psf: PsfConfig, input: CreateBookingInput) {
+export async function createBooking(
+  psf: PsfConfig,
+  input: CreateBookingInput,
+  options?: { useCitizenAccountPhone?: boolean }
+) {
   const body: Record<string, unknown> = {
     nome: input.nome.trim(),
     telefone: onlyDigits(input.telefone),
@@ -309,6 +320,12 @@ export async function createBooking(psf: PsfConfig, input: CreateBookingInput) {
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
+        ...(options?.useCitizenAccountPhone
+          ? {
+              ...citizenAuthorizationHeaders(),
+              'X-PWA-Citizen-Account': '1'
+            }
+          : {}),
         ...(API_KEY ? { 'X-Api-Key': API_KEY } : {})
       },
       body: JSON.stringify(body)
@@ -438,8 +455,46 @@ export async function listAllAppointmentsForPwa(psf: PsfConfig, cpf: string, lim
   };
 }
 
+export async function listAllAppointmentsForPwaAccount(psf: PsfConfig) {
+  const url = buildUrl(psf, '/endpoints/agendamentos/listar_pwa_telefone.php', {
+    empresa: psf.empresaId
+  });
+
+  let response: Response;
+  try {
+    response = await fetchWithTimeout(url, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        ...citizenAuthorizationHeaders(),
+        ...(API_KEY ? { 'X-Api-Key': API_KEY } : {})
+      }
+    });
+  } catch (cause) {
+    throw cause instanceof SchedulingApiError
+      ? cause
+      : new SchedulingApiError('Não foi possível conectar à API de agendamento.');
+  }
+
+  const payload = await parseJson(response);
+  if (!response.ok) {
+    const err = payload as { data?: { message?: string }; message?: string } | null;
+    throw new SchedulingApiError(err?.data?.message ?? err?.message ?? 'Erro ao consultar agendamentos.');
+  }
+
+  const data = unwrapData<{
+    total?: number;
+    agendamentos?: SchedulingAppointment[];
+  }>(payload);
+
+  return {
+    total: data.total ?? data.agendamentos?.length ?? 0,
+    agendamentos: data.agendamentos ?? []
+  };
+}
+
 export async function cancelAppointment(psf: PsfConfig, appointmentId: number) {
-  const url = buildUrl(psf, '/endpoints/agendamentos/cancelar.php', {
+  const url = buildUrl(psf, '/endpoints/agendamentos/cancelar_pwa.php', {
     id: appointmentId,
     empresa: psf.empresaId
   });
@@ -450,6 +505,7 @@ export async function cancelAppointment(psf: PsfConfig, appointmentId: number) {
       method: 'POST',
       headers: {
         Accept: 'application/json',
+        ...citizenAuthorizationHeaders(),
         ...(API_KEY ? { 'X-Api-Key': API_KEY } : {})
       }
     });

@@ -12,6 +12,7 @@ export const PWA_CITIZEN_ROUTES = [
   '/saude',
   '/agendamento',
   '/meus-agendamentos',
+  '/conversas',
   '/unidade'
 ] as const;
 

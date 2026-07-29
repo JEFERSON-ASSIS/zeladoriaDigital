@@ -58,6 +58,30 @@
   --text: var(--i7-text);
 }
 
+.support-chat { display: flex; flex-direction: column; min-height: 60vh; }
+.support-chat__messages { flex: 1; display: flex; flex-direction: column; gap: 10px; padding: 16px; overflow-y: auto; max-height: 65vh; background: #f5f7fa; border-radius: 16px 16px 0 0; }
+.support-chat__bubble { align-self: flex-start; max-width: 78%; padding: 10px 12px; border-radius: 14px 14px 14px 4px; background: #fff; box-shadow: 0 1px 4px rgb(0 0 0 / 8%); }
+.support-chat__bubble.is-own { align-self: flex-end; color: #fff; background: var(--primary, #176b5b); border-radius: 14px 14px 4px 14px; }
+.support-chat__bubble p { margin: 4px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.support-chat__bubble small, .support-chat__bubble time { display: block; font-size: .72rem; opacity: .75; }
+.support-chat__bubble img { display: block; max-width: 280px; width: 100%; border-radius: 10px; margin: 6px 0; }
+.support-chat__bubble audio { max-width: 280px; width: 100%; margin-top: 6px; }
+.support-chat__composer { display: grid; grid-template-columns: auto auto 1fr auto; gap: 8px; align-items: center; padding: 12px; background: #fff; border: 1px solid #e3e8ee; border-radius: 0 0 16px 16px; }
+.support-chat__composer input[type="text"], .support-chat__composer > input { min-width: 0; }
+.support-chat__attach { cursor: pointer; font-size: 1.25rem; padding: 6px; }
+.support-chat__attach input { display: none; }
+.support-admin__layout { display: grid; grid-template-columns: minmax(240px, 320px) 1fr; gap: 16px; }
+.support-admin__list { display: flex; flex-direction: column; gap: 8px; max-height: 75vh; overflow-y: auto; }
+.support-admin__list button { text-align: left; display: flex; flex-direction: column; gap: 3px; padding: 12px; border: 1px solid #e3e8ee; border-radius: 10px; background: #fff; }
+.support-admin__list button.is-active { border-color: var(--primary, #176b5b); background: #eef8f5; }
+.support-admin__thread-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+@media (max-width: 800px) {
+  .support-admin__layout { grid-template-columns: 1fr; }
+  .support-chat__bubble { max-width: 90%; }
+  .support-chat__composer { grid-template-columns: auto auto 1fr; }
+  .support-chat__composer button { grid-column: 1 / -1; }
+}
+
 /* ─── Reset & base ─── */
 * { box-sizing: border-box; }
 

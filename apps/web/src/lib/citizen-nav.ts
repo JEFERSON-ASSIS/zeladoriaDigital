@@ -10,20 +10,22 @@ export type CitizenNavItem = {
   matchPaths: string[];
 };
 
-const NAV_ORDER: Array<'inicio' | 'nova-ocorrencia' | 'minhas-solicitacoes' | 'agendamento' | 'meus-agendamentos'> = [
+const NAV_ORDER: Array<'inicio' | 'nova-ocorrencia' | 'minhas-solicitacoes' | 'agendamento' | 'meus-agendamentos' | 'conversas'> = [
   'inicio',
   'nova-ocorrencia',
   'minhas-solicitacoes',
   'agendamento',
-  'meus-agendamentos'
+  'meus-agendamentos',
+  'conversas'
 ];
 
-const UNIT_NAV_ORDER: Array<'inicio' | 'nova-ocorrencia' | 'minhas-solicitacoes' | 'agendamento' | 'meus-agendamentos'> = [
+const UNIT_NAV_ORDER: Array<'inicio' | 'nova-ocorrencia' | 'minhas-solicitacoes' | 'agendamento' | 'meus-agendamentos' | 'conversas'> = [
   'inicio',
   'nova-ocorrencia',
   'minhas-solicitacoes',
   'agendamento',
-  'meus-agendamentos'
+  'meus-agendamentos',
+  'conversas'
 ];
 
 const UNIT_NAV_LABELS: Record<(typeof UNIT_NAV_ORDER)[number], string> = {
@@ -31,7 +33,8 @@ const UNIT_NAV_LABELS: Record<(typeof UNIT_NAV_ORDER)[number], string> = {
   'nova-ocorrencia': 'Solicitar',
   'minhas-solicitacoes': 'Chamados',
   agendamento: 'Agendar',
-  'meus-agendamentos': 'Consultas'
+  'meus-agendamentos': 'Consultas',
+  conversas: 'Conversas'
 };
 
 export function resolveCitizenNavItems(menuKeys: MenuKey[]): CitizenNavItem[] {
@@ -99,6 +102,12 @@ export function resolveCitizenUnitNavItems(
         iconKey: key,
         matchPaths: [href, `${href}/`]
       });
+      continue;
+    }
+
+    if (key === 'conversas') {
+      const href = unit.path('/conversas');
+      items.push({ key, label: UNIT_NAV_LABELS[key], href, iconKey: key, matchPaths: [href, `${href}/`] });
       continue;
     }
 

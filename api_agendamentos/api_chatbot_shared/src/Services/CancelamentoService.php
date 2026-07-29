@@ -40,6 +40,36 @@ final class CancelamentoService
         ];
     }
 
+    /**
+     * Cancela somente quando o agendamento pertence ao telefone autenticado no PWA.
+     *
+     * @return array{status: string, message: string, id?: int}
+     */
+    public function cancelarPorTelefone(int $id, string $telefone, ?int $empresa = null): array
+    {
+        $empresa = $empresa ?? AppConfig::empresaId();
+        $dados = $this->repo->findById($id, $empresa);
+        if (!$dados) {
+            return ['status' => 'not_found', 'message' => 'Agendamento não encontrado.'];
+        }
+
+        if ($this->normalizarTelefone((string)($dados['telefone'] ?? '')) !== $this->normalizarTelefone($telefone)) {
+            return ['status' => 'forbidden', 'message' => 'Este agendamento não pertence à sua conta.'];
+        }
+
+        return $this->cancelar($id, $empresa);
+    }
+
+    private function normalizarTelefone(string $telefone): string
+    {
+        $digitos = preg_replace('/\D+/', '', $telefone) ?? '';
+        if (strlen($digitos) >= 12 && str_starts_with($digitos, '55')) {
+            return substr($digitos, 2);
+        }
+
+        return $digitos;
+    }
+
     private function registrarLog(int $servico, int $empresa, string $cpf, int $id, bool $soft): void
     {
         $c = Database::connection();

@@ -21,7 +21,9 @@ export type MenuKey =
   | 'minhas-solicitacoes'
   | 'agendamento'
   | 'meus-agendamentos'
-  | 'cidadaos-saude';
+  | 'cidadaos-saude'
+  | 'atendimentos'
+  | 'conversas';
 
 export type MenuCatalogItem = {
   key: MenuKey;
@@ -46,12 +48,14 @@ export const MENU_CATALOG: MenuCatalogItem[] = [
   { key: 'permissoes', label: 'Permissões', href: '/admin/permissoes', group: 'admin' },
   { key: 'avisos-app', label: 'Avisos do app', href: '/admin/avisos', group: 'admin' },
   { key: 'cidadaos-saude', label: 'Cidadãos — Saúde', href: '/admin/cidadaos-saude', group: 'admin' },
+  { key: 'atendimentos', label: 'Atendimentos', href: '/admin/atendimentos', group: 'operacao' },
   { key: 'transparencia', label: 'Transparência', href: '/transparency', group: 'gestao' },
   { key: 'inicio', label: 'Início (PWA)', href: '/inicio', group: 'cidadao' },
   { key: 'nova-ocorrencia', label: 'Solicitar (PWA)', href: '/nova-ocorrencia', group: 'cidadao' },
   { key: 'minhas-solicitacoes', label: 'Chamados (PWA)', href: '/minhas-solicitacoes', group: 'cidadao' },
   { key: 'agendamento', label: 'Agendar (PWA)', href: '/agendamento', group: 'cidadao' },
-  { key: 'meus-agendamentos', label: 'Consultas (PWA)', href: '/meus-agendamentos', group: 'cidadao' }
+  { key: 'meus-agendamentos', label: 'Consultas (PWA)', href: '/meus-agendamentos', group: 'cidadao' },
+  { key: 'conversas', label: 'Conversas (PWA)', href: '/conversas', group: 'cidadao' }
 ];
 
 export const CITIZEN_PWA_MODULES = [
@@ -59,7 +63,8 @@ export const CITIZEN_PWA_MODULES = [
   { key: 'nova-ocorrencia' as const, label: 'Solicitar', route: '/nova-ocorrencia' },
   { key: 'minhas-solicitacoes' as const, label: 'Chamados', route: '/minhas-solicitacoes' },
   { key: 'agendamento' as const, label: 'Agendar', route: '/agendamento' },
-  { key: 'meus-agendamentos' as const, label: 'Consultas', route: '/meus-agendamentos' }
+  { key: 'meus-agendamentos' as const, label: 'Consultas', route: '/meus-agendamentos' },
+  { key: 'conversas' as const, label: 'Conversas', route: '/conversas' }
 ];
 
 export function resolveCitizenPwaModules(menuKeys?: MenuKey[] | null) {
@@ -96,11 +101,11 @@ export const DEFAULT_ROLE_MENU_KEYS: Record<
   Exclude<UserRole, 'TRIAGEM'>,
   MenuKey[]
 > = {
-  ADMIN: [...staffMenus, 'configuracoes', 'secretarias', 'usuarios', 'permissoes', 'avisos-app', 'cidadaos-saude'],
-  PREFEITURA: [...staffMenus, 'avisos-app', 'cidadaos-saude'],
+  ADMIN: [...staffMenus, 'atendimentos', 'configuracoes', 'secretarias', 'usuarios', 'permissoes', 'avisos-app', 'cidadaos-saude'],
+  PREFEITURA: [...staffMenus, 'atendimentos', 'avisos-app', 'cidadaos-saude'],
   SECRETARIA: ['painel', 'ocorrencias', 'ordens-servico', 'alertas', 'mapas', 'usuarios'],
   EQUIPE_CAMPO: ['painel', 'ordens-servico'],
-  CIDADAO: ['inicio', 'nova-ocorrencia', 'minhas-solicitacoes', 'agendamento', 'meus-agendamentos']
+  CIDADAO: ['inicio', 'nova-ocorrencia', 'minhas-solicitacoes', 'agendamento', 'meus-agendamentos', 'conversas']
 };
 
 export const STAFF_ROLES: UserRole[] = ['ADMIN', 'PREFEITURA', 'SECRETARIA', 'EQUIPE_CAMPO'];

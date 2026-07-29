@@ -60,6 +60,7 @@ export function canAccessCitizenPwaPath(pathname: string, menuKeys?: MenuKey[] |
     }
     if (pathname.includes('/agendamento')) return allowed.has('agendamento');
     if (pathname.includes('/meus-agendamentos')) return allowed.has('meus-agendamentos');
+    if (pathname.includes('/conversas')) return allowed.has('conversas');
     return false;
   }
 

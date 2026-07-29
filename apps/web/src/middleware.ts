@@ -46,6 +46,7 @@ export const config = {
     '/saude/:path*',
     '/agendamento/:path*',
     '/meus-agendamentos/:path*',
+    '/conversas/:path*',
     '/unidade/:path*',
     '/app/unidades/:path*'
   ]

@@ -9,6 +9,16 @@ use App\Support\CpfHelper;
 
 final class ListagemService
 {
+    private function normalizarTelefone(string $telefone): string
+    {
+        $digitos = preg_replace('/\D+/', '', $telefone) ?? '';
+        if (strlen($digitos) >= 12 && str_starts_with($digitos, '55')) {
+            $digitos = substr($digitos, 2);
+        }
+
+        return $digitos;
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -146,6 +156,64 @@ final class ListagemService
             'documento'    => $doc,
             'empresa'      => $idEmpresa,
             'total'        => count($agendamentos),
+            'agendamentos' => $agendamentos,
+        ];
+    }
+
+    /**
+     * Lista os agendamentos realizados no PWA usando o telefone fixo da conta.
+     *
+     * @return array<string, mixed>
+     */
+    public function listarHistoricoPwaPorTelefone(string $telefone, ?int $empresa = null): array
+    {
+        $numero = $this->normalizarTelefone($telefone);
+        $idEmpresa = $empresa ?? AppConfig::empresaId();
+        if (strlen($numero) < 10 || strlen($numero) > 11) {
+            return [
+                'status' => 'error',
+                'message' => 'Telefone inválido.',
+            ];
+        }
+
+        $c = Database::connection();
+        $sql = "SELECT a.*, s.nome AS nome_servico
+                FROM agendamentos a
+                LEFT JOIN servico s ON s.id = a.servico
+                WHERE RIGHT(
+                    REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(a.telefone, '+', ''), '(', ''), ')', ''), '-', ''), ' ', ''), '.', ''),
+                    ?
+                ) = ?
+                AND a.empresa = ?
+                ORDER BY a.datetime DESC";
+
+        $st = $c->prepare($sql);
+        $tamanho = strlen($numero);
+        $empresaStr = (string)$idEmpresa;
+        $st->bind_param('iss', $tamanho, $numero, $empresaStr);
+        $st->execute();
+        $res = $st->get_result();
+
+        $agendamentos = [];
+        while ($row = $res->fetch_assoc()) {
+            $dt = strtotime($row['datetime']);
+            $agendamentos[] = [
+                'id' => (int)$row['id'],
+                'nome' => $row['nome'],
+                'cpf' => CpfHelper::normalizeDocument((string)($row['cpf'] ?? '')),
+                'servico' => $row['nome_servico'],
+                'servico_canonico' => $this->servicoCanonico($row['nome_servico'] ?? ''),
+                'data' => date('d/m/Y', $dt),
+                'hora' => date('H:i', $dt),
+                'status' => $row['status_agendamento'],
+            ];
+        }
+        $st->close();
+
+        return [
+            'status' => 'success',
+            'empresa' => $idEmpresa,
+            'total' => count($agendamentos),
             'agendamentos' => $agendamentos,
         ];
     }

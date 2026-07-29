@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import { getSession } from '../../lib/auth';
@@ -9,28 +9,14 @@ import { useResolvedPsfUnit } from '../../hooks/use-resolved-psf-unit';
 import { buildPwaLoginUrl, pwaPath } from '../../lib/pwa';
 import { parsePsfIdFromPath, unitPath } from '../../lib/psf-unit';
 import { CitizenConfirmDialog } from '../../components/citizen-confirm-dialog';
-import {
-  getSavedPsfConfig,
-  formatCpf,
-  getPatientProfile,
-  onlyDigits
-} from '../../lib/scheduling/psf-storage';
+import { formatCpf, getSavedPsfConfig, getPatientProfile } from '../../lib/scheduling/psf-storage';
 import {
   cancelAppointment,
-  listAllAppointmentsForPwa,
+  listAllAppointmentsForPwaAccount,
   SchedulingApiError,
   type SchedulingAppointment
 } from '../../lib/scheduling/scheduling-api';
-import {
-  formatHistoryTimestamp,
-  formatRemoteStatus,
-  getHistoryDisplayStatus,
-  getSchedulingHistory,
-  isCancellableRemoteStatus,
-  recordCancellationHistory,
-  syncHistoryWithRemote,
-  type SchedulingHistoryEntry
-} from '../../lib/scheduling/scheduling-history';
+import { formatRemoteStatus, isCancellableRemoteStatus } from '../../lib/scheduling/scheduling-history';
 import { processAppointmentReminders } from '../../lib/scheduling/scheduling-reminders';
 import { SchedulingReminderPrompt } from '../../components/scheduling-reminder-prompt';
 
@@ -42,33 +28,18 @@ export default function MyAppointmentsPage() {
   const unit = useResolvedPsfUnit();
   const [ready, setReady] = useState(false);
   const [needsPsf, setNeedsPsf] = useState(false);
-  const [cpf, setCpf] = useState('');
   const [searching, setSearching] = useState(false);
   const [cancellingId, setCancellingId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [items, setItems] = useState<SchedulingAppointment[]>([]);
-  const [history, setHistory] = useState<SchedulingHistoryEntry[]>([]);
   const [cancelTarget, setCancelTarget] = useState<SchedulingAppointment | null>(null);
-  const cpfRef = useRef('');
 
-  const loadHistory = useCallback((document: string) => {
-    setHistory(getSchedulingHistory(document));
-  }, []);
-
-  const search = useCallback(async (value?: string, options?: { silent?: boolean }) => {
+  const search = useCallback(async (options?: { silent?: boolean }) => {
     const psf = unit?.psf ?? getSavedPsfConfig();
-    const document = onlyDigits(value ?? cpfRef.current);
 
     if (!psf) {
       setNeedsPsf(true);
-      return;
-    }
-
-    if (document.length !== 11) {
-      if (!options?.silent) {
-        setError('Informe um CPF válido com 11 dígitos.');
-      }
       return;
     }
 
@@ -79,19 +50,12 @@ export default function MyAppointmentsPage() {
     }
 
     try {
-      const result = await listAllAppointmentsForPwa(psf, document);
+      const result = await listAllAppointmentsForPwaAccount(psf);
       setItems(result.agendamentos);
-      if (result.partialSync) {
-        setHistory(getSchedulingHistory(document));
-      } else {
-        const synced = syncHistoryWithRemote(document, result.agendamentos, psf.id, psf.label);
-        setHistory(synced);
-      }
       void processAppointmentReminders(result.agendamentos, psf.label);
     } catch (searchError) {
       if (!options?.silent) {
         setItems([]);
-        loadHistory(document);
         setError(searchError instanceof SchedulingApiError ? searchError.message : 'Não foi possível consultar.');
       }
     } finally {
@@ -99,11 +63,7 @@ export default function MyAppointmentsPage() {
         setSearching(false);
       }
     }
-  }, [loadHistory, unit]);
-
-  useEffect(() => {
-    cpfRef.current = cpf;
-  }, [cpf]);
+  }, [unit]);
 
   useEffect(() => {
     const unitFromPath = parsePsfIdFromPath(pathname);
@@ -123,29 +83,25 @@ export default function MyAppointmentsPage() {
     }
 
     const profile = getPatientProfile();
-    if (profile?.cpf) {
-      setCpf(profile.cpf);
-      loadHistory(onlyDigits(profile.cpf));
-      void search(profile.cpf);
+    if (profile?.telefone) {
+      void search();
     }
 
     setReady(true);
-  }, [router, loadHistory, search, unit, pathname]);
+  }, [router, search, unit, pathname]);
 
   useEffect(() => {
     if (!ready) return;
 
     const handleVisibility = () => {
-      if (document.visibilityState === 'visible' && cpfRef.current.replace(/\D/g, '').length === 11) {
-        void search(undefined, { silent: true });
+      if (document.visibilityState === 'visible') {
+        void search({ silent: true });
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibility);
     const interval = window.setInterval(() => {
-      if (cpfRef.current.replace(/\D/g, '').length === 11) {
-        void search(undefined, { silent: true });
-      }
+      void search({ silent: true });
     }, AUTO_REFRESH_MS);
 
     return () => {
@@ -165,17 +121,7 @@ export default function MyAppointmentsPage() {
     try {
       const result = await cancelAppointment(psf, item.id);
 
-      recordCancellationHistory(item.id, {
-        psfId: psf.id,
-        psfLabel: psf.label,
-        nome: item.nome,
-        cpf: onlyDigits(cpf),
-        servico: item.servico ?? 'Consulta',
-        data: item.data,
-        hora: item.hora
-      });
-
-      await search(undefined, { silent: true });
+      await search({ silent: true });
       setCancelTarget(null);
       setSuccess(result.message ?? 'Agendamento cancelado com sucesso. O registro foi removido na unidade de saúde.');
     } catch (cancelError) {
@@ -213,34 +159,22 @@ export default function MyAppointmentsPage() {
   return (
     <CitizenAppShell
       title="Meus agendamentos"
-      subtitle={psf ? `Consultas em ${psf.label}` : 'Consulte seus agendamentos pelo CPF.'}
+      subtitle={psf ? `Todos os agendamentos feitos pela sua conta em ${psf.label}` : 'Agendamentos da sua conta.'}
     >
       <section className="panel scheduling-panel">
-        <form
-          className="protocol-search"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void search();
-          }}
-        >
-          <input
-            value={cpf}
-            onChange={(event) => setCpf(formatCpf(event.target.value))}
-            placeholder="CPF do paciente"
-            inputMode="numeric"
-          />
-          <button type="submit" disabled={searching}>
-            {searching ? 'Buscando...' : 'Consultar'}
-          </button>
+        <div className="protocol-search">
+          <p className="scheduling-copy">
+            Aqui aparecem todos os pacientes agendados usando o telefone da sua conta.
+          </p>
           <button
             type="button"
             className="scheduling-refresh-btn"
             disabled={searching}
             onClick={() => void search()}
           >
-            Atualizar
+            {searching ? 'Atualizando...' : 'Atualizar agendamentos'}
           </button>
-        </form>
+        </div>
 
         <SchedulingReminderPrompt compact />
 
@@ -249,8 +183,8 @@ export default function MyAppointmentsPage() {
 
         {searching ? <p className="scheduling-copy">Consultando agendamentos...</p> : null}
 
-        {!searching && items.length === 0 && history.length === 0 && !error ? (
-          <p className="scheduling-copy">Nenhum histórico de agendamento encontrado para este CPF.</p>
+        {!searching && items.length === 0 && !error ? (
+          <p className="scheduling-copy">Nenhum agendamento encontrado para esta conta.</p>
         ) : null}
 
         {items.length > 0 ? (
@@ -262,6 +196,7 @@ export default function MyAppointmentsPage() {
                   <p className="eyebrow">#{item.id}</p>
                   <h3>{item.servico ?? 'Consulta'}</h3>
                   <p>Paciente: {item.nome ?? '—'}</p>
+                  {item.cpf ? <p>CPF: {formatCpf(item.cpf)}</p> : null}
                   <p>
                     Data: {item.data ?? '—'}
                     {item.hora ? ` · ${item.hora}` : ''}
@@ -298,46 +233,6 @@ export default function MyAppointmentsPage() {
         </div>
       </section>
 
-      <section className="panel scheduling-panel scheduling-history">
-        <p className="eyebrow">Histórico do CPF</p>
-        <h3>Agendamentos e cancelamentos</h3>
-
-        {history.length === 0 ? (
-          <p className="scheduling-copy">Nenhum histórico encontrado para este CPF.</p>
-        ) : (
-          <ul className="scheduling-history__list">
-            {history.map((entry) => (
-              <li key={entry.localId} className={`scheduling-history__item scheduling-history__item--${entry.status}`}>
-                <div className="scheduling-history__top">
-                  <strong>{entry.servico}</strong>
-                  <span className={`scheduling-history__badge scheduling-history__badge--${entry.status}`}>
-                    {getHistoryDisplayStatus(entry)}
-                  </span>
-                </div>
-                <p>
-                  #{entry.appointmentId} · {entry.psfLabel} · {entry.data}
-                  {entry.hora ? ` às ${entry.hora}` : ''}
-                </p>
-                <p>{entry.nome}</p>
-                <p className="scheduling-history__meta">
-                  Agendado em: {formatHistoryTimestamp(entry.bookedAt)}
-                </p>
-                {entry.syncedAt ? (
-                  <p className="scheduling-history__meta">
-                    Sincronizado em: {formatHistoryTimestamp(entry.syncedAt)}
-                  </p>
-                ) : null}
-                {entry.cancelledAt ? (
-                  <p className="scheduling-history__meta">
-                    Cancelado em: {formatHistoryTimestamp(entry.cancelledAt)}
-                  </p>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
       <CitizenConfirmDialog
         open={Boolean(cancelTarget)}
         title="Cancelar agendamento"
@@ -355,7 +250,7 @@ export default function MyAppointmentsPage() {
               ]
             : []
         }
-        warning="O cancelamento ficará registrado neste aparelho para consulta futura."
+        warning="O cancelamento ficará registrado no histórico da unidade."
         confirmLabel="Sim, cancelar consulta"
         cancelLabel="Manter agendamento"
         destructive

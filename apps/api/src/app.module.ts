@@ -25,6 +25,7 @@ import { AccessModule } from './modules/access/access.module';
 import { WebPushModule } from './modules/web-push/web-push.module';
 import { AnnouncementsModule } from './modules/announcements/announcements.module';
 import { PushLogsModule } from './modules/push-logs/push-logs.module';
+import { SupportChatModule } from './modules/support-chat/support-chat.module';
 
 @Module({
   imports: [
@@ -55,7 +56,8 @@ import { PushLogsModule } from './modules/push-logs/push-logs.module';
     PushNotificationsModule,
     SchedulingRemindersModule,
     AnnouncementsModule,
-    PushLogsModule
+    PushLogsModule,
+    SupportChatModule
   ]
 })
 export class AppModule {}
