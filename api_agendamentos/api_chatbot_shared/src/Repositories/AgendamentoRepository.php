@@ -9,6 +9,49 @@ final class AgendamentoRepository
 {
     private const STATUS_CANCELADOS = "('cancelado', 'cancelado usuário', 'cancelado usuario')";
 
+    public function existeAusentePorCpfServico(int $empresa, int $servico, string $cpf): bool
+    {
+        $c = Database::connection();
+        $sql = "SELECT 1 FROM agendamentos
+                WHERE empresa = ?
+                AND servico = ?
+                AND REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', '') = ?
+                AND LOWER(TRIM(status_agendamento)) = 'ausente'
+                LIMIT 1";
+        $stmt = $c->prepare($sql);
+        $stmt->bind_param('iis', $empresa, $servico, $cpf);
+        $stmt->execute();
+        $ok = $stmt->get_result()->num_rows > 0;
+        $stmt->close();
+        return $ok;
+    }
+
+    public function adquirirTravaCpfServico(int $empresa, int $servico, string $cpf): string
+    {
+        $c = Database::connection();
+        $chave = 'agendamento_' . substr(hash('sha256', "{$empresa}:{$servico}:{$cpf}"), 0, 48);
+        $stmt = $c->prepare('SELECT GET_LOCK(?, 10) AS acquired');
+        $stmt->bind_param('s', $chave);
+        $stmt->execute();
+        $adquirida = (int)($stmt->get_result()->fetch_assoc()['acquired'] ?? 0) === 1;
+        $stmt->close();
+
+        if (!$adquirida) {
+            throw new \RuntimeException('Não foi possível validar o agendamento agora. Tente novamente.');
+        }
+
+        return $chave;
+    }
+
+    public function liberarTrava(string $chave): void
+    {
+        $c = Database::connection();
+        $stmt = $c->prepare('SELECT RELEASE_LOCK(?)');
+        $stmt->bind_param('s', $chave);
+        $stmt->execute();
+        $stmt->close();
+    }
+
     public function countAtivosDia(int $empresa, int $servico, string $dataISO): int
     {
         $c = Database::connection();

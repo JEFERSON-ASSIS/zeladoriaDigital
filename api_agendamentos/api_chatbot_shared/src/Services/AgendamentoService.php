@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Infrastructure\AppConfig;
+use App\Repositories\AgendamentoRepository;
 use App\Strategies\DentistaStrategy;
 use App\Strategies\EnfermeiraStrategy;
 use App\Strategies\MedicaStrategy;
@@ -13,9 +14,11 @@ final class AgendamentoService
 {
     /** @var list<object> */
     private array $strategies;
+    private AgendamentoRepository $agendamentos;
 
     public function __construct()
     {
+        $this->agendamentos = new AgendamentoRepository();
         $this->strategies = [
             new MedicaStrategy(),
             new DentistaStrategy(),
@@ -55,12 +58,26 @@ final class AgendamentoService
             throw new \InvalidArgumentException('Campo hora é obrigatório para dentista.');
         }
 
-        foreach ($this->strategies as $strategy) {
-            if ($strategy->supports($idServico)) {
-                return $strategy->agendar($input);
-            }
-        }
+        $idEmpresa = (int)$input['empresa'];
+        $trava = $this->agendamentos->adquirirTravaCpfServico($idEmpresa, $idServico, $cpf);
 
-        throw new \RuntimeException('Nenhuma estratégia de agendamento para este serviço.');
+        try {
+            if ($this->agendamentos->existeAusentePorCpfServico($idEmpresa, $idServico, $cpf)) {
+                throw new \InvalidArgumentException(
+                    'Esta pessoa já possui um agendamento ativo para este serviço. '
+                    . 'Cancele o agendamento atual antes de fazer outro.'
+                );
+            }
+
+            foreach ($this->strategies as $strategy) {
+                if ($strategy->supports($idServico)) {
+                    return $strategy->agendar($input);
+                }
+            }
+
+            throw new \RuntimeException('Nenhuma estratégia de agendamento para este serviço.');
+        } finally {
+            $this->agendamentos->liberarTrava($trava);
+        }
     }
 }
