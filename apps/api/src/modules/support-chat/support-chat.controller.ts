@@ -18,6 +18,7 @@ import { extname, join } from 'path';
 import { diskStorage } from 'multer';
 import { SupportChatGateway } from './support-chat.gateway';
 import { SupportChatService } from './support-chat.service';
+import { SubscribeSupportPushDto } from './dto/subscribe-support-push.dto';
 import { Roles } from '../auth/roles.decorator';
 
 type RequestActor = { user: { sub: string; role: UserRole } };
@@ -33,6 +34,14 @@ export class SupportChatController {
   @Get('conversation')
   citizenConversation(@Req() req: RequestActor) {
     return this.service.getCitizenConversation(req.user);
+  }
+
+  @Post('push/subscribe')
+  subscribePush(
+    @Body() body: SubscribeSupportPushDto,
+    @Req() req: RequestActor
+  ) {
+    return this.service.subscribePush(req.user, body);
   }
 
   @Get('conversations')

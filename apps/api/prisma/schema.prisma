@@ -69,6 +69,7 @@ model User {
   changedMovements OccurrenceMovement[] @relation("ChangedBy")
   assignedSupportConversations SupportConversation[] @relation("SupportAssignedTo")
   supportMessages SupportMessage[]
+  pushSubscriptions CitizenPushSubscription[]
 }
 
 model Citizen {
@@ -422,6 +423,8 @@ model CitizenPushSubscription {
   id        String   @id @default(cuid())
   citizenId String?
   citizen   Citizen? @relation(fields: [citizenId], references: [id], onDelete: SetNull)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   endpoint  String   @unique
   p256dh    String
   auth      String
@@ -429,6 +432,7 @@ model CitizenPushSubscription {
   updatedAt DateTime @updatedAt
 
   @@index([citizenId])
+  @@index([userId])
 }
 
 enum PushNotificationSource {

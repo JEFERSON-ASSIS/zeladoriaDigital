@@ -97,6 +97,7 @@ self.addEventListener('push', (event) => {
     body: payload.body ?? 'Você tem uma nova atualização.',
     icon: payload.icon ?? `${origin}/icons/notification-icon.png`,
     badge: payload.badge ?? `${origin}/icons/notification-badge.png`,
+    tag: payload.tag ?? 'prefeitura-na-mao',
     data: { url: payload.url ?? '/app/inicio' }
   };
   event.waitUntil(self.registration.showNotification(title, options));

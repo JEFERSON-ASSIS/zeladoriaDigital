@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { CitizenAppShell } from '../../components/citizen-app-shell';
 import { SupportChatThread } from '../../components/support-chat-thread';
+import { SupportChatNotificationButton } from '../../components/support-chat-notification-button';
 import { getSession } from '../../lib/auth';
 import { getCitizenSupportConversation, type SupportConversation } from '../../lib/support-chat-api';
 
@@ -19,6 +20,7 @@ export default function CitizenConversationsPage() {
   return (
     <CitizenAppShell title="Conversas" subtitle="Fale diretamente com a equipe de atendimento.">
       {error ? <p className="login-error">{error}</p> : null}
+      {session ? <SupportChatNotificationButton token={session.accessToken} /> : null}
       {!conversation ? <p className="scheduling-copy">Carregando conversa...</p> : null}
       {conversation && session ? <SupportChatThread conversation={conversation} token={session.accessToken} ownType="CIDADAO" /> : null}
     </CitizenAppShell>

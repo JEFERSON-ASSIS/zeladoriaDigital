@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { SupportChatThread } from '../../../components/support-chat-thread';
+import { SupportChatNotificationButton } from '../../../components/support-chat-notification-button';
 import { getSession } from '../../../lib/auth';
 import { fetchCitizens, type AdminCitizenRecord } from '../../../lib/citizens-api';
 import {
@@ -76,6 +77,15 @@ export default function SupportAdminPage() {
     return () => { socket.disconnect(); };
   }, [load, token]);
 
+  useEffect(() => {
+    if (!token || selected || items.length === 0 || typeof window === 'undefined') return;
+    const conversationId = new URLSearchParams(window.location.search).get('conversa');
+    if (!conversationId || !items.some((item) => item.id === conversationId)) return;
+    void getSupportConversation(conversationId, token)
+      .then(setSelected)
+      .catch(() => setError('Não foi possível abrir a conversa da notificação.'));
+  }, [items, selected, token]);
+
   async function open(item: SupportConversation) {
     try {
       setSelected(await getSupportConversation(item.id, token));
@@ -119,10 +129,13 @@ export default function SupportAdminPage() {
           <h1>Conversas com cidadãos</h1>
           <p>Acompanhe solicitações e converse com os usuários do aplicativo.</p>
         </div>
-        <button className="btn-primary support-admin__new-button" type="button" onClick={() => setShowNewConversation((current) => !current)}>
-          <Plus size={18} aria-hidden="true" />
-          Nova conversa
-        </button>
+        <div className="support-admin__header-actions">
+          {token ? <SupportChatNotificationButton token={token} compact /> : null}
+          <button className="btn-primary support-admin__new-button" type="button" onClick={() => setShowNewConversation((current) => !current)}>
+            <Plus size={18} aria-hidden="true" />
+            Nova conversa
+          </button>
+        </div>
       </header>
 
       <div className="support-admin__metrics" aria-label="Resumo dos atendimentos">

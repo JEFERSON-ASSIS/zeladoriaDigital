@@ -6,6 +6,7 @@ export type WebPushPayload = {
   title: string;
   body: string;
   url?: string;
+  tag?: string;
 };
 
 export type PushSubscriptionKeys = {
@@ -59,7 +60,8 @@ export class WebPushService {
       JSON.stringify({
         title: payload.title,
         body: payload.body,
-        url: payload.url ?? '/app/inicio'
+        url: payload.url ?? '/app/inicio',
+        tag: payload.tag
       })
     );
 

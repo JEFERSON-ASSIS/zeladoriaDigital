@@ -1,15 +1,41 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { SupportConversationStatus, SupportMessageType, SupportSenderType, UserRole } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { WebPushService } from '../web-push/web-push.service';
+import { SubscribeSupportPushDto } from './dto/subscribe-support-push.dto';
 
 type Actor = { sub: string; role: UserRole };
 
 @Injectable()
 export class SupportChatService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(SupportChatService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly webPush: WebPushService
+  ) {}
 
   private isCitizen(actor: Actor) {
     return actor.role === UserRole.CIDADAO;
+  }
+
+  async subscribePush(actor: Actor, subscription: SubscribeSupportPushDto) {
+    const citizen = this.isCitizen(actor);
+    await this.prisma.citizenPushSubscription.upsert({
+      where: { endpoint: subscription.endpoint },
+      update: {
+        p256dh: subscription.p256dh,
+        auth: subscription.auth,
+        citizenId: citizen ? actor.sub : null,
+        userId: citizen ? null : actor.sub
+      },
+      create: {
+        ...subscription,
+        citizenId: citizen ? actor.sub : null,
+        userId: citizen ? null : actor.sub
+      }
+    });
+    return { ok: true };
   }
 
   private async assertAccess(conversationId: string, actor: Actor) {
@@ -147,7 +173,63 @@ export class SupportChatService {
       });
       return created;
     });
+    await this.notifyMessage(conversation, actor, message).catch((error) => {
+      this.logger.warn(
+        `Mensagem ${message.id} salva, mas o push do chat falhou.`,
+        error instanceof Error ? error.message : String(error)
+      );
+    });
     return message;
+  }
+
+  private async notifyMessage(
+    conversation: { id: string; citizenId: string },
+    actor: Actor,
+    message: { id: string; type: SupportMessageType; text: string | null }
+  ) {
+    if (!this.webPush.isConfigured()) return;
+
+    const fromCitizen = this.isCitizen(actor);
+    const subscriptions = await this.prisma.citizenPushSubscription.findMany({
+      where: fromCitizen
+        ? { user: { role: { in: [UserRole.ADMIN, UserRole.PREFEITURA] } } }
+        : { citizenId: conversation.citizenId },
+      select: { id: true, endpoint: true, p256dh: true, auth: true }
+    });
+    if (subscriptions.length === 0) return;
+
+    const citizen = fromCitizen
+      ? await this.prisma.citizen.findUnique({
+          where: { id: conversation.citizenId },
+          select: { name: true }
+        })
+      : null;
+    const body = message.type === SupportMessageType.TEXTO
+      ? (message.text ?? 'Nova mensagem')
+      : message.type === SupportMessageType.IMAGEM ? 'Enviou uma imagem.' : 'Enviou uma mensagem de áudio.';
+    const payload = {
+      title: fromCitizen
+        ? `Nova mensagem de ${citizen?.name ?? 'um cidadão'}`
+        : 'Nova mensagem do atendimento',
+      body: body.length > 160 ? `${body.slice(0, 157)}...` : body,
+      url: fromCitizen
+        ? `/admin/atendimentos?conversa=${conversation.id}`
+        : '/app/conversas',
+      tag: `support-chat-${conversation.id}`
+    };
+
+    await Promise.all(subscriptions.map(async (subscription) => {
+      try {
+        await this.webPush.send(subscription, payload);
+      } catch (error) {
+        const statusCode = (error as { statusCode?: number })?.statusCode;
+        if (statusCode === 404 || statusCode === 410) {
+          await this.prisma.citizenPushSubscription.delete({ where: { id: subscription.id } }).catch(() => undefined);
+          return;
+        }
+        throw error;
+      }
+    }));
   }
 
   async setStatus(id: string, status: SupportConversationStatus, actor: Actor) {

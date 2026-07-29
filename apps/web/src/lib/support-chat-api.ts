@@ -80,3 +80,14 @@ export function supportMediaUrl(path?: string | null) {
 export function connectSupportSocket(token: string): Socket {
   return io(`${getPublicApiUrl()}/support-chat`, { auth: { token }, transports: ['websocket', 'polling'] });
 }
+
+export function subscribeSupportChatPush(
+  subscription: { endpoint: string; p256dh: string; auth: string },
+  token: string
+) {
+  return fetch(`${getPublicApiUrl()}/support-chat/push/subscribe`, {
+    method: 'POST',
+    headers: headers(token, true),
+    body: JSON.stringify(subscription)
+  }).then(read);
+}
