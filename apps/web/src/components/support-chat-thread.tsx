@@ -21,7 +21,9 @@ export function SupportChatThread({ conversation, token, ownType }: {
   const [sending, setSending] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => setMessages(conversation.messages ?? []), [conversation]);
+  useEffect(() => {
+    setMessages(conversation.messages ?? []);
+  }, [conversation]);
   useEffect(() => {
     const socket = connectSupportSocket(token);
     socket.emit('conversation:join', conversation.id);
@@ -30,7 +32,9 @@ export function SupportChatThread({ conversation, token, ownType }: {
     });
     return () => { socket.disconnect(); };
   }, [conversation.id, token]);
-  useEffect(() => endRef.current?.scrollIntoView({ behavior: 'smooth' }), [messages]);
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   async function submitText(event: React.FormEvent) {
     event.preventDefault();
